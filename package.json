@@ -1,0 +1,17 @@
+{
+  "name": "ambient-weather-heiligers",
+  "version": "1.0.0",
+  "description": "collect data from Heiligers weather station",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Tina Heiligers",
+  "license": "MIT",
+  "dependencies": {
+    "ambient-weather-api": "0.0.6",
+    "convert-units": "^2.3.4",
+    "file-system": "^2.2.2",
+    "moment": "^2.26.0"
+  }
+}

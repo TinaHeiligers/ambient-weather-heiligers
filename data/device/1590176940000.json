@@ -1,0 +1,50 @@
+{
+  "macAddress": "F4:CF:A2:CD:9B:12",
+  "lastData": {
+    "dateutc": 1590176940000,
+    "tempinf": 79.3,
+    "humidityin": 28,
+    "baromrelin": 29.85,
+    "baromabsin": 28.506,
+    "tempf": 93,
+    "battout": 1,
+    "humidity": 12,
+    "winddir": 257,
+    "windspeedmph": 1.1,
+    "windgustmph": 1.1,
+    "maxdailygust": 10.3,
+    "hourlyrainin": 0,
+    "eventrainin": 0,
+    "dailyrainin": 0,
+    "weeklyrainin": 0,
+    "monthlyrainin": 0,
+    "totalrainin": 0,
+    "solarradiation": 848.89,
+    "uv": 8,
+    "feelsLike": 88.27,
+    "dewPoint": 32.86,
+    "feelsLikein": 78.2,
+    "dewPointin": 43.3,
+    "tz": "America/Phoenix",
+    "date": "2020-05-22T19:49:00.000Z"
+  },
+  "info": {
+    "name": "Heiligers Weather Station",
+    "coords": {
+      "geo": {
+        "type": "Point",
+        "coordinates": [
+          -111.7421359,
+          33.3560276
+        ]
+      },
+      "elevation": 386.7543029785156,
+      "location": "Gilbert",
+      "address": "2225 E Vaughn Ave, Gilbert, AZ 85234, USA",
+      "coords": {
+        "lon": -111.7421359,
+        "lat": 33.3560276
+      }
+    }
+  }
+}
