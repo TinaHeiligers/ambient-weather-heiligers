@@ -6,6 +6,8 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
+const humanReadibleDate = "24-05-2020";
+const fromDate = moment.utc(`${humanReadibleDate} 0:00:00 AM`, "D-M-YYYY h:mm:ss a").toDate();
 
 function convertTemp(f) {
   const tempInC = cu(f).from('F').to('C');
@@ -15,20 +17,19 @@ function convertMPH(mph) {
   const speedmph = cu(mph).from('m/h').to('m/s');
   return Number((speedmph).toFixed(3));
 }
-async function getDevice(save = false) {
+async function getDevice(save = true) {
   const devices = await awApi.userDevices();
   if (save) {
-    fs.writeFile(`./data/device/${devices[0].lastData.dateutc || Math.random()}.json`, JSON.stringify(devices[0], null, 2));
+    fs.writeFile(`./data/device/${devices[0].lastData.dateutc}.json`, JSON.stringify(devices[0], null, 2));
   }
   return devices[0];
 }
 
-async function fetchRecentData(fromDate = moment.utc(), numRecords = 1, toMetric = true) {
+async function fetchRecentData(from = fromDate, numRecords = 288, toMetric = true) {
+  console.log(fromDate)
   const devices = await awApi.userDevices();
-  const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords }, { endDate: fromDate });
+  const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
   const metricData = allData.map(datum => {
-    console.log(`datum point:`, datum);
-    // console.log(`date in UTC: ${datum.date}, date in local time: ${moment(datum.date)} --- Temp in F: ${datum.tempf}, temp in C`);
     const convertedDatum = {
       date_utc: datum.dateutc,
       temp_inside_c: convertTemp(datum.tempinf),
@@ -57,14 +58,10 @@ async function fetchRecentData(fromDate = moment.utc(), numRecords = 1, toMetric
       loc: datum.loc,
       date: moment(datum.date).local().format(),
     }
-    // fs.writeFile(`./data/raw/${devices[0].lastData.dateutc}.json`, JSON.stringify(devices[0], null, 2));
-    console.log('HELLO?', convertedDatum)
-    return {
-      imperial: { ...datum },
-      metric: { ...convertedDatum }
-    };
-  });
 
+    return convertedDatum;
+  });
+  fs.writeFile(`./data/test/${humanReadibleDate}.json`, JSON.stringify(metricData, null, 2));
   return metricData;
 }
 
