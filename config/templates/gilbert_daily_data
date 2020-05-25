@@ -268,6 +268,6 @@ PUT _template/gilbert_daily_data
     }
   },
   "aliases" : {
-    "gilbert_daily_data_alias" : {},
+    "gilbert_daily_data" : {}
   }
 }
