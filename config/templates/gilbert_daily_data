@@ -267,5 +267,7 @@ PUT _template/gilbert_daily_data
       }
     }
   },
-  "aliases": {}
+  "aliases" : {
+    "gilbert_daily_data_alias" : {},
+  }
 }
