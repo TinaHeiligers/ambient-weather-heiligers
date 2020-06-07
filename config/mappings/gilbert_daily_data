@@ -2,8 +2,7 @@
   "dynamic" : "true",
   "_meta" : { },
   "_source" : {
-    "includes" : [ ],
-    "excludes" : [ ]
+    "enabled" : true
   },
   "dynamic_date_formats" : [
     "strict_date_optional_time",
@@ -142,17 +141,50 @@
     },
     "fulldate" : {
       "properties" : {
+        "monthday" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
         "hour" : {
-          "type" : "long"
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
         },
         "month" : {
-          "type" : "long"
-        },
-        "monthday" : {
-          "type" : "long"
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
         },
         "year" : {
-          "type" : "long"
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "minute": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "ignore_above": 256,
+              "type": "keyword"
+            }
+          }
         }
       }
     },

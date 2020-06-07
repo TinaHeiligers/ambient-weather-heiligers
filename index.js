@@ -6,7 +6,7 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
-const humanReadibleDate = "03-05-2020";
+const humanReadibleDate = "07-06-2020";
 const fromDate = moment.utc(`${humanReadibleDate} 7:00:00 AM`, "D-M-YYYY h:mm:ss a").toDate();
 
 function convertTemp(f) {
