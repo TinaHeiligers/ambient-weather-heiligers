@@ -6,8 +6,20 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
-const humanReadibleDate = "11-06-2020";
-const fromDate = moment.utc(`${humanReadibleDate} 7:00:00 AM`, "D-M-YYYY h:mm:ss a").toDate();
+const currentDate = new Date();
+
+async function getDevice(save = true) {
+  const devices = await awApi.userDevices();
+  if (save) {
+    fs.writeFile(`./data/device/${devices[0].lastData.dateutc}.json`, JSON.stringify(devices[0], null, 2));
+  }
+  return devices[0];
+}
+var MyDate = new Date();
+function padDateWithLeadingZeros() {
+  currentDate.setDate(MyDate.getDate() + 20);
+  return `${MyDate.getFullYear()}${('0' + (MyDate.getMonth() + 1)).slice(-2)}${('0' + MyDate.getDate()).slice(-2)}`;
+}
 
 function convertTemp(f) {
   const tempInC = cu(f).from('F').to('C');
@@ -17,18 +29,13 @@ function convertMPH(mph) {
   const speedmph = cu(mph).from('m/h').to('m/s');
   return Number((speedmph).toFixed(3));
 }
-async function getDevice(save = true) {
-  const devices = await awApi.userDevices();
-  if (save) {
-    fs.writeFile(`./data/device/${devices[0].lastData.dateutc}.json`, JSON.stringify(devices[0], null, 2));
-  }
-  return devices[0];
-}
 
-async function fetchRecentData(from = fromDate, numRecords = 288, toMetric = true) {
-  console.log(fromDate)
+async function fetchRecentData(from = moment.utc(currentDate).toDate(), numRecords = 288) {
+  const dateForFileName = padDateWithLeadingZeros();
+  console.log('dateForFileName', dateForFileName)
   const devices = await awApi.userDevices();
   const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
+
   const metricData = allData.map(datum => {
     const convertedDatum = {
       date_utc: datum.dateutc,
@@ -43,12 +50,12 @@ async function fetchRecentData(from = fromDate, numRecords = 288, toMetric = tru
       windspeed_mps: convertMPH(datum.windspeedmph),
       windgust_mps: convertMPH(datum.windgustmph),
       max_daily_gust: convertMPH(datum.maxdailygust),
-      hourly_rain_mm: datum.hourlyrainin !== 0 ? cu(datum.hourlyrainin).from('in').to('mm') : 0,
-      event_rain_mm: datum.eventrainin !== 0 ? cu(datum.eventrainin).from('in').to('mm') : 0,
-      daily_rain_mm: datum.dailyrainin !== 0 ? cu(datum.dailyrainin).from('in').to('mm') : 0,
-      weekly_rain_mm: datum.weeklyrainin !== 0 ? cu(datum.weeklyrainin).from('in').to('mm') : 0,
-      monthly_rain_mm: datum.monthlyrain !== 0 ? cu(datum.monthlyrainin).from('in').to('mm') : 0,
-      total_rain_mm: datum.totalrainin !== 0 ? cu(datum.totalrainin).from('in').to('mm') : 0,
+      hourly_rain_mm: datum.hourlyrainin !== 0 ? cu(datum.hourlyrainin).from('in').to('mm') : 0.0,
+      event_rain_mm: datum.eventrainin !== 0 ? cu(datum.eventrainin).from('in').to('mm') : 0.0,
+      daily_rain_mm: datum.dailyrainin !== 0 ? cu(datum.dailyrainin).from('in').to('mm') : 0.0,
+      weekly_rain_mm: datum.weeklyrainin !== 0 ? cu(datum.weeklyrainin).from('in').to('mm') : 0.0,
+      monthly_rain_mm: datum.monthlyrain !== 0 ? cu(datum.monthlyrainin).from('in').to('mm') : 0.0,
+      total_rain_mm: datum.totalrainin !== 0 ? cu(datum.totalrainin).from('in').to('mm') : 0.0,
       solar_radiation_W_msq: datum.solarradiation,
       uv: datum.uv,
       feels_like_outside_c: convertTemp(datum.feelsLike),
@@ -56,12 +63,12 @@ async function fetchRecentData(from = fromDate, numRecords = 288, toMetric = tru
       feelslike_insideC: convertTemp(datum.feelsLikein),
       dewpoint_insideC: convertTemp(datum.dewPointin),
       loc: datum.loc,
-      date: moment(datum.date).local().format(),
+      date: datum.date,
     }
 
     return convertedDatum;
   });
-  fs.writeFile(`./data/test/${humanReadibleDate}.json`, JSON.stringify(metricData, null, 2));
+  fs.writeFile(`./data/convertedUnits/${dateForFileName}.json`, JSON.stringify(metricData, null, 2));
   return metricData;
 }
 
