@@ -8,6 +8,17 @@ const awApi = new AmbientWeatherApi({
 });
 const currentDate = new Date();
 
+function getDates(startDate, stopDate) {
+  var dateArray = [];
+  var currentDate = moment(startDate);
+  var stopDate = moment(stopDate);
+  while (currentDate <= stopDate) {
+    dateArray.push(moment(currentDate).format('YYYY-MM-DD'))
+    currentDate = moment(currentDate).add(1, 'days');
+  }
+  return dateArray;
+}
+
 async function getDevice(save = true) {
   const devices = await awApi.userDevices();
   if (save) {
@@ -15,12 +26,11 @@ async function getDevice(save = true) {
   }
   return devices[0];
 }
-var MyDate = new Date();
-function padDateWithLeadingZeros() {
-  currentDate.setDate(MyDate.getDate() + 20);
-  return `${MyDate.getFullYear()}${('0' + (MyDate.getMonth() + 1)).slice(-2)}${('0' + MyDate.getDate()).slice(-2)}`;
-}
 
+function padDateWithLeadingZeros(date) {
+  date.setDate(date.getDate());
+  return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
+}
 function convertTemp(f) {
   const tempInC = cu(f).from('F').to('C');
   return Number((tempInC).toFixed(3));
@@ -30,12 +40,11 @@ function convertMPH(mph) {
   return Number((speedmph).toFixed(3));
 }
 
-async function fetchRecentData(from = moment.utc(currentDate).toDate(), numRecords = 288) {
-  const dateForFileName = padDateWithLeadingZeros();
+async function fetchRecentData(from, numRecords) {
+  const dateForFileName = padDateWithLeadingZeros(from);
   console.log('dateForFileName', dateForFileName)
   const devices = await awApi.userDevices();
   const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
-
   const metricData = allData.map(datum => {
     const convertedDatum = {
       date_utc: datum.dateutc,
@@ -60,18 +69,37 @@ async function fetchRecentData(from = moment.utc(currentDate).toDate(), numRecor
       uv: datum.uv,
       feels_like_outside_c: convertTemp(datum.feelsLike),
       dewpoint_c: convertTemp(datum.dewPoint),
-      feelslike_insideC: convertTemp(datum.feelsLikein),
-      dewpoint_insideC: convertTemp(datum.dewPointin),
+      feelslike_inside_c: convertTemp(datum.feelsLikein),
+      dewpoint_inside_c: convertTemp(datum.dewPointin),
       loc: datum.loc,
       date: datum.date,
     }
 
     return convertedDatum;
   });
-  fs.writeFile(`./data/convertedUnits/${dateForFileName}.json`, JSON.stringify(metricData, null, 2));
+  fs.writeFile(`./data/raw_as_metric/${dateForFileName}.json`, JSON.stringify(metricData, null, 2));
   return metricData;
 }
 
-return fetchRecentData();
-
-
+async function getDataForDateRanges() {
+  const datesDataFetchedFor = [];
+  const datesToGetDataFor = getDates('2020-06-01', '2020-06-12');
+  for (const dateForFetchingData of datesToGetDataFor) {
+    const fromDate = moment.utc(dateForFetchingData).toDate();
+    const numberOfRecords = 288
+    try {
+      const result = await fetchRecentData(fromDate, numberOfRecords);
+      if (result && result.length > 0) {
+        datesDataFetchedFor.push(dateForFetchingData)
+      }
+    } catch (err) {
+      console.log('There was an error fetching data for date:', dateForFetchingData)
+    }
+  }
+  if (datesDataFetchedFor.length === datesToGetDataFor.length) {
+    console.log(`retrieved data for ${datesToGetDataFor.length} dates`)
+  } else {
+    console.log(`couldn't get data for ${datesToGetDataFor.length - datesDataFetchedFor.length} dates`)
+  }
+}
+return getDataForDateRanges();
