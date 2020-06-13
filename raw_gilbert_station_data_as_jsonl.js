@@ -9,38 +9,32 @@ function padDateWithLeadingZeros(date) {
   return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
 }
 
-function getDates(startDate, stopDate) {
+function getDates(startDate, stopDate = startDate) {
   var dateArray = [];
   var currentDate = moment(startDate);
   var stopDate = moment(stopDate);
   while (currentDate <= stopDate) {
+    console.log(`currentDate: ${currentDate} | stopDate: ${stopDate}`)
     dateArray.push(moment(currentDate).format('YYYY-MM-DD'))
     currentDate = moment(currentDate).add(1, 'days');
   }
   return dateArray;
 }
 
-function convertToJsonl() {
-  const datesToGetDataFor = getDates('2020-05-03', '2020-06-12');
+function convertToJsonl(providedStartDate, providedEndDate) {
+  const datesToGetDataFor = getDates(providedStartDate, providedEndDate);
   const filesConvertedToJsonl = [];
 
   for (const dateItem of datesToGetDataFor) {
     dateFromFileName = padDateWithLeadingZeros(new Date(dateItem));
-    const dataFileRead = JSON.parse(fs.readFileSync(`./data/raw_as_metric/${dateFromFileName}.json`));
+    const dataFileRead = JSON.parse(fs.readFileSync(`./data/ambient-weather-heiligers-data/${dateFromFileName}.json`));
 
-    const openedDataForDailyFile = fs.openSync(`./data/jsonl/raw_as_metric_daily/${dateFromFileName}.jsonl`, "w");
+    const openedDataForDailyFile = fs.openSync(`./data/ambient-weather-heiligers-jsonl/${dateFromFileName}.jsonl`, "w");
 
     const arrayOfConvertedData = dataFileRead.map((element, index) => {
-      const fixedElement = {
-        ...element,
-        feels_like_inside_c: element.feelslike_insideC,
-        dewpoint_inside_c: element.dewpoint_insideC,
-        wind_speed_meters_per_second: element.windspeed_mps,
-        wind_gust_meters_per_second: element.windgust_mps
-      }
       fs.writeSync(openedDataForDailyFile, JSON.stringify(element) + '\n');
-      fs.appendFileSync(openedDataForDailyFile, JSON.stringify(fixedElement) + '\n')
-      return fixedElement;
+      fs.appendFileSync(openedDataForDailyFile, JSON.stringify(element) + '\n')
+      return element;
     });
     if (arrayOfConvertedData && arrayOfConvertedData.length > 0) {
       filesConvertedToJsonl.push(dateItem);
@@ -54,4 +48,4 @@ function convertToJsonl() {
   }
 }
 
-return convertToJsonl()
+return convertToJsonl('2020-05-03', '2020-06-11')

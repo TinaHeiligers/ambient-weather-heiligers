@@ -12,6 +12,8 @@
     "ambient-weather-api": "0.0.6",
     "convert-units": "^2.3.4",
     "file-system": "^2.2.2",
-    "moment": "^2.26.0"
+    "moment": "^2.26.0",
+    "moment-timezone": "^0.5.31",
+    "path": "^0.12.7"
   }
 }
