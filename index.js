@@ -6,17 +6,18 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
+const { convertTemp, convertMPH } = require('./helpers');
 const humanReadibleDate = "11-06-2020";
 const fromDate = moment.utc(`${humanReadibleDate} 7:00:00 AM`, "D-M-YYYY h:mm:ss a").toDate();
 
-function convertTemp(f) {
-  const tempInC = cu(f).from('F').to('C');
-  return Number((tempInC).toFixed(3));
-}
-function convertMPH(mph) {
-  const speedmph = cu(mph).from('m/h').to('m/s');
-  return Number((speedmph).toFixed(3));
-}
+// function convertTemp(f) {
+//   const tempInC = cu(f).from('F').to('C');
+//   return Number((tempInC).toFixed(3));
+// }
+// function convertMPH(mph) {
+//   const speedmph = cu(mph).from('m/h').to('m/s');
+//   return Number((speedmph).toFixed(3));
+// }
 async function getDevice(save = true) {
   const devices = await awApi.userDevices();
   if (save) {
@@ -61,10 +62,10 @@ async function fetchRecentData(from = fromDate, numRecords = 288, toMetric = tru
 
     return convertedDatum;
   });
-  fs.writeFile(`./data/test/${humanReadibleDate}.json`, JSON.stringify(metricData, null, 2));
+  // fs.writeFile(`./data/test/${humanReadibleDate}.json`, JSON.stringify(metricData, null, 2));
   return metricData;
 }
 
-return fetchRecentData();
+fetchRecentData();
 
 

@@ -22,3 +22,13 @@ POST /_aliases
 ```
 <br></br>5. Verify that you’re getting the results you expect with the alias and then you can remove *oldIndex* when you’re ready.
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
+
+
+## Test branch: adding-elasticsearch-client
+
+Includes install of `@elastic/elasticsearch (major: 7)
+
+Trying the advice in https://blog.logrocket.com/you-dont-need-babel-with-node/ first.
+
+
+_If that doesn't work, follow along with the tutorial in https://www.freecodecamp.org/news/how-to-enable-es6-and-beyond-syntax-with-node-and-express-68d3e11fe1ab/_
