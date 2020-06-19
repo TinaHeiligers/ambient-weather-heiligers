@@ -1,7 +1,11 @@
-bThe historic data is saved to gilbert_daily_data_historic index with index pattern of the same name. The template and alias setup didn't work as wanted to save the index to an alias.
+## Historic data from Dary Sky
+The historic data is saved to gilbert_daily_data_historic index with index pattern of the same name. The template and alias setup didn't work as wanted to save the index to an alias.
 What I want to do is save all the data to rolling indexes that map to index patterns using an alias.
 The data is already in ES, so just fix it from here
 The modify filebeat and logstash to use a similar setup as for the dark sky data.
+### Where the code lives:
+ - index.js
+ - toJsonl.js
 
 ## Reindexing and Aliases:
 Updating mappings for fields that already exist can only be done by reindexing with the new, updated mapping.
@@ -23,12 +27,22 @@ POST /_aliases
 <br></br>5. Verify that you’re getting the results you expect with the alias and then you can remove *oldIndex* when you’re ready.
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
 
+## Gilbert Ambient Weather Station
+The data is will be indexed into ambient_weather_heiligers_imperial and ambient_weather_heiligers_metric indices with index patterns of the same name. The template and alias still need to be defined/refined with an alias so that rollover can happen to a new index based on the same templates.
+
+### Where the code lives:
+ - fetch_raw_gilbert_station_data.js
+ - convert_raw_gilbert_station_data_units.js
+ - raw_gilbert_station_data_as_jsonl.js
+ - metric-data-to_jsonl.js
 
 ## Test branch: adding-elasticsearch-client
-
 Includes install of `@elastic/elasticsearch (major: 7)
 
+## Test branch: modularising code
 Trying the advice in https://blog.logrocket.com/you-dont-need-babel-with-node/ first.
-
-
 _If that doesn't work, follow along with the tutorial in https://www.freecodecamp.org/news/how-to-enable-es6-and-beyond-syntax-with-node-and-express-68d3e11fe1ab/_
+
+## Other solutions for sending data to ES
+ - build filebeat from code
+ - build logstash from code
