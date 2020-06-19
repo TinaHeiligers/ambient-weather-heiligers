@@ -7,7 +7,7 @@ const awApi = new AmbientWeatherApi({
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
 
-const { getMostRecentDataDate, getDates } = require('./helpers');
+const { getLastRecordedDataDate, getDates } = require('./helpers');
 
 // I need some sort of global saving of the date for now;
 
@@ -24,7 +24,15 @@ function padDateWithLeadingZeros(date) {
   return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
 }
 
+/*
+  fetches data from ambient weather backwards in time
+  @params: macAddress (string) the weather station device mac address
+  @params: options (object) consisting of
+    limit: number of entries to fetch data for
+    endDate: date to END fetching data from
+*/
 async function fetchRecentData(from, numRecords) {
+  const dateForFileName = from.format(`YYYY-MM-DDThh_mm_ss`)
   console.log('dateForFileName', dateForFileName)
   // the call takes in the endDate and counts backwards in time
   const devices = await awApi.userDevices();
@@ -35,19 +43,20 @@ async function fetchRecentData(from, numRecords) {
   } else {
     console.log('device not found')
   }
+  return null;
 }
 
 async function getDataForDateRanges() {
   const datesNewDataFetchedFor = [];
   let setNow = momentTZ(); // a static point for date for dev
   // placeholders for changing items after fetching some data
-  let dateToFetchDataFrom;
+  let dateOfLastRecordedData;
   let currentDateDiff;
   let numberOfRecords;
   // I need to determine what data is missing from what I already have -> this can all be extracted into a helper fnc
   // determine the diff bwt mostRecentDataDate and now and divide that by 5 min to see the num of data entries to retrieve.
-  const mostRecentDataDate = getMostRecentDataDate('ambient-weather-heiligers-data');
-  const totalMinutesDifference = momentTZ.duration(momentTZ(setNow).diff(momentTZ(mostRecentDataDate))).as('minutes');
+  const LastRecordedData = getLastRecordedDataDate('ambient-weather-heiligers-data');
+  const totalMinutesDifference = momentTZ.duration(momentTZ(setNow).diff(momentTZ(LastRecordedData))).as('minutes');
   const totalNumberOfRecordsToGet = Math.floor(totalMinutesDifference / 5);
   let numberOfBatches = totalNumberOfRecordsToGet / 288; // 288 5min intervals in a 24 hour period
   // we can loop with 288 records if the batch count is an integer
@@ -55,16 +64,16 @@ async function getDataForDateRanges() {
 
   // while ("we still need to fetch data") {
   // set the initial values if we've only started fetching data
-  if (!dateToFetchDataFrom && !currentDateDiff) {
-    dateToFetchDataFrom = mostRecentDataDate;
+  if (!dateOfLastRecordedData && !currentDateDiff) {
+    dateOfLastRecordedData = LastRecordedData;
     currentDateDiff = totalMinutesDifference;
   }
   numberOfRecords = numberOfBatches > 0 ? 288 : numberOfBatches * 288; // --> this I'll change because I'm going to decrease numberOfRecordsToGet as the data flows in
   try {
-    console.log(`dateToFetchDataFrom ${dateToFetchDataFrom}, numberOfRecords ${numberOfRecords}`)
-    const result = await fetchRecentData(dateToFetchDataFrom, numberOfRecords)
+    const result = await fetchRecentData(setNow, numberOfRecords)
+
     if (result && result.length === numberOfRecords) {
-      datesNewDataFetchedFor.push(dateToFetchDataFrom)
+      datesNewDataFetchedFor.push(dateOfLastRecordedData)
       // call the same method again but using the new last retrieved date with
     }
   } catch (err) {

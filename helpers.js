@@ -14,7 +14,7 @@ module.exports.convertMPH = function (mph) {
 }
 
 //generic mostRecentDate getter from existing data files
-const getMostRecentDataDate = function (pathToFolder) {
+const getLastRecordedDataDate = function (pathToFolder) {
   const directoryPath = path.join(__dirname, `data/${pathToFolder}`);
   let filesArray = [];
   const files = fs.readdirSync(directoryPath);
@@ -44,4 +44,4 @@ const padDateWithLeadingZeros = (date) => {
   return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
 }
 
-module.exports = { getMostRecentDataDate, getDates, padDateWithLeadingZeros }
+module.exports = { getLastRecordedDataDate, getDates, padDateWithLeadingZeros }
