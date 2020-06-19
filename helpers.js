@@ -28,6 +28,21 @@ const getLastRecordedDataDate = function (pathToFolder) {
   return mostRecentDataDate;
 }
 
+//generic mostRecentDate getter from existing data files
+const getLastRecordedUTCDate = function (pathToFolder) {
+  const directoryPath = path.join(__dirname, `data/${pathToFolder}`);
+  const files = fs.readdirSync(directoryPath);
+  const maxFileEntriesDatesArray = files.map(file => {
+    // get the max date from ONE file
+    const data = JSON.parse(fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
+    dataDates = data.map((datum) => momentTZ(datum.date));
+    return momentTZ.max(dataDates)
+  });
+  const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
+  console.log('mostRecentDate', mostRecentDate);
+  return momentTZ.utc(mostRecentDate);
+}
+
 const getDates = function (arrayOfExistingDataDates) {
   var dateArray = [];
   var lastRecordedDate = momentTZ(arrayOfExistingDataDates.sort()[arrayOfExistingDataDates.length - 1]).startOf('day');
@@ -44,4 +59,4 @@ const padDateWithLeadingZeros = (date) => {
   return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
 }
 
-module.exports = { getLastRecordedDataDate, getDates, padDateWithLeadingZeros }
+module.exports = { getLastRecordedDataDate, getDates, padDateWithLeadingZeros, getLastRecordedUTCDate }
