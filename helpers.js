@@ -57,5 +57,20 @@ const padDateWithLeadingZeros = (date) => {
   date.setDate(date.getDate());
   return `${date.getFullYear()}${('0' + (date.getMonth() + 1)).slice(-2)}${('0' + date.getDate()).slice(-2)}`;
 }
+const calcMinutesDiff = (to, from) => {
+  return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as('minutes');
+}
+const calcNumberOfRecordsToFetch = (totalMinutesDiff, minutesBetweenRecords, maxNumRecordsCanGet) => {
+  const maxTotalNumberOfRecordsToGet = Math.floor(totalMinutesDiff / minutesBetweenRecords);
+  let numberOfBatches = maxTotalNumberOfRecordsToGet / maxNumRecordsCanGet;
+  return numberOfRecords = numberOfBatches > 0 ? maxNumRecordsCanGet : maxTotalNumberOfRecordsToGet;
+}
 
-module.exports = { getLastRecordedDataDate, getDates, padDateWithLeadingZeros, getLastRecordedUTCDate }
+module.exports = {
+  getLastRecordedDataDate,
+  getDates,
+  padDateWithLeadingZeros,
+  getLastRecordedUTCDate,
+  calcMinutesDiff,
+  calcNumberOfRecordsToFetch
+}
