@@ -4,7 +4,7 @@
   "description": "collect data from Heiligers weather station",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "jest"
   },
   "author": "Tina Heiligers",
   "license": "MIT",
@@ -16,5 +16,8 @@
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31",
     "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1"
   }
 }

@@ -7,8 +7,7 @@ const awApi = new AmbientWeatherApi({
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
 
-const { getLastRecordedDataDate, getLastRecordedUTCDate } = require('./helpers');
-const { min } = require('moment-timezone');
+const { getLastRecordedUTCDate } = require('./helpers');
 
 // I need some sort of global saving of the date for now;
 
@@ -60,7 +59,7 @@ async function fetchAndStoreData(setNow, numberOfRecords, datesArray, lastRecord
   const result = await fetchRecentData(setNow, numberOfRecords);
 
   const dateForFileName = setNow.format(`YYYYMMDD-T-hhmmss`)
-  fs.writeFileSync(`./data/ambient-weather-heiligers-data/${dateForFileName}.json`, JSON.stringify(result, null, 2));
+  // fs.writeFileSync(`./data/ambient-weather-heiligers-data/${dateForFileName}.json`, JSON.stringify(result, null, 2));
   if (result && result.length) {
     datesArray.push(dateForFileName);
     const resultsDates = result.map((datum) => momentTZ.utc(momentTZ(datum.date)));
@@ -78,13 +77,17 @@ async function fetchAndStoreData(setNow, numberOfRecords, datesArray, lastRecord
   }
   return datesArray;
 }
-//
+// TODO: figure out why my initial date isn't changing when I call this function
 async function getDataForDateRanges(dateForDataFetchCall = momentTZ.utc(momentTZ())) {
+  console.log('dateForDataFetchCall', dateForDataFetchCall)
   let numberOfRecords;
   let datesArray;
   let setNow = dateForDataFetchCall; // a static point for date for dev in UTC
   const lastRecordedDataUTCDate = getLastRecordedUTCDate('ambient-weather-heiligers-data');
   const totalMinutesDifference = momentTZ.duration(momentTZ(setNow).diff(momentTZ(lastRecordedDataUTCDate))).as('minutes');
+  // my static point isn't actually being reset
+  console.log('totalMinutesDifference', totalMinutesDifference)
+  if (totalMinutesDifference < 5) return "It hasn't been long enough to fetch data";
   const totalNumberOfRecordsToGet = Math.floor(totalMinutesDifference / 5);
   let numberOfBatches = totalNumberOfRecordsToGet / 288; // 288 5min intervals in a 24 hour period
   numberOfRecords = numberOfBatches > 0 ? 288 : totalMinutesDifference / 5;

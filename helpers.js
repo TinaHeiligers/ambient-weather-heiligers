@@ -39,7 +39,6 @@ const getLastRecordedUTCDate = function (pathToFolder) {
     return momentTZ.max(dataDates)
   });
   const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
-  console.log('mostRecentDate', mostRecentDate);
   return momentTZ.utc(mostRecentDate);
 }
 
