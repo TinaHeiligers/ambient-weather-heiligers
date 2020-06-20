@@ -36,14 +36,12 @@ async function retryFetch(from, numRecords) {
     endDate: date to END fetching data from
 */
 async function fetchRecentData(from, numRecords) {
-  const dateForFileName = from.format(`YYYYMMDD-T-hhmmss`)
-  console.log('dateForFileName', dateForFileName)
+
   // the call takes in the endDate and counts backwards in time
   const devices = await awApi.userDevices();
   if (devices) {
     try {
       const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
-      // fs.writeFile(`./data/ambient-weather-heiligers-data/${dateForFileName}.json`, JSON.stringify(allData, null, 2));
       return allData;
     } catch (err) {
       if (err.statusCode == 429) {
@@ -58,43 +56,45 @@ async function fetchRecentData(from, numRecords) {
   }
 
 }
+async function fetchAndStoreData(setNow, numberOfRecords, datesArray, lastRecordedDataUTCDate) {
+  const result = await fetchRecentData(setNow, numberOfRecords);
+
+  const dateForFileName = setNow.format(`YYYYMMDD-T-hhmmss`)
+  fs.writeFileSync(`./data/ambient-weather-heiligers-data/${dateForFileName}.json`, JSON.stringify(result, null, 2));
+  if (result && result.length) {
+    datesArray.push(dateForFileName);
+    const resultsDates = result.map((datum) => momentTZ.utc(momentTZ(datum.date)));
+    const nextBatchDateToFetchFrom = momentTZ.min(resultsDates);
+    if (nextBatchDateToFetchFrom.diff(lastRecordedDataUTCDate, "min") > 5) {
+      setNow = nextBatchDateToFetchFrom;
+      const totalMinutesDifference = momentTZ.duration(momentTZ(nextBatchDateToFetchFrom).diff(momentTZ(lastRecordedDataUTCDate))).as('minutes');
+      const totalNumberOfRecordsToGet = Math.floor(totalMinutesDifference / 5);
+      let numberOfBatches = totalNumberOfRecordsToGet / 288; // 288 5min intervals in a 24 hour period
+      numberOfRecords = numberOfBatches > 0 ? 288 : totalMinutesDifference / 5;
+      await fetchAndStoreData(nextBatchDateToFetchFrom, numberOfRecords, datesArray, lastRecordedDataUTCDate);
+    } else {
+      console.log('Fetch complete');
+    }
+  }
+  return datesArray;
+}
 //
 async function getDataForDateRanges(dateForDataFetchCall = momentTZ.utc(momentTZ())) {
   let numberOfRecords;
-  const datesNewDataFetchedFor = [];
+  let datesArray;
   let setNow = dateForDataFetchCall; // a static point for date for dev in UTC
   const lastRecordedDataUTCDate = getLastRecordedUTCDate('ambient-weather-heiligers-data');
-  // getting values needed for fetching the data
   const totalMinutesDifference = momentTZ.duration(momentTZ(setNow).diff(momentTZ(lastRecordedDataUTCDate))).as('minutes');
   const totalNumberOfRecordsToGet = Math.floor(totalMinutesDifference / 5);
   let numberOfBatches = totalNumberOfRecordsToGet / 288; // 288 5min intervals in a 24 hour period
-  // while we still have an offset
-  // while (totalMinutesDifference > 0) {
-  numberOfRecords = numberOfBatches > 0 ? 288 : totalMinutesDifference / 5; // --> this I'll change because I'm going to decrease numberOfRecordsToGet as the data flows in
+  numberOfRecords = numberOfBatches > 0 ? 288 : totalMinutesDifference / 5;
   try {
-    const result = await fetchRecentData(setNow, numberOfRecords)
-    // get the min date from results entries, this will be the new setNow
-    const resultsDates = result.map((datum) => momentTZ.utc(momentTZ(datum.date)));
-    // console.log('resultsDates', resultsDates)
-    const nextBatchDateToFetchFrom = momentTZ.min(resultsDates)
-    console.log('nextBatchDateToFetchFrom', nextBatchDateToFetchFrom)
-    console.log('lastRecordedDataUTCDate', lastRecordedDataUTCDate)
-    console.log('nextBatchDateToFetchFrom.diff(lastRecordedDataUTCDate, "min")',)
-    if (result && result.length === numberOfRecords) {
-      datesNewDataFetchedFor.push(setNow)
-      if (nextBatchDateToFetchFrom.diff(lastRecordedDataUTCDate, "min") > 5) {
-        setNow = nextBatchDateToFetchFrom;
-        // similar logic used as above --> extract to a method
-        numberOfRecords = Math.floor(nextBatchDateToFetchFrom.diff(lastRecordedDataUTCDate, "min") / 5)
-        await fetchRecentData(nextBatchDateToFetchFrom,)
-      }
-      //   // call the same method again but using the new last retrieved date with
-      // }
-    } catch (err) {
-      console.log('There was an error fetching data for date:', setNow)
-    }
-    return datesNewDataFetchedFor;
-    // }
+    datesArray = await fetchAndStoreData(setNow, numberOfRecords, [], lastRecordedDataUTCDate)
+  } catch (err) {
+    console.log('There was an error fetching data for date:', err)
   }
+  console.log('datesArray', datesArray)
+  return datesArray;
+}
 module.exports = getDataForDateRanges();
 //TODO: convert getDataForDateRanges into a Class that uses helpers
