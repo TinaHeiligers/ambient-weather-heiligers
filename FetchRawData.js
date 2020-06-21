@@ -3,8 +3,7 @@ const momentTZ = require('moment-timezone');
 const AmbientWeatherApi = require('ambient-weather-api');
 const {
   getLastRecordedUTCDate,
-  calcMinutesDiff,
-  calcNumberOfRecordsToFetch
+  calcMinutesDiff
 } = require('./helpers');
 const { relativeTimeRounding } = require('moment-timezone');
 const awApi = new AmbientWeatherApi({
@@ -42,9 +41,6 @@ class FetchRawData {
   }
   get pathToFiles() {
     return this.#pathToFiles;
-  }
-  calcMinutesDiff(to, from) {
-    return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as('minutes');
   }
   extractDataInfo = (dataArray) => {
     const dataDates = dataArray.map((datum) => momentTZ(datum.date));
@@ -93,7 +89,7 @@ class FetchRawData {
     }
     // this is all setup before I can start fetching the data
     const dateOfLastDataSaved = getLastRecordedUTCDate(this.pathToFiles);
-    const minSinceLastData = this.calcMinutesDiff(fromDate, dateOfLastDataSaved);
+    const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);

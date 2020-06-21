@@ -52,3 +52,6 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - figure out how I'm going to ship the data
  - if using es client, implement it
  - if not, build filebeat and logstash on pi
+
+## Known bugs:
+ - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
