@@ -39,10 +39,16 @@ The data is will be indexed into ambient_weather_heiligers_imperial and ambient_
 ## Test branch: adding-elasticsearch-client
 Includes install of `@elastic/elasticsearch (major: 7)
 
-## Test branch: modularising code
-Trying the advice in https://blog.logrocket.com/you-dont-need-babel-with-node/ first.
-_If that doesn't work, follow along with the tutorial in https://www.freecodecamp.org/news/how-to-enable-es6-and-beyond-syntax-with-node-and-express-68d3e11fe1ab/_
-
 ## Other solutions for sending data to ES
  - build filebeat from code
  - build logstash from code
+
+## TODO:
+ - finish tests for class fetch data method
+ - refactor metric conversion to class
+ - refactor toJsonl files to a class
+ - add new classes to their own call modules
+ - add a main file to run through the whole chain of events.
+ - figure out how I'm going to ship the data
+ - if using es client, implement it
+ - if not, build filebeat and logstash on pi
