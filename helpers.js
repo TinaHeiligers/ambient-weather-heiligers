@@ -74,3 +74,4 @@ module.exports = {
   calcMinutesDiff,
   calcNumberOfRecordsToFetch
 }
+return getLastRecordedDataDate('ambient-weather-heiligers-data')

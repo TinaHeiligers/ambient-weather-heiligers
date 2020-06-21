@@ -62,6 +62,8 @@ async function fetchAndStoreData(setNow, numberOfRecords, datesArray, lastRecord
   // fs.writeFileSync(`./data/ambient-weather-heiligers-data/${dateForFileName}.json`, JSON.stringify(result, null, 2));
   if (result && result.length) {
     datesArray.push(dateForFileName);
+
+    // this is setup for next recursive call.
     const resultsDates = result.map((datum) => momentTZ.utc(momentTZ(datum.date)));
     const nextBatchDateToFetchFrom = momentTZ.min(resultsDates);
     if (nextBatchDateToFetchFrom.diff(lastRecordedDataUTCDate, "min") > 5) {

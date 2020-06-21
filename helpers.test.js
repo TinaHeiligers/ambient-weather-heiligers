@@ -8,14 +8,15 @@ const {
   calcNumberOfRecordsToFetch
 } = require('./helpers');
 
-describe.only('helpers', () => {
+describe('helpers', () => {
   describe('getLastRecordedDate', () => {
+    it.todo('should use mocks for fs');
     it.todo('should read the files from the filepath provided');
     it.todo('should not fail if there are no files in the filepath');
     it.todo('should get the most recent data point date for each file')
     it.todo('should retrieve the most recent date point date');
   })
-  describe.only('calcMinutesDiff', () => {
+  describe('calcMinutesDiff', () => {
     let fromDate;
     let dateOfLastRecordSaved;
     beforeEach(() => {
