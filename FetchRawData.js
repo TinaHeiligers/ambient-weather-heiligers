@@ -3,7 +3,8 @@ const momentTZ = require('moment-timezone');
 const AmbientWeatherApi = require('ambient-weather-api');
 const {
   getLastRecordedUTCDate,
-  calcMinutesDiff
+  calcMinutesDiff,
+  extractDataInfo
 } = require('./helpers');
 const { relativeTimeRounding } = require('moment-timezone');
 const awApi = new AmbientWeatherApi({
@@ -42,12 +43,6 @@ class FetchRawData {
   get pathToFiles() {
     return this.#pathToFiles;
   }
-  extractDataInfo = (dataArray) => {
-    const dataDates = dataArray.map((datum) => momentTZ(datum.date));
-    const dataFrom = momentTZ.min(dataDates)
-    const dataTo = momentTZ.max(dataDates)
-    return { from: dataFrom, to: dataTo }
-  }
   async retry(from, numRecords) {
     return await this.fetchRecentData(from, numRecords)
   }
@@ -74,7 +69,7 @@ class FetchRawData {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length) {
-        const { from, to } = this.extractDataInfo(result);
+        const { from, to } = extractDataInfo(result);
         fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }

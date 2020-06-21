@@ -60,6 +60,12 @@ const padDateWithLeadingZeros = (date) => {
 const calcMinutesDiff = (to, from) => {
   return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as('minutes');
 }
+const extractDataInfo = (dataArray) => {
+  const dataDates = dataArray.map((datum) => momentTZ(datum.date));
+  const dataFrom = momentTZ.min(dataDates);
+  const dataTo = momentTZ.max(dataDates);
+  return { from: dataFrom, to: dataTo };
+}
 
 module.exports = {
   convertTemp,
@@ -69,4 +75,5 @@ module.exports = {
   padDateWithLeadingZeros,
   getLastRecordedUTCDate,
   calcMinutesDiff,
+  extractDataInfo,
 }

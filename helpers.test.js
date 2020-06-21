@@ -5,6 +5,7 @@ const {
   padDateWithLeadingZeros,
   getLastRecordedUTCDate,
   calcMinutesDiff,
+  extractDataInfo,
   calcNumberOfRecordsToFetch
 } = require('./helpers');
 
@@ -35,6 +36,19 @@ describe('helpers', () => {
       let to = '2020-01-02';
       let from = '2020-01-01';
       expect(calcMinutesDiff(to, from)).toEqual(24 * 60)
+    })
+  })
+  describe('extractDataInfo', () => {
+    it('should extract the min and max dates for an array of data containing dates', () => {
+      const to1 = '2020-06-20';
+      const from1 = '2020-06-19';
+      const to2 = '2020-06-22'
+      const from2 = '2020-06-21'
+      const testArray = [
+        { date: from1 },
+        { date: from2 }
+      ];
+      expect(extractDataInfo(testArray)).toEqual({ from: momentTZ(from1), to: momentTZ(from2) })
     })
   })
 })

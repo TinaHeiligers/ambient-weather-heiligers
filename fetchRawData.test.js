@@ -54,8 +54,9 @@ describe.only('FetchRawData', () => {
       }, 15000);
       jest.runAllTimers();
     });
-    it.todo('should get the path to the data files');
-    it.todo('should get the minimum time between new data might be available');
+    it('should get the path to the data files', () => {
+      expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-data');
+    });
   });
   describe('class methods: fetchRecentData', () => {
     it.todo('accepts two args: a date in UTC and the number of records to fetch');
