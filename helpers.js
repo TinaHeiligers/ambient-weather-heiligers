@@ -27,12 +27,6 @@ const getLastRecordedUTCDate = function (pathToFolder) {
   return momentTZ.utc(mostRecentDate);
 };
 
-const padDateWithLeadingZeros = (date) => {
-  date.setDate(date.getDate());
-  return `${date.getFullYear()}${("0" + (date.getMonth() + 1)).slice(-2)}${(
-    "0" + date.getDate()
-  ).slice(-2)}`;
-};
 const calcMinutesDiff = (to, from) => {
   return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
 };
@@ -47,7 +41,6 @@ module.exports = {
   convertTemp,
   convertMPH,
   getLastRecordedUTCDate,
-  padDateWithLeadingZeros,
   calcMinutesDiff,
   extractDataInfo,
 };

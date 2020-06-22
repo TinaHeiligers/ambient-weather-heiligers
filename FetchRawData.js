@@ -103,7 +103,7 @@ class FetchRawData {
       }
       // fetch the last lot of data that doesn't fall into a batch
       const lastRecordsFromDate = momentTZ.min(this.datesArray.map((entry) => momentTZ(entry.from)));
-      const lastRecordsLimit = Math.floor(this.calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
+      const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
       const { from, to } = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
       this.datesArray = this.datesArray.concat({ from, to })
       return this.datesArray;

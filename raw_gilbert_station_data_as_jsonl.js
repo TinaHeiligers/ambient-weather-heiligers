@@ -1,16 +1,6 @@
 const fs = require("file-system");
-const moment = require("moment");
 const path = require("path");
 // const date = "08-06-2020";
-
-function padDateWithLeadingZeros(date) {
-  // console.log('date:', new Date(date))
-  // console.log(new Date(date).getDate())
-  date.setDate(date.getDate());
-  return `${date.getFullYear()}${("0" + (date.getMonth() + 1)).slice(-2)}${(
-    "0" + date.getDate()
-  ).slice(-2)}`;
-}
 
 // I want to replace having to give the dates for the files to convert with checking what has and hasn't been converted yet.
 function getArrayOfFiles(pathToFolder) {
@@ -62,7 +52,7 @@ function convertToJsonl() {
   } else {
     console.log(
       `couldn't convert files for ${
-        filesToConvert.length - convertedCount
+      filesToConvert.length - convertedCount
       } files`
     );
   }
