@@ -1,4 +1,8 @@
-## Historic data from Dary Sky
+## Warning
+Use at your own risk!
+This project is in progress and by no means do I declare it to be 'prod-ready'.
+
+## Historic data from Dark Sky
 The historic data is saved to gilbert_daily_data_historic index with index pattern of the same name. The template and alias setup didn't work as wanted to save the index to an alias.
 What I want to do is save all the data to rolling indexes that map to index patterns using an alias.
 The data is already in ES, so just fix it from here
@@ -6,6 +10,7 @@ The modify filebeat and logstash to use a similar setup as for the dark sky data
 ### Where the code lives:
  - index.js
  - toJsonl.js
+
 
 ## Reindexing and Aliases:
 Updating mappings for fields that already exist can only be done by reindexing with the new, updated mapping.
@@ -29,6 +34,8 @@ POST /_aliases
 
 ## Gilbert Ambient Weather Station
 The data is will be indexed into ambient_weather_heiligers_imperial and ambient_weather_heiligers_metric indices with index patterns of the same name. The template and alias still need to be defined/refined with an alias so that rollover can happen to a new index based on the same templates.
+The data comes from my very own weather station, mounted on my porch roof, just outside my office.
+
 
 ### Where the code lives:
  - fetch_raw_gilbert_station_data.js
