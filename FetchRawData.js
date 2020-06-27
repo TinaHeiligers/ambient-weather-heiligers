@@ -21,6 +21,7 @@ class FetchRawData {
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = []; // an array of objects containing a from (max date for data file entries) and to date (min date for data file entries)
+  #retryCount = 0;
   constructor() { }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -37,14 +38,25 @@ class FetchRawData {
   get now() {
     return this.#now;
   }
+  get retryCount() {
+    return this.#retryCount;
+  }
+  set retryCount(value) {
+    this.#retryCount = value;
+  }
   set now(date) {
     this.#now = date;
   }
   get pathToFiles() {
     return this.#pathToFiles;
   }
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
   async retry(from, numRecords) {
-    return await this.fetchRecentData(from, numRecords)
+    await this.delay(5000);
+    this.retryCount(this.retryCount + 1);
+    return await this.fetchRecentData(from, numRecords);
   }
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time

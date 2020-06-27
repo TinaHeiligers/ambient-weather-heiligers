@@ -8,7 +8,7 @@ describe.only('FetchRawData', () => {
   beforeAll(() => {
     FetchRawDataTester = new FetchRawData();
     testNow = FetchRawDataTester.now;
-    nowInMST = momentTZ();
+    nowInMST = momentTZ('2020-06-10');
   });
   describe('FetchRawData getters and setters', () => {
     it('gets the number of records', () => {
@@ -64,6 +64,7 @@ describe.only('FetchRawData', () => {
     it.todo('checks that the device responds -> need a mock for awApi.userDevices');
     it.todo('fetchs data from the api with the args provided -> need a mock awApi.deviceData')
     it.todo('returns an array of data')
+    it.todo('retrys the fetch if an error code of 429 of too many requests is thrown')
   });
   describe('class methods: extractDataInfo', () => {
     it.todo('acccepts an array of data');
