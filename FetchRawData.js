@@ -6,7 +6,6 @@ const {
   calcMinutesDiff,
   extractDataInfo
 } = require('./helpers');
-const { relativeTimeRounding } = require('moment-timezone');
 const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
@@ -17,12 +16,13 @@ const AW_CONSTANTS = {
   maxNumRecords: 288,
 }
 class FetchRawData {
-  #pathToFiles = 'ambient-weather-heiligers-data';
+  #pathToFiles = 'ambient-weather-heiligers-imperial';
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = []; // an array of objects containing a from (max date for data file entries) and to date (min date for data file entries)
   #retryCount = 0;
-  constructor() { }
+  constructor() {
+  }
   get numberOfRecords() {
     return this.#numberOfRecords;
   }

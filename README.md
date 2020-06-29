@@ -55,3 +55,4 @@ Includes install of `@elastic/elasticsearch (major: 7)
 
 ## Known bugs:
  - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
+- fetchNewData script doesn't exit after it's done

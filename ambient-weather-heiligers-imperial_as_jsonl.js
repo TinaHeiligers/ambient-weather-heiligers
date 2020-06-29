@@ -14,9 +14,9 @@ function getArrayOfFiles(pathToFolder) {
 
 function convertToJsonl() {
   const allConvertedFiles = getArrayOfFiles(
-    "ambient-weather-heiligers-data-jsonl"
+    "ambient-weather-heiligers-imperial-jsonl"
   );
-  const allRawFiles = getArrayOfFiles("ambient-weather-heiligers-data");
+  const allRawFiles = getArrayOfFiles("ambient-weather-heiligers-imperial");
   const filesToConvert = allRawFiles.filter(
     (element) => allConvertedFiles.indexOf(element) === -1
   );
@@ -27,10 +27,10 @@ function convertToJsonl() {
   if (filesToConvert.length > 0) {
     filesToConvert.forEach((entry, index) => {
       const dataFileRead = JSON.parse(
-        fs.readFileSync(`./data/ambient-weather-heiligers-data/${entry}.json`)
+        fs.readFileSync(`./data/ambient-weather-heiligers-imperial/${entry}.json`)
       );
       const openedDataForDailyFile = fs.openSync(
-        `./data/ambient-weather-heiligers-data-jsonl/${entry}.jsonl`,
+        `./data/ambient-weather-heiligers-imperial-jsonl/${entry}.jsonl`,
         "w"
       );
       const arrayOfConvertedData = dataFileRead.map((element, index) => {

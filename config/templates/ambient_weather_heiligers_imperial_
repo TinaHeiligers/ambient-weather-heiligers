@@ -6,44 +6,32 @@ PUT _template/ambient_weather_heiligers_imperial
     "ambient_weather_heiligers_imperial_*"
   ],
   "settings": {
-    "number_of_shards": 1
-  },
-  "mappings":   "dynamic" : "true",
-  "_meta" : { },
-  "_source" : {
-    "enabled" : true
-  },
-  "dynamic_date_formats" : [
-    "strict_date_optional_time",
-    "yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z||strict_date_time"
-  ],
-  "dynamic_templates" : [
-    {
-      "rain_as_half-float": {
-        "match_mapping_type": "long",
-        "match": "*rain",
-        "unmatch": "double",
-        "mapping": {
-          "type": "half-float"
-        }
-      },
-      "location_as_keyword": {
-        "match_mapping_type": "string",
-        "match": "loc",
-      }
+    "index": {
+      "number_of_shards": 1
     }
-   ],
-  "date_detection" : true,
-  "numeric_detection" : true,
-  "properties" : {
-    "@timestamp" : {
-      "type" : "date",
-      "format" : "strict_date_optional_time"
+  },
+  "mappings": {
+    "dynamic" : "true",
+    "_meta" : { },
+    "_source" : {
+      "enabled" : true
     },
-    "@version" : {
-      "type" : "long"
-    },
-    "agent" : {
+    "dynamic_date_formats" : [
+      "strict_date_optional_time",
+      "yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z||strict_date_time"
+    ],
+    "dynamic_templates" : [],
+    "date_detection" : true,
+    "numeric_detection" : true,
+    "properties" : {
+      "@timestamp" : {
+        "type" : "date",
+        "format" : "strict_date_optional_time"
+      },
+      "@version" : {
+        "type" : "long"
+      },
+      "agent" : {
       "properties" : {
         "ephemeral_id" : {
           "type" : "text",
@@ -92,13 +80,13 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "date" : {
+      "date" : {
       "type" : "date"
     },
-    "dateutc" : {
+      "dateutc" : {
       "type" : "long"
     },
-    "ecs" : {
+      "ecs" : {
       "properties" : {
         "version" : {
           "type" : "text",
@@ -111,7 +99,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "fields" : {
+      "fields" : {
       "properties" : {
         "data_type" : {
           "type" : "text",
@@ -124,7 +112,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "fulldate" : {
+      "fulldate" : {
       "properties" : {
         "monthday" : {
           "type" : "text",
@@ -173,7 +161,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "host" : {
+      "host" : {
       "properties" : {
         "name" : {
           "type" : "text",
@@ -186,7 +174,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "loc" : {
+      "loc" : {
       "type" : "text",
       "fields" : {
         "keyword" : {
@@ -195,7 +183,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "log" : {
+      "log" : {
       "properties" : {
         "file" : {
           "properties" : {
@@ -215,7 +203,7 @@ PUT _template/ambient_weather_heiligers_imperial
         }
       }
     },
-    "tags" : {
+      "tags" : {
       "type" : "text",
       "fields" : {
         "keyword" : {
@@ -223,6 +211,7 @@ PUT _template/ambient_weather_heiligers_imperial
           "ignore_above" : 256
         }
       }
+    }
     }
   },
   "aliases" : {
