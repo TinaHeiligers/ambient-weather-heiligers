@@ -6,10 +6,10 @@ const {
   calcMinutesDiff,
   extractDataInfo
 } = require('./helpers');
-const awApi = new AmbientWeatherApi({
-  apiKey: process.env.AMBIENT_WEATHER_API_KEY,
-  applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
-});
+// const awApi = new AmbientWeatherApi({
+//   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
+//   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
+// });
 // hard coded numbers from ambient weather API
 const AW_CONSTANTS = {
   dataInterval: 5,
@@ -21,7 +21,8 @@ class FetchRawData {
   #numberOfRecords = 0;
   #datesArray = []; // an array of objects containing a from (max date for data file entries) and to date (min date for data file entries)
   #retryCount = 0;
-  constructor() {
+  constructor(awApi) {
+    this.AWApi = awApi;
   }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -60,10 +61,10 @@ class FetchRawData {
   }
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time
-    const devices = await awApi.userDevices();
+    const devices = await this.AWApi.userDevices();
     if (devices) {
       try {
-        const allData = await awApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
+        const allData = await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
         return allData;
       } catch (err) {
         if (err.statusCode == 429) {
@@ -103,8 +104,10 @@ class FetchRawData {
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
     if (estNumberOfBatches >= 1) {
+      console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; 1 < Math.floor(estNumberOfBatches); i++) {
+        console.log(`Issueing batch request ${i} of ${match.floor(estNumberOfBatches)}`)
         try {
           const { from, to } = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           this.now = from;
@@ -116,6 +119,7 @@ class FetchRawData {
       // fetch the last lot of data that doesn't fall into a batch
       const lastRecordsFromDate = momentTZ.min(this.datesArray.map((entry) => momentTZ(entry.from)));
       const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
+      console.log(`Setting up final collection for ${lastRecordsLimit} records.`)
       const { from, to } = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
       this.datesArray = this.datesArray.concat({ from, to })
       return this.datesArray;
@@ -123,6 +127,7 @@ class FetchRawData {
 
       // single day data fetch
       try {
+        console.log(`Fewer than a 288-batch records required. Setting up request for ${estTotalNumRecordsToFetch} records`)
         const result = await this.fetchAndStoreData(this.now, estTotalNumRecordsToFetch);
         this.datesArray = this.datesArray.concat(result)
         return this.datesArray
@@ -130,7 +135,7 @@ class FetchRawData {
         console.log('PROBLEM in single day fetch!', err)
       }
     }
-    return 'done'
+    return this.datesArray;
   };
 }
 module.exports = FetchRawData;
