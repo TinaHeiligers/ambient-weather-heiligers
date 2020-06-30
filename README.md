@@ -51,6 +51,7 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - build logstash from code
 
 ## TODO:
+ - update logstash config to point to the new index: `ambient_weather_heiligers_daily_2020_06_30`
  - finish tests for class fetch data method
  - refactor metric conversion to class
  - refactor toJsonl files to a class
