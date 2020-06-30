@@ -53,7 +53,8 @@ Includes install of `@elastic/elasticsearch (major: 7)
 ## TODO:
  - update logstash config to point to the new index: `ambient_weather_heiligers_imperial_2020_06_30`
  - figure out the mismatch in doc count between `ambient_weather_heiligers_daily_2020_06_27` (29126) and `ambient_weather_heiligers_imperial_2020_06_30` (13000)
- - finish tests for class fetch data method
+ - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
+- finish tests for class fetch data method
  - refactor metric conversion to class
  - refactor toJsonl files to a class
  - add new classes to their own call modules
