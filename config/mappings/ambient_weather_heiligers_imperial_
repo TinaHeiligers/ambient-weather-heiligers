@@ -1,109 +1,251 @@
 {
-  "dynamic" : "true",
-  "_meta" : { },
-  "_source" : {
-    "enabled" : true
-  },
   "dynamic_date_formats" : [
     "strict_date_optional_time",
     "yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z||strict_date_time"
   ],
-  "dynamic_templates" : [
-    {
-      "rain_as_half-float": {
-        "match_mapping_type": "long",
-        "match": "*rain",
-        "unmatch": "double",
-        "mapping": {
-          "type": "half-float"
-        }
-      },
-      "location_as_keyword": {
-        "match_mapping_type": "string",
-        "match": "loc",
-      }
-    }
-   ],
-  "date_detection" : true,
   "numeric_detection" : true,
+  "_meta" : { },
+  "dynamic" : "true",
+  "_source" : {
+    "enabled" : true
+  },
+  "dynamic_templates" : [ ],
+  "date_detection" : true,
   "properties" : {
-    "baromabsin" : {
-      "type" : "float"
-    },
-    "baromrelin" : {
-      "type" : "float"
-    },
-    "battout" : {
-      "type" : "long"
-    },
-    "dailyrainin" : {
-      "type" : "half-float"
-    },
     "date" : {
       "type" : "date"
     },
-    "dateutc" : {
-      "type" : "long"
-    },
-    "dewPoint" : {
+    "tempf" : {
       "type" : "float"
     },
-    "dewPointin" : {
+    "loc" : {
+      "ignore_above" : 256,
+      "type" : "keyword"
+    },
+    "agent" : {
+      "properties" : {
+        "hostname" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "id" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "ephemeral_id" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "type" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "version" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        }
+      }
+    },
+    "totalrainin" : {
       "type" : "float"
     },
-    "eventrainin" : {
-      "type" : "half-float"
-    },
-    "feelsLike" : {
-      "type" : "float"
+    "log" : {
+      "properties" : {
+        "file" : {
+          "properties" : {
+            "path" : {
+              "type" : "text",
+              "fields" : {
+                "keyword" : {
+                  "ignore_above" : 256,
+                  "type" : "keyword"
+                }
+              }
+            }
+          }
+        },
+        "offset" : {
+          "type" : "long"
+        }
+      }
     },
     "feelsLikein" : {
       "type" : "float"
     },
-    "hourlyrainin" : {
-      "type" : "half-float"
+    "lastRain" : {
+      "format" : "strict_date_optional_time",
+      "type" : "date"
     },
-    "humidity" : {
-      "type" : "long"
-    },
-    "humidityin" : {
-      "type" : "long"
-    },
-    "loc" : {
-      "type" : "keyword",
-      "ignore_above" : 256
-    },
-    "maxdailygust" : {
+    "dewPointin" : {
       "type" : "float"
     },
     "monthlyrainin" : {
-      "type" : "half-float"
+      "type" : "float"
+    },
+    "dailyrainin" : {
+      "type" : "float"
     },
     "solarradiation" : {
       "type" : "float"
     },
-    "tempf" : {
+    "ecs" : {
+      "properties" : {
+        "version" : {
+          "ignore_above" : 256,
+          "type" : "keyword"
+        }
+      }
+    },
+    "humidityin" : {
+      "type" : "long"
+    },
+    "@version" : {
+      "type" : "long"
+    },
+    "host" : {
+      "properties" : {
+        "name" : {
+          "ignore_above" : 256,
+          "type" : "keyword"
+        }
+      }
+    },
+    "humidity" : {
+      "type" : "long"
+    },
+    "maxdailygust" : {
+      "type" : "float"
+    },
+    "fulldate" : {
+      "properties" : {
+        "monthday" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "hour" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "month" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "year" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "minute" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        }
+      }
+    },
+    "uv" : {
+      "type" : "long"
+    },
+    "windspeedmph" : {
+      "type" : "long"
+    },
+    "eventrainin" : {
+      "type" : "float"
+    },
+    "hourlyrainin" : {
+      "type" : "float"
+    },
+    "winddir" : {
+      "type" : "long"
+    },
+    "baromabsin" : {
+      "type" : "float"
+    },
+    "dewPoint" : {
       "type" : "float"
     },
     "tempinf" : {
       "type" : "float"
     },
-    "totalrainin" : {
-      "type" : "half-float"
-    },
-    "uv" : {
+    "battout" : {
       "type" : "long"
     },
-    "weeklyrainin" : {
-      "type" : "half-float"
+    "tags" : {
+      "ignore_above" : 256,
+      "type" : "keyword"
     },
-    "winddir" : {
+    "feelsLike" : {
+      "type" : "float"
+    },
+    "dateutc" : {
       "type" : "long"
     },
     "windgustmph" : {
+      "type" : "long"
+    },
+    "@timestamp" : {
+      "format" : "strict_date_optional_time",
+      "type" : "date"
+    },
+    "baromrelin" : {
       "type" : "float"
     },
-    "windspeedmph" : {
+    "fields" : {
+      "properties" : {
+        "data_type" : {
+          "ignore_above" : 256,
+          "type" : "keyword"
+        }
+      }
+    },
+    "weeklyrainin" : {
       "type" : "float"
     }
   }
