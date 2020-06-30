@@ -1,5 +1,6 @@
 const fs = require("file-system");
 const path = require("path");
+const convert = require('convert-units');
 // const date = "08-06-2020";
 
 // I want to replace having to give the dates for the files to convert with checking what has and hasn't been converted yet.
@@ -12,7 +13,7 @@ function getArrayOfFiles(pathToFolder) {
   return filesArray;
 }
 
-function convertToJsonl() {
+function convertRawImperialDataToJsonl() {
   const allConvertedFiles = getArrayOfFiles(
     "ambient-weather-heiligers-imperial-jsonl"
   );
@@ -58,4 +59,5 @@ function convertToJsonl() {
   }
 }
 // note ATM, I have to provide tomorrow's date to convert the data in the file for today, for example.
-return convertToJsonl();
+return convertRawImperialDataToJsonl();
+// module.exports = convertRawImperialDataToJsonl;
