@@ -6,11 +6,13 @@ const awApi = new AmbientWeatherApi({
 });
 const FetchRawData = require('./FetchRawData');
 const fetchRawDataTester = new FetchRawData(awApi);
-// const newData = fetchRawDataTester.getDataForDateRanges();
+const newData = fetchRawDataTester.getDataForDateRanges();
 
-// converting imperial raw to jsonl:
-const convertRawImperialDataToJsonl = require('./ambient-weather-heiligers-imperial_as_jsonl');
-convertImperialToJsonl = convertRawImperialDataToJsonl();
+module.exports = newData;
 
-// module.exports = newData;
-module.exports = convertRawImperialDataToJsonl;
+// -----------------------------------------
+// converting imperial raw to jsonl: THIS THROWS AN ERROR but it does work
+// -----------------------------------------
+// const convertRawImperialDataToJsonl = require('./ambient-weather-heiligers-imperial_as_jsonl');
+// convertImperialToJsonl = convertRawImperialDataToJsonl();
+// module.exports = convertImperialToJsonl;
