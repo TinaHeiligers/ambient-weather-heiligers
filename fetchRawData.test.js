@@ -45,7 +45,12 @@ const goodMock = {
   }
 };
 
-describe('FetchRawData', () => {
+const mockAWApi = {
+  userDevices: jest.fn(),
+  deviceData: jest.fn()
+};
+
+describe.only('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
   beforeAll(() => {
@@ -101,45 +106,18 @@ describe('FetchRawData', () => {
   });
   describe.only('class methods: fetchRecentData', () => {
     beforeEach(() => {
-      const mockAWApi = {
-        userDevices: jest.fn(),
-        deviceData: jest.fn(),
-      }
+      mockAWApi.userDevices.mockClear();
+      mockAWApi.deviceData.mockClear();
     });
-    it.only('calls AWApi.userDevices', () => {
-      const mockAWApi = {
-        userDevices: jest.fn(),
-        deviceData: jest.fn(),
-      }
+    it('calls AWApi.userDevices', async () => {
+      const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce([{
-        macAddress: "F4:CF:A2:CD:9B:12",
-        lastData: {
-          dateutc: 1590176760000,
-          tz: "America/Phoenix",
-          date: "2020-05-22T19:46:00.000Z"
-        },
-        info: {
-          name: "Heiligers Weather Station",
-          coords: {
-            geo: {
-              type: "Point",
-              coordinates: [
-                -111.7421359,
-                33.3560276
-              ]
-            },
-            elevation: 386.7543029785156,
-            location: "Gilbert",
-            address: "2225 E Vaughn Ave, Gilbert, AZ 85234, USA",
-            coords: {
-              lon: -111.7421359,
-              lat: 33.3560276
-            }
-          }
-        }
+        macAddress: "F4:CF:A2:CD:9B:12"
       }])
-      new FetchRawData(mockAWApi).fetchRecentData(nowInMST, 1);
+      const rawDataFetcher = new FetchRawData(mockAWApi);
+      await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
+      expect(deviceDataSpy).toHaveBeenCalled();
     })
     it.todo('accepts two args: a date in UTC and the number of records to fetch');
     it.todo('works without arguments');
