@@ -40,6 +40,7 @@ function convertRawImperialDataToJsonl() {
           openedDataForDailyFile,
           JSON.stringify(element) + "\n"
         );
+        filesConvertedToJsonl.push(entry);
         return element;
       });
       if (arrayOfConvertedData && arrayOfConvertedData.length > 0) {
@@ -57,7 +58,8 @@ function convertRawImperialDataToJsonl() {
       } files`
     );
   }
+  return filesConvertedToJsonl;
 }
 // note ATM, I have to provide tomorrow's date to convert the data in the file for today, for example.
-return convertRawImperialDataToJsonl();
-// module.exports = convertRawImperialDataToJsonl;
+// return convertRawImperialDataToJsonl();
+module.exports = convertRawImperialDataToJsonl;

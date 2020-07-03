@@ -1,3 +1,3 @@
 
-// const { newData } = require('./fetchNewData');
-const { convertImperialToJsonl } = require('./fetchNewData');
+export { newData } from './fetchNewData';
+export { convertImperialToJsonl } from './fetchNewData';

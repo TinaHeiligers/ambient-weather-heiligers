@@ -99,7 +99,7 @@ describe.only('FetchRawData', () => {
       jest.runAllTimers();
     });
     it('should get the path to the data files', () => {
-      expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-data');
+      expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-imperial');
     });
   });
   describe('class methods: fetchRecentData', () => {
