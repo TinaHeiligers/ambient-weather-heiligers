@@ -51,6 +51,7 @@ class FetchRawData {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   async retry(from, numRecords) {
+    console.log('hello from retry')
     await this.delay(5000);
     this.retryCount(this.retryCount + 1);
     return await this.fetchRecentData(from, numRecords);
@@ -58,22 +59,17 @@ class FetchRawData {
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time
     const devices = await this.AWApi.userDevices();
-    if (devices) {
+    if (devices && devices.length > 0) {
       try {
-        const allData = await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
-        return allData;
+        return await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
       } catch (err) {
-        if (err.statusCode == 429) {
-          console.log('Data fetching error: too many requests per second, please slow down!')
-          this.retryFetch(from, numRecords)
-        } else {
-          console.log('Data fetching error')
-        }
+        throw err;
       }
     } else {
-      console.log('device not found')
+      return;
     }
   }
+
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
@@ -103,7 +99,7 @@ class FetchRawData {
       console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; 1 < Math.floor(estNumberOfBatches); i++) {
-        console.log(`Issueing batch request ${i} of ${match.floor(estNumberOfBatches)}`)
+        console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
           const { from, to } = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           this.now = from;

@@ -105,16 +105,17 @@ describe.only('FetchRawData', () => {
     });
   });
   describe.only('class methods: fetchRecentData', () => {
+    let rawDataFetcher;
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi);
     });
     it('waits for AWApi.userDevices to return a value then calls deviceData', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
       }])
-      const rawDataFetcher = new FetchRawData(mockAWApi);
       await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).toHaveBeenCalled();
@@ -122,16 +123,39 @@ describe.only('FetchRawData', () => {
     it('does not call deviceData if userDevices does not return a value', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce(false);
-      const rawDataFetcher = new FetchRawData(mockAWApi);
+      // const rawDataFetcher = new FetchRawData(mockAWApi);
       await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).not.toHaveBeenCalled();
     })
-    it.todo('accepts two args: a date in UTC and the number of records to fetch');
-    it.todo('works without arguments');
-    it.todo('fetchs data from the api with the args provided -> need a mock awApi.deviceData')
-    it.todo('returns an array of data')
-    it.todo('retrys the fetch if an error code of 429 of too many requests is thrown')
+    it('accepts two args: a date in UTC and the number of records to fetch', async () => {
+      mockAWApi.userDevices.mockReturnValueOnce([{
+        macAddress: "F4:CF:A2:CD:9B:12"
+      }])
+      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
+      const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      expect(data).toBeTruthy();
+    });
+    it('returns an array of data', async () => {
+      mockAWApi.userDevices.mockReturnValueOnce([{
+        macAddress: "F4:CF:A2:CD:9B:12"
+      }])
+      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
+      const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      expect(data.length).toEqual(1)
+    })
+    it.skip('retrys the fetch if an error code of 429 of too many requests is thrown', async () => {
+      mockAWApi.userDevices.mockReturnValueOnce([{
+        macAddress: "F4:CF:A2:CD:9B:12"
+      }])
+      mockAWApi.deviceData.mockImplementation(() => {
+        throw new Error({ statusCode: 429 })
+      });
+      rawDataFetcher.retry.mockimplementation = (a, b) => jest.fn();
+      const retrySpy = jest.spyOn(rawDataFetcher, 'retry');
+      const result = await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      expect(retrySpy).toHaveBeenCalled();
+    })
   });
   describe('class methods: fetchAndStoreData', () => {
     it.todo('works without arguments');
