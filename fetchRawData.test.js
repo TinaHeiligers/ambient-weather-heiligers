@@ -109,7 +109,7 @@ describe.only('FetchRawData', () => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
     });
-    it('calls AWApi.userDevices', async () => {
+    it('waits for AWApi.userDevices to return a value then calls deviceData', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
@@ -119,9 +119,16 @@ describe.only('FetchRawData', () => {
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).toHaveBeenCalled();
     })
+    it('does not call deviceData if userDevices does not return a value', async () => {
+      const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
+      mockAWApi.userDevices.mockReturnValueOnce(false);
+      const rawDataFetcher = new FetchRawData(mockAWApi);
+      await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      expect(mockAWApi.userDevices).toHaveBeenCalled();
+      expect(deviceDataSpy).not.toHaveBeenCalled();
+    })
     it.todo('accepts two args: a date in UTC and the number of records to fetch');
     it.todo('works without arguments');
-    it.todo('checks that the device responds -> need a mock for awApi.userDevices');
     it.todo('fetchs data from the api with the args provided -> need a mock awApi.deviceData')
     it.todo('returns an array of data')
     it.todo('retrys the fetch if an error code of 429 of too many requests is thrown')
