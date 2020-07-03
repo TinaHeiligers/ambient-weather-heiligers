@@ -1,25 +1,21 @@
 const fs = require('file-system');
 const momentTZ = require('moment-timezone');
-const AmbientWeatherApi = require('ambient-weather-api');
 const {
   getLastRecordedUTCDate,
   calcMinutesDiff,
   extractDataInfo
 } = require('./helpers');
-// const awApi = new AmbientWeatherApi({
-//   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
-//   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
-// });
-// hard coded numbers from ambient weather API
+
 const AW_CONSTANTS = {
   dataInterval: 5,
   maxNumRecords: 288,
 }
+
 class FetchRawData {
   #pathToFiles = 'ambient-weather-heiligers-imperial';
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
-  #datesArray = []; // an array of objects containing a from (max date for data file entries) and to date (min date for data file entries)
+  #datesArray = [];
   #retryCount = 0;
   constructor(awApi) {
     this.AWApi = awApi;

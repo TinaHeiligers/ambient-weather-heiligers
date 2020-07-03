@@ -1,15 +1,11 @@
 const fs = require("file-system");
 const path = require("path");
-const convert = require('convert-units');
-// const date = "08-06-2020";
 
-// I want to replace having to give the dates for the files to convert with checking what has and hasn't been converted yet.
 function getArrayOfFiles(pathToFolder) {
   const directoryPath = path.join(__dirname, `data/${pathToFolder}`);
   let filesArray = [];
   const files = fs.readdirSync(directoryPath);
   files.forEach((file) => filesArray.push(`${file}`.split(".")[0]));
-  // console.log('filesArrayInFunction', filesArray)
   return filesArray;
 }
 

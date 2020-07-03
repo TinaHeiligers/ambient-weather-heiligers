@@ -45,10 +45,9 @@ const goodMock = {
   }
 };
 
-describe.only('FetchRawData', () => {
+describe('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
-  let nowInMST;
   beforeAll(() => {
     FetchRawDataTester = new FetchRawData(goodMock);
     testNow = FetchRawDataTester.now;
@@ -74,7 +73,6 @@ describe.only('FetchRawData', () => {
       expect(FetchRawDataTester.now).toEqual(testNow)
     });
     it('it gets the initial "now" in uct that is static in time', () => {
-      const dateTimeInUTC = testNow;
       const dateTimeInMST = momentTZ();
       const formatString = 'YYYY-MM-DD HH:mm:ss Z';
       expect(FetchRawDataTester.now).toEqual(momentTZ.utc(testNow));
@@ -86,7 +84,6 @@ describe.only('FetchRawData', () => {
       jest.runAllTimers();
     });
     it('it sets the initial "now" in uct that is static in time', () => {
-      const dateTimeInUTC = testNow;
       const newDateTimeinUTC = momentTZ.utc(testNow).subtract(1, 'days');
       FetchRawDataTester.now = newDateTimeinUTC;
       const formatString = 'YYYY-MM-DD HH:mm:ss Z';
@@ -102,11 +99,47 @@ describe.only('FetchRawData', () => {
       expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-imperial');
     });
   });
-  describe('class methods: fetchRecentData', () => {
+  describe.only('class methods: fetchRecentData', () => {
     beforeEach(() => {
-      // set up the mocked device
-      // also set up the device data (TODO)
-      require('ambient-weather-api').__setUserDevices()
+      const mockAWApi = {
+        userDevices: jest.fn(),
+        deviceData: jest.fn(),
+      }
+    });
+    it.only('calls AWApi.userDevices', () => {
+      const mockAWApi = {
+        userDevices: jest.fn(),
+        deviceData: jest.fn(),
+      }
+      mockAWApi.userDevices.mockReturnValueOnce([{
+        macAddress: "F4:CF:A2:CD:9B:12",
+        lastData: {
+          dateutc: 1590176760000,
+          tz: "America/Phoenix",
+          date: "2020-05-22T19:46:00.000Z"
+        },
+        info: {
+          name: "Heiligers Weather Station",
+          coords: {
+            geo: {
+              type: "Point",
+              coordinates: [
+                -111.7421359,
+                33.3560276
+              ]
+            },
+            elevation: 386.7543029785156,
+            location: "Gilbert",
+            address: "2225 E Vaughn Ave, Gilbert, AZ 85234, USA",
+            coords: {
+              lon: -111.7421359,
+              lat: 33.3560276
+            }
+          }
+        }
+      }])
+      new FetchRawData(mockAWApi).fetchRecentData(nowInMST, 1);
+      expect(mockAWApi.userDevices).toHaveBeenCalled();
     })
     it.todo('accepts two args: a date in UTC and the number of records to fetch');
     it.todo('works without arguments');
