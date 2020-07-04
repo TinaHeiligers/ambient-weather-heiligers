@@ -87,7 +87,7 @@ class FetchRawData {
       if (result && result.length > 0) {
         console.log('result in if condition', result && result.length)
         const { from, to } = extractDataInfo(result);
-        fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        fs.writeFileSync(`./data/${this.pathToFiles}/BOB${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;
@@ -119,6 +119,9 @@ class FetchRawData {
             const { from, to } = resultDatesObject;
             this.now = from;
             this.datesArray = this.datesArray.concat({ from, to });
+          } else {
+            this.failedDatesForDate = this.failedDatesForDate.concat(this.now);
+            break;
           }
         } catch (err) {
           console.log('PROBLEM in multi day fetch!', err)
@@ -128,9 +131,14 @@ class FetchRawData {
       const lastRecordsFromDate = momentTZ.min(this.datesArray.map((entry) => momentTZ(entry.from)));
       const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
       console.log(`Setting up final collection for ${lastRecordsLimit} records.`)
-      const { from, to } = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
-      this.datesArray = this.datesArray.concat({ from, to })
-      return this.datesArray;
+      const resultDatesObject = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
+      if (resultDatesObject) {
+        const { from, to } = resultDatesObject;
+        this.datesArray = this.datesArray.concat({ from, to })
+        return this.datesArray;
+      } else {
+        return this.datesArray;
+      }
     } else {
 
       // single day data fetch

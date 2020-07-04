@@ -147,7 +147,9 @@ describe.only('FetchRawData', () => {
       expect(data.length).toEqual(1)
     })
   });
-  describe.only('class methods: fetchAndStoreData', () => {
+  describe.skip('class methods: fetchAndStoreData', () => {
+    // NB: mock out fs because it's writing the test runs to file.
+    // TODO: move fs to be a dependency of the FetchRawData class
     let rawDataFetcher;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
