@@ -16,7 +16,7 @@ class FetchRawData {
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = [];
-  // #retryCount = 0;
+  #failedDatesForDataFetch = [];
   constructor(awApi) {
     this.AWApi = awApi;
   }
@@ -32,10 +32,15 @@ class FetchRawData {
   set datesArray(newArray) {
     this.#datesArray = newArray;
   }
+  get failedDatesForDate() {
+    return this.#failedDatesForDataFetch;
+  }
+  set failedDatesForDate(newArray) {
+    this.#failedDatesForDataFetch = newArray;
+  }
   get now() {
     return this.#now;
   }
-
   set now(date) {
     this.#now = date;
   }
@@ -78,12 +83,14 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
-      if (result && result.length) {
+      console.log('result in real function', result && result.length > 0)
+      if (result && result.length > 0) {
+        console.log('result in if condition', result && result.length)
         const { from, to } = extractDataInfo(result);
         fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
-      return;
+      return null;
     } catch (err) {
       console.log('error in fetchAndStoreData', err)
     }
@@ -107,9 +114,12 @@ class FetchRawData {
       for (let i = 0; 1 < Math.floor(estNumberOfBatches); i++) {
         console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
-          const { from, to } = await this.fetchAndStoreData(this.now, this.numberOfRecords);
-          this.now = from;
-          this.datesArray = this.datesArray.concat({ from, to });
+          const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
+          if (resultDatesObject) {
+            const { from, to } = resultDatesObject;
+            this.now = from;
+            this.datesArray = this.datesArray.concat({ from, to });
+          }
         } catch (err) {
           console.log('PROBLEM in multi day fetch!', err)
         }

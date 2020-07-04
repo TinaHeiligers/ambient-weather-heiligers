@@ -103,6 +103,8 @@ describe.only('FetchRawData', () => {
     it('should get the path to the data files', () => {
       expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-imperial');
     });
+    it.todo('gets the failed dates array for data that wasn\t fetched')
+    it.todo('sets the failed dates array for data that wasn\t fetched')
   });
   describe('class methods: fetchRecentData', () => {
     let rawDataFetcher;
@@ -152,20 +154,26 @@ describe.only('FetchRawData', () => {
       mockAWApi.deviceData.mockClear();
       rawDataFetcher = new FetchRawData(mockAWApi);
     });
-    afterAll(() => {
+    afterEach(() => {
       jest.restoreAllMocks();
     })
     // mock fetchRecentData from the class
-    it('calls fetchRecentData with date and record count provided', async () => {
+    it.skip('calls fetchRecentData with date and record count provided', async () => {
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData')
         .mockImplementationOnce(() => [{ data: { date: '2020-06-30' } }])
       rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      jest.restoreAllMocks();
       expect(rawDataFetcher.fetchRecentData).toHaveBeenCalled();
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe('2020-06-30')
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][1]).toBe(1)
       expect(rawDataFetcher.fetchRecentData.mock.results[0].value).toEqual([{ data: { date: '2020-06-30' } }])
     });
-    it.todo('returns nothing if there the response is empty');
+    it('returns nothing if there the response is empty', async () => {
+      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce((a, b) => [])
+      const result = await rawDataFetcher.fetchAndStoreData('2040-06-30', 1);
+      expect(result).toBe(null);
+    });
+
     // mock extractDataInfo from helpers
     it.todo('extracts the min and max date from the data');
     it.todo('dynamically sets the filename based on the max date from the data')
