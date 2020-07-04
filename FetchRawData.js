@@ -16,7 +16,7 @@ class FetchRawData {
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = [];
-  #retryCount = 0;
+  // #retryCount = 0;
   constructor(awApi) {
     this.AWApi = awApi;
   }
@@ -35,27 +35,32 @@ class FetchRawData {
   get now() {
     return this.#now;
   }
-  get retryCount() {
-    return this.#retryCount;
-  }
-  set retryCount(value) {
-    this.#retryCount = value;
-  }
+
   set now(date) {
     this.#now = date;
   }
   get pathToFiles() {
     return this.#pathToFiles;
   }
+  /* -------------------UNUSED START-------------------
+  // reason: awAPI only returns the reponse body and not the whole response
+  get retryCount() {
+    return this.#retryCount;
+  }
+  set retryCount(value) {
+    this.#retryCount = value;
+  }
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   async retry(from, numRecords) {
-    console.log('hello from retry')
     await this.delay(5000);
     this.retryCount(this.retryCount + 1);
     return await this.fetchRecentData(from, numRecords);
   }
+  -------------------UNUSED END-------------------
+  */
+
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time
     const devices = await this.AWApi.userDevices();
@@ -78,6 +83,7 @@ class FetchRawData {
         fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
+      return;
     } catch (err) {
       console.log('error in fetchAndStoreData', err)
     }

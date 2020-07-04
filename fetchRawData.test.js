@@ -104,7 +104,7 @@ describe.only('FetchRawData', () => {
       expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-imperial');
     });
   });
-  describe.only('class methods: fetchRecentData', () => {
+  describe('class methods: fetchRecentData', () => {
     let rawDataFetcher;
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
@@ -144,21 +144,34 @@ describe.only('FetchRawData', () => {
       const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(data.length).toEqual(1)
     })
-    it.skip('retrys the fetch if an error code of 429 of too many requests is thrown', async () => {
-      mockAWApi.userDevices.mockReturnValueOnce([{
-        macAddress: "F4:CF:A2:CD:9B:12"
-      }])
-      mockAWApi.deviceData.mockImplementation(() => {
-        throw new Error({ statusCode: 429 })
-      });
-      rawDataFetcher.retry.mockimplementation = (a, b) => jest.fn();
-      const retrySpy = jest.spyOn(rawDataFetcher, 'retry');
-      const result = await rawDataFetcher.fetchRecentData(nowInMST, 1);
-      expect(retrySpy).toHaveBeenCalled();
-    })
   });
-  describe('class methods: fetchAndStoreData', () => {
-    it.todo('works without arguments');
+  describe.only('class methods: fetchAndStoreData', () => {
+    let rawDataFetcher;
+    beforeAll(() => {
+      mockAWApi.userDevices.mockClear();
+      mockAWApi.deviceData.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi);
+    });
+    afterAll(() => {
+      jest.restoreAllMocks();
+    })
+    // mock fetchRecentData from the class
+    it('calls fetchRecentData with date and record count provided', async () => {
+      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData')
+        .mockImplementationOnce(() => [{ data: { date: '2020-06-30' } }])
+      rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      expect(rawDataFetcher.fetchRecentData).toHaveBeenCalled();
+      expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe('2020-06-30')
+      expect(rawDataFetcher.fetchRecentData.mock.calls[0][1]).toBe(1)
+      expect(rawDataFetcher.fetchRecentData.mock.results[0].value).toEqual([{ data: { date: '2020-06-30' } }])
+    });
+    it.todo('returns nothing if there the response is empty');
+    // mock extractDataInfo from helpers
+    it.todo('extracts the min and max date from the data');
+    it.todo('dynamically sets the filename based on the max date from the data')
+    // mock npm fs
+    it.todo('saves the data to file');
+    it.todo('returns an object containing the max and min dates from the data')
   })
   describe('class methods: extractDataInfo', () => {
     it.todo('acccepts an array of data');
