@@ -1,6 +1,5 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
-
 const failingMock = {
   userDevices: function () {
     throw 'fail';
@@ -49,15 +48,15 @@ const mockAWApi = {
   userDevices: jest.fn(),
   deviceData: jest.fn()
 };
-const fsMock = {
-  writeFileSync: jest.fn(),
+const mockFs = {
+  writeFileSync: jest.fn()
 }
 
 describe.only('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
   beforeAll(() => {
-    FetchRawDataTester = new FetchRawData(goodMock);
+    FetchRawDataTester = new FetchRawData(goodMock, mockFs);
     testNow = FetchRawDataTester.now;
     nowInMST = momentTZ('2020-06-10');
   });
@@ -124,7 +123,7 @@ describe.only('FetchRawData', () => {
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
-      rawDataFetcher = new FetchRawData(mockAWApi);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     });
     it('waits for AWApi.userDevices to return a value then calls deviceData', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
@@ -159,31 +158,42 @@ describe.only('FetchRawData', () => {
       expect(data.length).toEqual(1)
     })
   });
-  describe.skip('class methods: fetchAndStoreData', () => {
+  describe('class methods: fetchAndStoreData', () => {
     // NB: mock out fs because it's writing the test runs to file.
     // TODO: move fs to be a dependency of the FetchRawData class
     let rawDataFetcher;
-    let fsMock;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
-      rawDataFetcher = new FetchRawData(mockAWApi);
+      mockFs.writeFileSync.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     });
     afterEach(() => {
       jest.restoreAllMocks();
     })
     // mock fetchRecentData from the class
-    it.skip('calls fetchRecentData with date and record count provided', async () => {
-      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData')
-        .mockImplementationOnce(() => [{ data: { date: '2020-06-30' } }])
-      rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
-      jest.restoreAllMocks();
+    // mock fs writeFileSync from fs dependency
+    // ? extractDataInfo from the helpers
+    it('calls fetchRecentData with date and record count provided', async () => {
+      const mockedData = [{ date: '2020-06-29 00:01' }, { date: '2020-06-30 00:01' }];
+      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
+
+      // jest.restoreAllMocks();
+      await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
       expect(rawDataFetcher.fetchRecentData).toHaveBeenCalled();
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe('2020-06-30')
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][1]).toBe(1)
-      expect(rawDataFetcher.fetchRecentData.mock.results[0].value).toEqual([{ data: { date: '2020-06-30' } }])
+      expect(rawDataFetcher.fetchRecentData.mock.results[0].value).toEqual(mockedData)
+
+      spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
+
+      expect(mockFs.writeFileSync).toHaveBeenCalled();
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('./data/ambient-weather-heiligers-imperial/BOB__20200630-T-1201.json')
+      expect(mockFs.writeFileSync.mock.calls[0][1]).toBe(JSON.stringify(mockedData, null, 2))
+      expect(mockFs.writeFileSync.mock.results[0].value).toBe(undefined)
+      spy.mockRestore();
     });
-    it('returns nothing if there the response is empty', async () => {
+    it.skip('returns nothing if there the response is empty', async () => {
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce((a, b) => [])
       const result = await rawDataFetcher.fetchAndStoreData('2040-06-30', 1);
       expect(result).toBe(null);
