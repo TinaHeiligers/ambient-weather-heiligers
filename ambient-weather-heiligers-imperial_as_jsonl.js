@@ -1,7 +1,13 @@
-const fs = require("file-system");
+/* TODO: for testing, fs methods used are:
+  readdirSync
+  readFileSync
+  writeSync
+  appendFileSync
+  closeSync
+*/
 const path = require("path");
 
-function getArrayOfFiles(pathToFolder) {
+function getArrayOfFiles(pathToFolder, fs) {
   const directoryPath = path.join(__dirname, `data/${pathToFolder}`);
   let filesArray = [];
   const files = fs.readdirSync(directoryPath);
@@ -9,11 +15,11 @@ function getArrayOfFiles(pathToFolder) {
   return filesArray;
 }
 
-function convertRawImperialDataToJsonl() {
+function convertRawImperialDataToJsonl(fs) {
   const allConvertedFiles = getArrayOfFiles(
-    "ambient-weather-heiligers-imperial-jsonl"
+    "ambient-weather-heiligers-imperial-jsonl", fs
   );
-  const allRawFiles = getArrayOfFiles("ambient-weather-heiligers-imperial");
+  const allRawFiles = getArrayOfFiles("ambient-weather-heiligers-imperial", fs);
   const filesToConvert = allRawFiles.filter(
     (element) => allConvertedFiles.indexOf(element) === -1
   );
@@ -46,7 +52,7 @@ function convertRawImperialDataToJsonl() {
     });
   }
   if (convertedCount === filesToConvert.length) {
-    console.log(`converted files for ${filesToConvert.length} files`);
+    console.log(`converted files for ${filesToConvert.length} files, ${filesToConvert}`);
   } else {
     console.log(
       `couldn't convert files for ${
