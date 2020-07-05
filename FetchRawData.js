@@ -1,4 +1,4 @@
-const fs = require('file-system');
+
 const momentTZ = require('moment-timezone');
 const {
   getLastRecordedUTCDate,
@@ -17,8 +17,9 @@ class FetchRawData {
   #numberOfRecords = 0;
   #datesArray = [];
   #failedDatesForDataFetch = [];
-  constructor(awApi) {
+  constructor(awApi, fs) {
     this.AWApi = awApi;
+    this.fs = fs;
   }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -87,7 +88,7 @@ class FetchRawData {
       if (result && result.length > 0) {
         console.log('result in if condition', result && result.length)
         const { from, to } = extractDataInfo(result);
-        fs.writeFileSync(`./data/${this.pathToFiles}/BOB${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;
@@ -111,7 +112,7 @@ class FetchRawData {
     if (estNumberOfBatches >= 1) {
       console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
-      for (let i = 0; 1 < Math.floor(estNumberOfBatches); i++) {
+      for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
         console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
           const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
