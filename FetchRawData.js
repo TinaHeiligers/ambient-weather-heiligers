@@ -84,9 +84,7 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
-      console.log('result in real function', result && result.length > 0)
       if (result && result.length > 0) {
-        console.log('result in if condition', result && result.length)
         const { from, to } = extractDataInfo(result);
         this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });

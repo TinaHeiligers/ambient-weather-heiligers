@@ -49,6 +49,9 @@ const mockAWApi = {
   userDevices: jest.fn(),
   deviceData: jest.fn()
 };
+const fsMock = {
+  writeFileSync: jest.fn(),
+}
 
 describe.only('FetchRawData', () => {
   let FetchRawDataTester;
@@ -103,8 +106,18 @@ describe.only('FetchRawData', () => {
     it('should get the path to the data files', () => {
       expect(FetchRawDataTester.pathToFiles).toEqual('ambient-weather-heiligers-imperial');
     });
-    it.todo('gets the failed dates array for data that wasn\t fetched')
-    it.todo('sets the failed dates array for data that wasn\t fetched')
+    it("gets the failed dates array for data that wasn't fetched", () => {
+      const newArray = ['2020-06-30', '2020-06-29'];
+      expect(FetchRawDataTester.failedDatesForDate).toEqual([])
+      FetchRawDataTester.failedDatesForDate = newArray;
+      expect(FetchRawDataTester.failedDatesForDate).toEqual(newArray)
+    })
+    it("sets the failed dates array for data that wasn't fetched", () => {
+      let originalArray = FetchRawDataTester.failedDatesForDate;
+      FetchRawDataTester.failedDatesForDate = ['2020-06-30'];
+      expect(FetchRawDataTester.failedDatesForDate).not.toEqual(originalArray)
+      expect(FetchRawDataTester.failedDatesForDate).toEqual(['2020-06-30'])
+    })
   });
   describe('class methods: fetchRecentData', () => {
     let rawDataFetcher;
@@ -125,7 +138,6 @@ describe.only('FetchRawData', () => {
     it('does not call deviceData if userDevices does not return a value', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce(false);
-      // const rawDataFetcher = new FetchRawData(mockAWApi);
       await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).not.toHaveBeenCalled();
@@ -151,6 +163,7 @@ describe.only('FetchRawData', () => {
     // NB: mock out fs because it's writing the test runs to file.
     // TODO: move fs to be a dependency of the FetchRawData class
     let rawDataFetcher;
+    let fsMock;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
