@@ -86,7 +86,7 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         const { from, to } = extractDataInfo(result);
-        this.fs.writeFileSync(`./data/${this.pathToFiles}/BOB__${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;

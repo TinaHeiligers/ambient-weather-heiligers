@@ -188,7 +188,7 @@ describe.only('FetchRawData', () => {
       spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
 
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('./data/ambient-weather-heiligers-imperial/BOB__20200630-T-1201.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('./data/ambient-weather-heiligers-imperial/20200630-T-1201.json')
       expect(mockFs.writeFileSync.mock.calls[0][1]).toBe(JSON.stringify(mockedData, null, 2))
       expect(mockFs.writeFileSync.mock.results[0].value).toBe(undefined)
       spy.mockRestore();
