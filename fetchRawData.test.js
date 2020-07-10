@@ -1,5 +1,6 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
+const { extractDataInfo } = require('./helpers')
 const failingMock = {
   userDevices: function () {
     throw 'fail';
@@ -159,8 +160,6 @@ describe.only('FetchRawData', () => {
     })
   });
   describe('class methods: fetchAndStoreData', () => {
-    // NB: mock out fs because it's writing the test runs to file.
-    // TODO: move fs to be a dependency of the FetchRawData class
     let rawDataFetcher;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
@@ -171,14 +170,10 @@ describe.only('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    // mock fetchRecentData from the class
-    // mock fs writeFileSync from fs dependency
-    // ? extractDataInfo from the helpers
     it('calls fetchRecentData with date and record count provided', async () => {
       const mockedData = [{ date: '2020-06-29 00:01' }, { date: '2020-06-30 00:01' }];
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
 
-      // jest.restoreAllMocks();
       await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
       expect(rawDataFetcher.fetchRecentData).toHaveBeenCalled();
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe('2020-06-30')
@@ -193,24 +188,43 @@ describe.only('FetchRawData', () => {
       expect(mockFs.writeFileSync.mock.results[0].value).toBe(undefined)
       spy.mockRestore();
     });
-    it.skip('returns nothing if there the response is empty', async () => {
+    it('returns nothing if there the response is empty', async () => {
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce((a, b) => [])
       const result = await rawDataFetcher.fetchAndStoreData('2040-06-30', 1);
       expect(result).toBe(null);
+      spy.mockRestore();
     });
-
-    // mock extractDataInfo from helpers
-    it.todo('extracts the min and max date from the data');
-    it.todo('dynamically sets the filename based on the max date from the data')
-    // mock npm fs
-    it.todo('saves the data to file');
-    it.todo('returns an object containing the max and min dates from the data')
-  })
-  describe('class methods: extractDataInfo', () => {
-    it.todo('acccepts an array of data');
-    it.todo('extracts the min and max dates from all the data');
+    it('extracts the min and max date from the data and returns that', async () => {
+      const mockedData = [{ date: '2020-06-29 00:01' }, { date: '2020-06-30 00:01' }];
+      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
+      const result = await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      expect(result.from).toEqual(momentTZ('2020-06-29 00:01'))
+      expect(result.to).toEqual(momentTZ('2020-06-30 00:01'))
+      expect(result.to > result.from).toBeTruthy
+      spy.mockRestore();
+    });
+    it('dynamically sets the filename based on the max date from the data', async () => {
+      const mockedData = [{ date: '2020-06-29' }, { date: '2020-06-30' }];
+      let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
+      await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
+      expect(mockFs.writeFileSync).toHaveBeenCalled();
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('./data/ambient-weather-heiligers-imperial/20200630-T-1201.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).not.toBe('./data/ambient-weather-heiligers-imperial/20200629-T-1201.json')
+      spy.mockRestore();
+    })
+  });
+  describe('class methods: getDataForDateRanges', () => {
+    let rawDataFetcher;
+    beforeAll(() => {
+      mockAWApi.userDevices.mockClear();
+      mockAWApi.deviceData.mockClear();
+      mockFs.writeFileSync.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    })
+    it.todo('does stuff and saves stuff');
   });
 });
-
-  // extractDataInfo
-  // getDataForDateRanges
