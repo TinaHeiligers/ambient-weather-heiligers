@@ -213,6 +213,4 @@ describe.only('FetchRawData', () => {
 });
 
   // extractDataInfo
-  // retry
-  // fetchAndStoreData
   // getDataForDateRanges
