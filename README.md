@@ -51,17 +51,18 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - build logstash from code
 
 ## TODO:
- - update logstash config to point to the new index: `ambient_weather_heiligers_imperial_2020_06_30`
- - figure out the mismatch in doc count between `ambient_weather_heiligers_daily_2020_06_27` (29126) and `ambient_weather_heiligers_imperial_2020_06_30` (13000)
  - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
-- finish tests for class fetch data method
- - refactor metric conversion to class
- - refactor toJsonl files to a class
- - add new classes to their own call modules
- - add a main file to run through the whole chain of events.
- - figure out how I'm going to ship the data
- - if using es client, implement it
- - if not, build filebeat and logstash on pi
+- [WIP] finish tests for class fetch data method
+    - add tests for `getLastRecordedUTCDate` moved to the class.
+    - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
+    - continue with tests for `getDataForDateRanges`. Note: I might want to refactor the method to make testing easier.
+- refactor metric conversion to class
+- refactor toJsonl files to a class
+- add new classes to their own call modules
+- add a main file to run through the whole chain of events.
+- figure out how I'm going to ship the data
+- if using es client, implement it
+- if not, build filebeat and logstash on pi
 
 ## Known bugs:
  - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
