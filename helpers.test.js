@@ -47,7 +47,7 @@ describe("helpers", () => {
     });
   });
   describe.skip("getLastRecordedUTCDate", () => {
-    // TODO: add mock return values for the fs methods.
+    // TODO: add mock return values for the fs methods and path.
     // const testItem = getLastRecordedUTCDate([momentTZ.utc()]);
     it.todo("should use mocks for fs");
     it.todo("should read the files from the filepath provided");

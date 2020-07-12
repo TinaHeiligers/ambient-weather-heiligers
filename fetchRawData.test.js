@@ -1,6 +1,6 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
-const { extractDataInfo } = require('./helpers')
+
 const failingMock = {
   userDevices: function () {
     throw 'fail';
@@ -53,7 +53,7 @@ const mockFs = {
   writeFileSync: jest.fn()
 }
 
-describe.only('FetchRawData', () => {
+describe('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
   beforeAll(() => {
@@ -225,6 +225,13 @@ describe.only('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it.todo('does stuff and saves stuff');
+    it.todo('takes a date');
+    it.todo('sets a date if one isn\t provided.');
+    it.todo('Does not work:checks if the minimum time has passed since storing data')
+    it.todo('batches the data to fetch')
+    it.todo('goes through the batches and fetches data')
+    it.todo('gets the remaining records that don\'t fit into a batch')
+    it.todo('gets all the records if there are fewer records to fetch than a batch')
+    it.todo('returns an array of dates for the data that was fetched')
   });
 });
