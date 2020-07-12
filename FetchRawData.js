@@ -1,9 +1,7 @@
 
 const momentTZ = require('moment-timezone');
 const {
-  getLastRecordedUTCDate,
-  calcMinutesDiff,
-  extractDataInfo
+  calcMinutesDiff
 } = require('./helpers');
 
 const AW_CONSTANTS = {
@@ -17,9 +15,10 @@ class FetchRawData {
   #numberOfRecords = 0;
   #datesArray = [];
   #failedDatesForDataFetch = [];
-  constructor(awApi, fs) {
+  constructor(awApi, fs, path) {
     this.AWApi = awApi;
     this.fs = fs;
+    this.path = path;
   }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -49,6 +48,26 @@ class FetchRawData {
     return this.#pathToFiles;
   }
 
+  extractDataInfo = (dataArray) => {
+    const dataDates = dataArray.map((datum) => momentTZ(datum.date));
+    const dataFrom = momentTZ.min(dataDates);
+    const dataTo = momentTZ.max(dataDates);
+    return { from: dataFrom, to: dataTo };
+  };
+  //generic mostRecentDate getter from existing data files
+  getLastRecordedUTCDate = (pathToFolder) => {
+    const directoryPath = this.path.join(__dirname, `data/${pathToFolder}`);
+    const files = this.fs.readdirSync(directoryPath);
+    const maxFileEntriesDatesArray = files.map((file) => {
+      // get the max date from ONE file
+      const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
+      dataDates = data.map((datum) => momentTZ(datum.date));
+      return momentTZ.max(dataDates);
+    });
+    const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
+    return momentTZ.utc(mostRecentDate);
+  };
+
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time
     const devices = await this.AWApi.userDevices();
@@ -67,7 +86,7 @@ class FetchRawData {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
-        const { from, to } = extractDataInfo(result);
+        const { from, to } = this.extractDataInfo(result);
         this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
@@ -82,7 +101,7 @@ class FetchRawData {
       fromDate = this.now;
     }
     // this is all setup before I can start fetching the data
-    const dateOfLastDataSaved = getLastRecordedUTCDate(this.pathToFiles);
+    const dateOfLastDataSaved = this.getLastRecordedUTCDate(this.pathToFiles);
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;

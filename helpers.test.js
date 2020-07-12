@@ -4,7 +4,6 @@ const {
   convertMPH,
   getLastRecordedUTCDate,
   calcMinutesDiff,
-  extractDataInfo,
 } = require("./helpers");
 
 describe("helpers", () => {
@@ -31,19 +30,6 @@ describe("helpers", () => {
       const expected = 24 * 60;
       const actual = calcMinutesDiff(dateTime1, dateTime2);
       expect(actual).toEqual(expected);
-    });
-  });
-  describe("extractDataInfo", () => {
-    it("should extract the min and max dates for an array of data containing dates", () => {
-      const to1 = "2020-06-20";
-      const from1 = "2020-06-19";
-      const to2 = "2020-06-22";
-      const from2 = "2020-06-21";
-      const testArray = [{ date: from1 }, { date: from2 }];
-      expect(extractDataInfo(testArray)).toEqual({
-        from: momentTZ(from1),
-        to: momentTZ(from2),
-      });
     });
   });
   describe.skip("getLastRecordedUTCDate", () => {
