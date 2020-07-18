@@ -53,7 +53,7 @@ Includes install of `@elastic/elasticsearch (major: 7)
 ## TODO:
  - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
 - [WIP] finish tests for class fetch data method
-    - add tests for `getLastRecordedUTCDate` moved to the class.
+    - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
     - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
     - continue with tests for `getDataForDateRanges`. Note: I might want to refactor the method to make testing easier.
 - refactor metric conversion to class
@@ -66,4 +66,3 @@ Includes install of `@elastic/elasticsearch (major: 7)
 
 ## Known bugs:
  - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
-- fetchNewData script doesn't exit after it's done
