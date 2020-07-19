@@ -240,8 +240,10 @@ describe('FetchRawData', () => {
       spy.mockRestore();
     });
   });
-  describe.only('class methods: getLastRecordedUTCDate', () => {
+  describe('class methods: getLastRecordedUTCDate', () => {
     let rawDataFetcher;
+    let mockedFiles = [];
+    let mockedData = [];
     beforeAll(() => {
       mockPath.join.mockClear();
       mockFs.readdirSync.mockClear();
@@ -253,18 +255,20 @@ describe('FetchRawData', () => {
     });
     beforeEach(() => {
       const resp = `./data/ambient-weather-heiligers-imperial`;
-      const mockedFiles = ['20200717-T-1055.json', '20200718-T-1055.json'];
-      const mockedData = [{ date: '2020-07-17T17:55:00.000Z' }, { date: '2020-07-18T17:55:00.000Z' }];
+      mockedFiles = ['20200717-T-1055.json', '20200718-T-1055.json'];
+      mockedData = [{ date: '2020-07-17T17:55:00.000Z' }, { date: '2020-07-18T17:55:00.000Z' }];
       mockPath.join.mockReturnValueOnce(resp);
-      mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
-      mockFs.readFileSync.mockReturnValueOnce(JSON.stringify([mockedData[0]])).mockReturnValueOnce(JSON.stringify([mockedData[1]]));
     })
     it('extracts the dates from the saved data and returns the most recent date data was saved for', async () => {
+      mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
+      mockFs.readFileSync.mockReturnValueOnce(JSON.stringify([mockedData[0]])).mockReturnValueOnce(JSON.stringify([mockedData[1]]));
       const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
       expect(JSON.stringify(result)).toEqual(JSON.stringify('2020-07-18T17:55:00.000Z'));
     });
     it('works when there are no files', async () => {
-
+      mockFs.readdirSync.mockImplementationOnce(() => []);
+      const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
+      expect(JSON.stringify(result.format('YYYY-MM-DD'))).toEqual(JSON.stringify(formatExpectedDate()));
     })
   })
   describe('class methods: getDataForDateRanges', () => {
@@ -289,3 +293,6 @@ describe('FetchRawData', () => {
   });
 });
 
+const formatExpectedDate = () => {
+  return momentTZ.utc(momentTZ().subtract(1, 'days')).format('YYYY-MM-DD')
+}

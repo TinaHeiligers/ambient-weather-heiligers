@@ -39,6 +39,7 @@ class FetchRawData {
     this.#failedDatesForDataFetch = newArray;
   }
   get now() {
+    console.log(this.#now)
     return this.#now;
   }
   set now(date) {
@@ -58,16 +59,22 @@ class FetchRawData {
   getLastRecordedUTCDate = (pathToFolder) => {
     const directoryPath = this.path.join(__dirname, `data/${pathToFolder}`);
     const files = this.fs.readdirSync(directoryPath);
-    const maxFileEntriesDatesArray = files.map((file) => {
-      // get the max date from ONE file
-      const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-      const dataDates = data.map((datum) => {
-        return momentTZ(datum.date);
+    if (files && files.length > 0) {
+      const maxFileEntriesDatesArray = files.map((file) => {
+        // get the max date from ONE file
+        const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
+        const dataDates = data.map((datum) => {
+          return momentTZ(datum.date);
+        });
+        return momentTZ.max(dataDates);
       });
-      return momentTZ.max(dataDates);
-    });
-    const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
-    return momentTZ.utc(mostRecentDate);
+      const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
+      return momentTZ.utc(mostRecentDate);
+    }
+    console.log('this.now', this.now)
+    const returnValue = momentTZ.utc(momentTZ(this.now).subtract(1, 'days'));
+    console.log('returnValue', returnValue)
+    return returnValue;
   };
 
   async fetchRecentData(from, numRecords) {
