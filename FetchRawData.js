@@ -105,8 +105,10 @@ class FetchRawData {
     if (!fromDate) {
       fromDate = this.now;
     }
+    console.log('TEST: fromDate', fromDate)
     // this is all setup before I can start fetching the data
     const dateOfLastDataSaved = this.getLastRecordedUTCDate(this.pathToFiles);
+    console.log('TEST: dateOfLastDataSaved', dateOfLastDataSaved)
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
