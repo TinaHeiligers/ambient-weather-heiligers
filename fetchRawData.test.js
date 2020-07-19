@@ -66,6 +66,9 @@ describe('FetchRawData', () => {
     testNow = FetchRawDataTester.now;
     nowInMST = momentTZ('2020-06-10');
   });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   describe('FetchRawData getters and setters', () => {
     it('gets the number of records', () => {
       expect(FetchRawDataTester.numberOfRecords).toBe(0);
@@ -123,6 +126,36 @@ describe('FetchRawData', () => {
       expect(FetchRawDataTester.failedDatesForDate).not.toEqual(originalArray)
       expect(FetchRawDataTester.failedDatesForDate).toEqual(['2020-06-30'])
     })
+  });
+  describe('class methods: extractDataInfo', () => {
+    let rawDataFetcher;
+    beforeEach(() => {
+      mockAWApi.userDevices.mockClear();
+      mockAWApi.deviceData.mockClear();
+    });
+    rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+    it('extracts dates from the data', async () => {
+      const testDataArray = [{ "date": "2020-07-18T18:46:00.000Z" },
+      { "date": "2020-07-18T18:40:00.000Z" },
+      { "date": "2020-07-18T18:35:00.000Z" },
+      { "date": "2020-07-18T18:30:00.000Z" },
+      { "date": "2020-07-18T18:25:00.000Z" },
+      { "date": "2020-07-18T18:20:00.000Z" },
+      { "date": "2020-07-18T18:15:00.000Z" },
+      { "date": "2020-07-18T18:10:00.000Z" },
+      { "date": "2020-07-18T18:05:00.000Z" },
+      { "date": "2020-07-18T18:00:00.000Z" },
+      { "date": "2020-07-18T17:55:00.000Z" }];
+      const { to, from } = await rawDataFetcher.extractDataInfo(testDataArray);
+      expect(to).toBeInstanceOf(momentTZ);
+      expect(from).toBeInstanceOf(momentTZ);
+      expect(to.format('YYYY-MM-DDTHH:MM'))
+        .toEqual(momentTZ("2020-07-18T18:40:00.000Z")
+          .format('YYYY-MM-DDTHH:MM'));
+      expect(from.format('YYYY-MM-DDTHH:MM'))
+        .toEqual(momentTZ("2020-07-18T17:55:00.000Z")
+          .format('YYYY-MM-DDTHH:MM'));
+    });
   });
   describe('class methods: fetchRecentData', () => {
     let rawDataFetcher;
@@ -281,7 +314,7 @@ describe('FetchRawData', () => {
     });
     afterEach(() => {
       jest.restoreAllMocks();
-    })
+    });
     it.todo('takes a date');
     it.todo('sets a date if one isn\t provided.');
     it.todo('Does not work:checks if the minimum time has passed since storing data')

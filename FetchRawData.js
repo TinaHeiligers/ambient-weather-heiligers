@@ -39,7 +39,6 @@ class FetchRawData {
     this.#failedDatesForDataFetch = newArray;
   }
   get now() {
-    console.log(this.#now)
     return this.#now;
   }
   set now(date) {
@@ -71,10 +70,7 @@ class FetchRawData {
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
       return momentTZ.utc(mostRecentDate);
     }
-    console.log('this.now', this.now)
-    const returnValue = momentTZ.utc(momentTZ(this.now).subtract(1, 'days'));
-    console.log('returnValue', returnValue)
-    return returnValue;
+    return momentTZ.utc(momentTZ(this.now).subtract(1, 'days'));
   };
 
   async fetchRecentData(from, numRecords) {
