@@ -240,24 +240,52 @@ describe('FetchRawData', () => {
       spy.mockRestore();
     });
   });
-});
-describe('class methods: getDataForDateRanges', () => {
-  let rawDataFetcher;
-  beforeAll(() => {
-    mockAWApi.userDevices.mockClear();
-    mockAWApi.deviceData.mockClear();
-    mockFs.writeFileSync.mockClear();
-    rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
+  describe.only('class methods: getLastRecordedUTCDate', () => {
+    let rawDataFetcher;
+    beforeAll(() => {
+      mockPath.join.mockClear();
+      mockFs.readdirSync.mockClear();
+      mockFs.readFileSync.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+    beforeEach(() => {
+      const resp = `./data/ambient-weather-heiligers-imperial`;
+      const mockedFiles = ['20200717-T-1055.json', '20200718-T-1055.json'];
+      const mockedData = [{ date: '2020-07-17T17:55:00.000Z' }, { date: '2020-07-18T17:55:00.000Z' }];
+      mockPath.join.mockReturnValueOnce(resp);
+      mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
+      mockFs.readFileSync.mockReturnValueOnce(JSON.stringify([mockedData[0]])).mockReturnValueOnce(JSON.stringify([mockedData[1]]));
+    })
+    it('extracts the dates from the saved data and returns the most recent date data was saved for', async () => {
+      const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
+      expect(JSON.stringify(result)).toEqual(JSON.stringify('2020-07-18T17:55:00.000Z'));
+    });
+    it('works when there are no files', async () => {
+
+    })
   })
-  it.todo('takes a date');
-  it.todo('sets a date if one isn\t provided.');
-  it.todo('Does not work:checks if the minimum time has passed since storing data')
-  it.todo('batches the data to fetch')
-  it.todo('goes through the batches and fetches data')
-  it.todo('gets the remaining records that don\'t fit into a batch')
-  it.todo('gets all the records if there are fewer records to fetch than a batch')
-  it.todo('returns an array of dates for the data that was fetched')
+  describe('class methods: getDataForDateRanges', () => {
+    let rawDataFetcher;
+    beforeAll(() => {
+      mockAWApi.userDevices.mockClear();
+      mockAWApi.deviceData.mockClear();
+      mockFs.writeFileSync.mockClear();
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    })
+    it.todo('takes a date');
+    it.todo('sets a date if one isn\t provided.');
+    it.todo('Does not work:checks if the minimum time has passed since storing data')
+    it.todo('batches the data to fetch')
+    it.todo('goes through the batches and fetches data')
+    it.todo('gets the remaining records that don\'t fit into a batch')
+    it.todo('gets all the records if there are fewer records to fetch than a batch')
+    it.todo('returns an array of dates for the data that was fetched')
+  });
 });
+
