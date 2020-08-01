@@ -120,6 +120,7 @@ class FetchRawData {
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
         console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
+          console.log('--> this.numberOfRecords', this.numberOfRecords)
           const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (resultDatesObject) {
             const { from, to } = resultDatesObject;

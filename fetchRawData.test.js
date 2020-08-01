@@ -316,7 +316,7 @@ describe('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it.only("fetches data for a date", async () => {
+    it("fetches data for a date", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
@@ -329,27 +329,47 @@ describe('FetchRawData', () => {
       expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
       expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
-    it.only("fetches data in batches if the date range is more than 1 day", async () => {
+    it("fetches data in batches if the date range is more than 1 day", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
-      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-10T17:55:00.000Z');
-      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementationOnce((a, b) => {
-        return { from: momentTZ('2020-07-10T17:55:00-07:00'), to: momentTZ('2020-07-11T17:50:00-07:00') }
-      });
+      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-15T17:55:00.000Z');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData')
+        .mockImplementationOnce(() => {
+          return { from: momentTZ('2020-07-19T17:55:00-07:00'), to: momentTZ('2020-07-18T17:55:00-07:00') }
+        })
+        .mockImplementationOnce(() => {
+          return { from: momentTZ('2020-07-18T17:50:00-07:00'), to: momentTZ('2020-07-17T17:55:00-07:00') }
+        })
+        .mockImplementationOnce(() => {
+          return { from: momentTZ('2020-07-17T17:50:00-07:00'), to: momentTZ('2020-07-16T17:55:00-07:00') }
+        })
+        .mockImplementationOnce(() => {
+          return { from: momentTZ('2020-07-16T17:50:00-07:00'), to: momentTZ('2020-07-15T17:55:00-07:00') }
+        });
       const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
-      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
-      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
-      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
+      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(4);
+      const fromDates = result.map(resultItem => resultItem.from.format('YYYY-MM-DD'))
+      const toDates = result.map(resultItem => resultItem.to.format('YYYY-MM-DD'))
+      expect(fromDates).toEqual(['2020-07-19', '2020-07-18', '2020-07-17', '2020-07-16'])
+      expect(toDates).toEqual(['2020-07-18', '2020-07-17', '2020-07-16', '2020-07-15'])
     });
-    it.todo('takes a date');
-    it.todo('sets a date if one isn\t provided.');
-    it.todo('Does not work:checks if the minimum time has passed since storing data')
-    it.todo('batches the data to fetch')
-    it.todo('goes through the batches and fetches data')
-    it.todo('gets the remaining records that don\'t fit into a batch')
-    it.todo('gets all the records if there are fewer records to fetch than a batch')
-    it.todo('returns an array of dates for the data that was fetched')
+    it('works if a date is not provided', async () => {
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      const result = await rawDataFetcher.getDataForDateRanges();
+      expect(result).toBeTruthy
+    });
+    it('Does not work:checks if the minimum time has passed since storing data', async () => {
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      // mock return value of rawDataFetcher.getLastRecordedUTCDate
+      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {
+        return { from: momentTZ('2020-07-18T17:55:00-07:00'), to: momentTZ('2020-07-19T17:50:00-07:00') }
+      });
+      const result = await rawDataFetcher.getDataForDateRanges('2020-07-18T17:55:00.000Z');
+      expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
+      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(0);
+    })
   });
 });
 
