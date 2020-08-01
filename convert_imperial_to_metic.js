@@ -22,8 +22,13 @@ const getArrayOfFiles = (pathToFolder) => {
   return filesArray;
 }
 
+/* DO NOT DELETE! Not in use yet but will be:
+* Reads imperial data from json files
+* converte data from imperial to metric units
+* writes data to file in `ambient-weather-heiligers-metric` folder.
+*/
 async function convertData() {
-  const allConvertedFiles = getArrayOfFiles('ambient-weather-heiligers-data-metric');
+  const allConvertedFiles = getArrayOfFiles('ambient-weather-heiligers-metric');
   const allRawFiles = getArrayOfFiles('ambient-weather-heiligers-imperial');
   const filesToConvert = allRawFiles.filter(element => allConvertedFiles.indexOf(element) === -1);
 
@@ -32,7 +37,7 @@ async function convertData() {
   if (filesToConvert.length > 0) {
     filesToConvert.forEach((entry, index) => {
       console.log('converting entry:', entry)
-      const dataFileRead = JSON.parse(fs.readFileSync(`./data/ambient-weather-heiligers-data/${entry}.json`));
+      const dataFileRead = JSON.parse(fs.readFileSync(`./data/ambient-weather-heiligers-imperial/${entry}.json`));
       // console.log('dataFileRead', dataFileRead)
       const arrayOfConvertedData = dataFileRead.map(datum => {
         return {
@@ -56,7 +61,7 @@ async function convertData() {
           dewpoint_inside_c: convertTemp(datum.dewPointin),
         }
       });
-      fs.writeFileSync(`./data/ambient-weather-heiligers-data-metric/${entry}.json`, JSON.stringify(arrayOfConvertedData, null, 2));
+      fs.writeFileSync(`./data/ambient-weather-heiligers-metric/${entry}.json`, JSON.stringify(arrayOfConvertedData, null, 2));
       convertedCount = convertedCount + 1;
       return arrayOfConvertedData;
     });
