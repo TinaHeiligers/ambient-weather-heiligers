@@ -316,17 +316,31 @@ describe('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it.only("takes a date", async () => {
+    it.only("fetches data for a date", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {
-        return { from: '' }
+        return { from: momentTZ('2020-07-18T17:55:00-07:00'), to: momentTZ('2020-07-19T17:50:00-07:00') }
       });
-      const result = await rawDataFetcher.getDataForDateRanges();
+      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
-      console.log('result', result)
-      expect(result).toBeTruthy;
+      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
+      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
+      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
+    });
+    it.only("fetches data in batches if the date range is more than 1 day", async () => {
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      // mock return value of rawDataFetcher.getLastRecordedUTCDate
+      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-10T17:55:00.000Z');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementationOnce((a, b) => {
+        return { from: momentTZ('2020-07-10T17:55:00-07:00'), to: momentTZ('2020-07-11T17:50:00-07:00') }
+      });
+      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
+      expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
+      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
+      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
+      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
     it.todo('takes a date');
     it.todo('sets a date if one isn\t provided.');
