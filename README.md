@@ -32,15 +32,18 @@ POST /_aliases
 <br></br>5. Verify that you’re getting the results you expect with the alias and then you can remove *oldIndex* when you’re ready.
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
 
-## Gilbert Ambient Weather Station
+## Ambient Weather Heiligers (weather station data)
 The data is will be indexed into ambient_weather_heiligers_imperial and ambient_weather_heiligers_metric indices with index patterns of the same name. The template and alias still need to be defined/refined with an alias so that rollover can happen to a new index based on the same templates.
 The data comes from my very own weather station, mounted on my porch roof, just outside my office.
 
 
 ### Where the code lives:
- - fetch_raw_gilbert_station_data.js
- - convert_raw_gilbert_station_data_units.js
- - raw_gilbert_station_data_as_jsonl.js
+ - fetchNewData.js (class)
+ - convertImperialToJsonl.js
+ - ambient-weather-heiligers-imperial_as_jsonl.js
+
+ **Not currently in use**
+ - convert_imperial_to_metric.js
  - metric-data-to_jsonl.js
 
 ## Test branch: adding-elasticsearch-client
@@ -51,7 +54,7 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - build logstash from code
 
 ## TODO:
- - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
+- ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
 - [WIP] finish tests for class fetch data method
     - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
     - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
