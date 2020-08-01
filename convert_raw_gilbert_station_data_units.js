@@ -24,7 +24,7 @@ const getArrayOfFiles = (pathToFolder) => {
 
 async function convertData() {
   const allConvertedFiles = getArrayOfFiles('ambient-weather-heiligers-data-metric');
-  const allRawFiles = getArrayOfFiles('ambient-weather-heiligers-data');
+  const allRawFiles = getArrayOfFiles('ambient-weather-heiligers-imperial');
   const filesToConvert = allRawFiles.filter(element => allConvertedFiles.indexOf(element) === -1);
 
   let convertedCount = 0;
