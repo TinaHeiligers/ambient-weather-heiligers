@@ -304,7 +304,7 @@ describe('FetchRawData', () => {
       spy.mockRestore();
     });
   });
-  describe.only('class methods: getDataForDateRanges', () => {
+  describe('class methods: getDataForDateRanges', () => {
     let rawDataFetcher;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
