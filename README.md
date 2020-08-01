@@ -54,7 +54,7 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - build logstash from code
 
 ## TODO:
- - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
+- ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
 - [WIP] finish tests for class fetch data method
     - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
     - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
