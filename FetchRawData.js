@@ -92,7 +92,7 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         const { from, to } = this.extractDataInfo(result);
-        // this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;
@@ -107,7 +107,6 @@ class FetchRawData {
     }
     // this is all setup before I can start fetching the data
     const dateOfLastDataSaved = this.getLastRecordedUTCDate(this.pathToFiles);
-    console.log('dateOfLastDataSaved', dateOfLastDataSaved)
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
@@ -120,7 +119,6 @@ class FetchRawData {
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
         console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
-          console.log('--> this.numberOfRecords', this.numberOfRecords)
           const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (resultDatesObject) {
             const { from, to } = resultDatesObject;
