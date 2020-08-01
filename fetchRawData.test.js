@@ -304,7 +304,7 @@ describe('FetchRawData', () => {
       spy.mockRestore();
     });
   });
-  describe('class methods: getDataForDateRanges', () => {
+  describe.only('class methods: getDataForDateRanges', () => {
     let rawDataFetcher;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
@@ -316,15 +316,17 @@ describe('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it("takes a date", async () => {
+    it.only("takes a date", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
-      console.log('rawDataFetcher.getLastRecordedUTCDate', rawDataFetcher.getLastRecordedUTCDate)
-      expect(1).not.toBeTruthy;
+      // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
-      const result = await rawDataFetcher.getDataForDateRanges('2020-01-01');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {
+        return { from: '' }
+      });
+      const result = await rawDataFetcher.getDataForDateRanges();
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
-      // console.log('result', result)
-      // expect(result).toBeTruthy;
+      console.log('result', result)
+      expect(result).toBeTruthy;
     });
     it.todo('takes a date');
     it.todo('sets a date if one isn\t provided.');

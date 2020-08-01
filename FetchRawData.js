@@ -58,6 +58,7 @@ class FetchRawData {
   getLastRecordedUTCDate = (pathToFolder) => {
     const directoryPath = this.path.join(__dirname, `data/${pathToFolder}`);
     const files = this.fs.readdirSync(directoryPath);
+    console.log('files', files)
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
         // get the max date from ONE file
@@ -105,7 +106,6 @@ class FetchRawData {
     if (!fromDate) {
       fromDate = this.now;
     }
-    console.log('TEST: fromDate', fromDate)
     // this is all setup before I can start fetching the data
     const dateOfLastDataSaved = this.getLastRecordedUTCDate(this.pathToFiles);
     console.log('TEST: dateOfLastDataSaved', dateOfLastDataSaved)
