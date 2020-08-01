@@ -2,6 +2,19 @@
 Use at your own risk!
 This project is in progress and by no means do I declare it to be 'prod-ready'.
 
+## Scripts:
+Install:
+`$npm install`
+
+Fetch new data:
+`$node fetchNewData.js`
+
+Convert imperial data to jsonl:
+`$node convertImperialToJsonl.js`
+
+Test:
+`$npm test`
+
 ## Historic data from Dark Sky
 The historic data is saved to gilbert_daily_data_historic index with index pattern of the same name. The template and alias setup didn't work as wanted to save the index to an alias.
 What I want to do is save all the data to rolling indexes that map to index patterns using an alias.
@@ -51,7 +64,7 @@ Includes install of `@elastic/elasticsearch (major: 7)
  - build logstash from code
 
 ## TODO:
- - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch
+ - Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch (Done using logstash for now)
 - [WIP] finish tests for class fetch data method
     - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
     - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
