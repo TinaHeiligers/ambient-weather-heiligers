@@ -1,0 +1,86 @@
+GET _cat/indices/ambient_*?v
+GET _cat/templates?v
+
+GET ambient_weather_heiligers_imperial_2020_06_30/_count
+
+GET ambient_weather_heiligers_imperial_2020_06_30/_search
+{
+  "query": {
+    "range": {
+      "dateutc": {
+        "gte": 1593630000000,
+        "lt": 1593634500000
+      }
+    }
+  },
+  "sort": [
+    {
+      "date": {
+        "order": "desc"
+      }
+    }
+  ],
+  "size": 1,
+  "_source": ["date", "dateutc"]
+}
+# 446 deduped
+# 968 not deduped
+
+# DELETE docs by query:
+POST /ambient_weather_heiligers_imperial_2020_06_30/_delete_by_query?refresh=true
+{
+  "query": {
+    "range": {
+      "dateutc": {
+        "gte": 1596244800000,
+        "lt": 1596466775000
+      }
+    }
+  }
+}
+
+GET ambient_weather_heiligers_imperial*/_mapping
+
+GET _cat/aliases?v
+
+# creating template, index and alias for deduped doc indices
+
+GET deduped_ambient_weather_heiligers_imperial_2020_07_25/_search
+{
+  "sort": [
+    {
+      "date": {
+        "order": "asc"
+      }
+    }
+  ],
+  "size": 2,
+  "_source": ["date", "dateutc"]
+}
+
+GET deduped_ambient_weather_heiligers_imperial_2020_07_25/_search
+{
+  "query": {
+    "range": {
+      "dateutc": {
+        "gt": 1595702400000,
+        "lt": 1609459200000
+      }
+    }
+  },
+  "sort": [
+    {
+      "date": {
+        "order": "desc"
+      }
+    }
+  ],
+  "size": 1,
+  "_source": ["date", "dateutc"]
+}
+GET ambient_weather_heiligers_imperial_*/_count
+
+
+PUT /deduped_ambient_weather_heiligers_imperial_2020_07_25/_alias/all-deduped-ambient-weather-heiligers-imperial
+
+GET _cluster/state
