@@ -1,68 +1,16 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
+const mocks = require('./__mocks__/FetchRawData.js')
 
-const failingMock = {
-  userDevices: function () {
-    throw 'fail';
-  },
-  deviceData: function () {
-    throw 'fail';
-  }
-};
-
-const goodMock = {
-  userDevices: function () {
-    return [{
-      macAddress: "F4:CF:A2:CD:9B:12",
-      lastData: {
-        dateutc: 1590176760000,
-        tz: "America/Phoenix",
-        date: "2020-05-22T19:46:00.000Z"
-      },
-      info: {
-        name: "Heiligers Weather Station",
-        coords: {
-          geo: {
-            type: "Point",
-            coordinates: [
-              -111.7421359,
-              33.3560276
-            ]
-          },
-          elevation: 386.7543029785156,
-          location: "Gilbert",
-          address: "2225 E Vaughn Ave, Gilbert, AZ 85234, USA",
-          coords: {
-            lon: -111.7421359,
-            lat: 33.3560276
-          }
-        }
-      }
-    }];
-  },
-  deviceData: function () {
-    return [{ data: { date: new Date().toString() } }];
-  }
-};
-
-const mockAWApi = {
-  userDevices: jest.fn(),
-  deviceData: jest.fn()
-};
-const mockFs = {
-  writeFileSync: jest.fn(),
-  readdirSync: jest.fn(),
-  readFileSync: jest.fn()
-}
-const mockPath = {
-  join: jest.fn()
-}
+const mockAWApi = mocks.mockAWApi;
+const mockFs = mocks.mockFs;
+const mockPath = mocks.mockPath;
 
 describe('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
   beforeAll(() => {
-    FetchRawDataTester = new FetchRawData(goodMock, mockFs, mockPath);
+    FetchRawDataTester = new FetchRawData(mockAWApi, mockFs, mockPath);
     testNow = FetchRawDataTester.now;
     nowInMST = momentTZ('2020-06-10');
   });
@@ -311,17 +259,35 @@ describe('FetchRawData', () => {
       mockAWApi.deviceData.mockClear();
       mockFs.writeFileSync.mockClear();
       mockPath.join.mockClear();
-      jest.restoreAllMocks();
     });
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it("fetches data for a date", async () => {
+    it.only("fetches data for a date", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
-      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
-      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {
-        return { from: momentTZ('2020-07-18T17:55:00-07:00'), to: momentTZ('2020-07-19T17:50:00-07:00') }
+      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00Z');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((date, numberOfRecords) => {
+        return {
+          from: momentTZ('2020-07-18'),
+          to: momentTZ('2020-07-18').add((288 * 5), 'minutes'),
+        }
+      });
+      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
+      expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
+      expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
+      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
+      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
+    });
+    it("fetches data if no date is provided", async () => {
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      // mock return value of rawDataFetcher.getLastRecordedUTCDate
+      jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00Z');
+      jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((date, numberOfRecords) => {
+        return {
+          from: momentTZ('2020-07-18'),
+          to: momentTZ('2020-07-18').add((288 * 5), 'minutes'),
+        }
       });
       const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
