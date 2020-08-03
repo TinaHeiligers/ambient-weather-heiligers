@@ -24,8 +24,10 @@ describe.only('ConvertImperialToJsonl', () => {
     it('gets the the path to jsonl files', () => {
       expect(ConvertImperialToJsonlTester.pathToJsonlFiles).toEqual('ambient-weather-heiligers-imperial-jsonl');
     });
-    it('gets the the path to json files', () => {
+    it('gets the the path to the json annd jsonl files', () => {
       expect(ConvertImperialToJsonlTester.pathToJsonFiles).toEqual('ambient-weather-heiligers-imperial');
+      expect(ConvertImperialToJsonlTester.pathToJsonlFiles).toEqual('ambient-weather-heiligers-imperial-jsonl');
+
     });
     it('it gets the array of files', () => {
       expect(ConvertImperialToJsonlTester.allJsonFilesArray).toEqual(expect.arrayContaining([]))
@@ -45,26 +47,16 @@ describe.only('ConvertImperialToJsonl', () => {
       expect(ConvertImperialToJsonlTester.convertedCount).toEqual(0);
     });
   });
-  // describe('class methods: extractDataInfo', () => {
-  //   let rawDataFetcher;
+  // describe('class methods: getArrayOfFiles', () => {
+  //   let converted;
   //   beforeEach(() => {
-  //     mockAWApi.userDevices.mockClear();
-  //     mockAWApi.deviceData.mockClear();
+  //     mockFs.readdirSync.mockClear();
+  //     mockPath.join.mockClear();
   //   });
-  //   rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
-  //   it('extracts dates from the data', async () => {
-  //     const testDataArray = [{ "date": "2020-07-18T18:46:00.000Z" },
-  //     { "date": "2020-07-18T18:40:00.000Z" },
-  //     { "date": "2020-07-18T18:35:00.000Z" },
-  //     { "date": "2020-07-18T18:30:00.000Z" },
-  //     { "date": "2020-07-18T18:25:00.000Z" },
-  //     { "date": "2020-07-18T18:20:00.000Z" },
-  //     { "date": "2020-07-18T18:15:00.000Z" },
-  //     { "date": "2020-07-18T18:10:00.000Z" },
-  //     { "date": "2020-07-18T18:05:00.000Z" },
-  //     { "date": "2020-07-18T18:00:00.000Z" },
-  //     { "date": "2020-07-18T17:55:00.000Z" }];
-  //     const { to, from } = await rawDataFetcher.extractDataInfo(testDataArray);
+  //   converted = new ConvertImperialToJsonlTester(mockFs, mockPath);
+  //   it('gets the filenames from the files', () => {
+  //     const testJsonlFilesArray = [];
+  //     const { to, from } = await converted.extractDataInfo(testDataArray);
   //     expect(to).toBeInstanceOf(momentTZ);
   //     expect(from).toBeInstanceOf(momentTZ);
   //     expect(to.format('YYYY-MM-DDTHH:MM'))
