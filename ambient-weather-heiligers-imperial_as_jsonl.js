@@ -37,7 +37,6 @@ function convertRawImperialDataToJsonl(fs) {
         "w"
       );
       const arrayOfConvertedData = dataFileRead.map((element, index) => {
-        // fs.writeSync(openedDataForDailyFile, JSON.stringify(element) + "\n");
         fs.appendFileSync(
           openedDataForDailyFile,
           JSON.stringify(element) + "\n"
