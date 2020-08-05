@@ -4,7 +4,8 @@
   "description": "collect data from Heiligers weather station",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node runFetchRawData.js && node runConvertImperialToJsonl.js"
   },
   "author": "Tina Heiligers",
   "license": "MIT",
