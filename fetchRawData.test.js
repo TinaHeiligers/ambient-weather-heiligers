@@ -263,7 +263,7 @@ describe('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it.only("fetches data for a date", async () => {
+    it("fetches data for a date", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00Z');

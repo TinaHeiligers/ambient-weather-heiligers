@@ -2,7 +2,6 @@ const momentTZ = require("moment-timezone");
 const {
   convertTemp,
   convertMPH,
-  getLastRecordedUTCDate,
   calcMinutesDiff,
 } = require("./helpers");
 
@@ -32,14 +31,4 @@ describe("helpers", () => {
       expect(actual).toEqual(expected);
     });
   });
-  describe.skip("getLastRecordedUTCDate", () => {
-    // TODO: add mock return values for the fs methods and path.
-    // const testItem = getLastRecordedUTCDate([momentTZ.utc()]);
-    it.todo("should use mocks for fs");
-    it.todo("should read the files from the filepath provided");
-    it.todo("should not fail if there are no files in the filepath");
-    it.todo("should get the most recent data point date for each file");
-    it.todo("should retrieve the most recent date point date");
-  });
-
 });

@@ -1,6 +1,4 @@
 const cu = require("convert-units");
-const path = require("path");
-const fs = require("fs");
 const momentTZ = require("moment-timezone");
 
 const convertTemp = function (f) {
@@ -13,34 +11,12 @@ const convertMPH = function (mph) {
   return Number(speedmph.toFixed(3));
 };
 
-//generic mostRecentDate getter from existing data files
-const getLastRecordedUTCDate = function (pathToFolder) {
-  const directoryPath = path.join(__dirname, `data/${pathToFolder}`);
-  const files = fs.readdirSync(directoryPath);
-  const maxFileEntriesDatesArray = files.map((file) => {
-    // get the max date from ONE file
-    const data = JSON.parse(fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-    dataDates = data.map((datum) => momentTZ(datum.date));
-    return momentTZ.max(dataDates);
-  });
-  const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
-  return momentTZ.utc(mostRecentDate);
-};
-
 const calcMinutesDiff = (to, from) => {
   return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
 };
-// const extractDataInfo = (dataArray) => {
-//   const dataDates = dataArray.map((datum) => momentTZ(datum.date));
-//   const dataFrom = momentTZ.min(dataDates);
-//   const dataTo = momentTZ.max(dataDates);
-//   return { from: dataFrom, to: dataTo };
-// };
 
 module.exports = {
   convertTemp,
   convertMPH,
-  getLastRecordedUTCDate,
-  calcMinutesDiff,
-  // extractDataInfo,
+  calcMinutesDiff
 };
