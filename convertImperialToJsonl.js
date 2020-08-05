@@ -64,6 +64,13 @@ class ConvertImperialToJsonl {
       this.fs.closeSync(openedDataForJsonlFile)
     });
   }
+  updateStatus(filesToConvert) {
+    if (this.convertedCount === filesToConvert.length) {
+      console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
+    } else {
+      console.log(`couldn't convert files for ${filesToConvert.length - this.convertedCount} files`);
+    }
+  }
   convertRawImperialDataToJsonl() {
     // fetch converted and unconverted file names without the .json/.jsonl;
     const allConvertedFiles = this.getArrayOfFiles('jsonl');
@@ -73,18 +80,7 @@ class ConvertImperialToJsonl {
     // read and write the file contents as newline delimited data
     if (filesToConvert.length > 0) {
       this.convertFiles(filesToConvert);
-    }
-    // do another check, mostly for logging purposes
-    if (filesToConvert.length > 0) {
-      if (this.convertedCount === filesToConvert.length) {
-        console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
-      } else {
-        console.log(
-          `couldn't convert files for ${
-          filesToConvert.length - this.convertedCount
-          } files`
-        );
-      }
+      this.updateStatus(filesToConvert);
     } else {
       console.log('There are no unconverted files')
     }
