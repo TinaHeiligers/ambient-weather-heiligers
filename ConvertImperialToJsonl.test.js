@@ -14,7 +14,7 @@ const mockPath = {
   join: jest.fn()
 };
 
-describe.only('ConvertImperialToJsonl', () => {
+describe('ConvertImperialToJsonl', () => {
   let convertImperialToJsonlTester;
   beforeAll(() => {
     convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs, mockPath);
