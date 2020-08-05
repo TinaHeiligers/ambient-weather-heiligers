@@ -41,7 +41,7 @@ class ConvertImperialToJsonl {
   }
 
   getArrayOfFiles(filetype) {
-    const fullPath = filetype === 'json' ? this.#pathToJsonFiles : this.#pathToJsonlFiles;
+    const fullPath = filetype === 'json' ? this.pathToJsonFiles : this.pathToJsonlFiles;
     const directoryPath = this.path.join(__dirname, `data/${fullPath}`);
     const files = this.fs.readdirSync(directoryPath);
     let filesArray = [];
@@ -50,10 +50,13 @@ class ConvertImperialToJsonl {
   }
   convertFiles(filesToConvert) {
     filesToConvert.forEach((entry) => {
+      // skip an entry if it doesn't contain values
+      if (Object.keys(entry).length === 0) return true;
       const dataFileRead = JSON.parse(this.fs.readFileSync(`./data/${this.pathToJsonFiles}/${entry}.json`));
       const openedDataForJsonlFile = this.fs.openSync(`./data/${this.pathToJsonlFiles}/${entry}.jsonl`, "w");
       const arrayOfConvertedData = dataFileRead.map((element) => {
         this.fs.appendFileSync(openedDataForJsonlFile, JSON.stringify(element) + "\n")
+        // should the following line not be outside of the .map? It's working on the file as an entry and not the data element within the file
         this.filesConvertedToJsonl = this.filesConvertedToJsonl.concat(entry);
         return element;
       });
@@ -63,8 +66,9 @@ class ConvertImperialToJsonl {
       };
       this.fs.closeSync(openedDataForJsonlFile)
     });
+    return true;
   }
-  updateStatus(filesToConvert) {
+  logResult(filesToConvert) {
     if (this.convertedCount === filesToConvert.length) {
       console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
     } else {
@@ -80,7 +84,7 @@ class ConvertImperialToJsonl {
     // read and write the file contents as newline delimited data
     if (filesToConvert.length > 0) {
       this.convertFiles(filesToConvert);
-      this.updateStatus(filesToConvert);
+      this.logResult(filesToConvert);
     } else {
       console.log('There are no unconverted files')
     }
