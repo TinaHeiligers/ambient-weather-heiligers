@@ -10,3 +10,4 @@ const fetchRawDataTester = new FetchRawData(awApi, fs, path);
 const newData = fetchRawDataTester.getDataForDateRanges();
 
 module.exports = newData;
+
