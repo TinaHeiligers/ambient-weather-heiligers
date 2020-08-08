@@ -2,23 +2,30 @@
 const momentTZ = require('moment-timezone');
 const {
   calcMinutesDiff
-} = require('./helpers');
+} = require('../utils');
 
 const AW_CONSTANTS = {
   dataInterval: 5,
   maxNumRecords: 288,
 }
 
+/*
+ * Fetches data from Ambient-Weather
+ * All dates should be in utc
+ * args:
+ * awAPi AW API REST application
+ * fs: file-system
+ * returns: an array of dates for which data was retrieved
+ */
 class FetchRawData {
   #pathToFiles = 'ambient-weather-heiligers-imperial';
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = [];
   #failedDatesForDataFetch = [];
-  constructor(awApi, fs, path) {
+  constructor(awApi, fs) {
     this.AWApi = awApi;
     this.fs = fs;
-    this.path = path;
   }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -56,7 +63,7 @@ class FetchRawData {
   };
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
-    const directoryPath = this.path.join(__dirname, `data/${pathToFolder}`);
+    const directoryPath = `data/${pathToFolder}`;
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
@@ -92,7 +99,8 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         const { from, to } = this.extractDataInfo(result);
-        this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        const formattedfileName = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
+        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedfileName}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;

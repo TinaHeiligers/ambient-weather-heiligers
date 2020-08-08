@@ -1,6 +1,4 @@
 const ConvertImperialToJsonl = require('./ConvertImperialToJsonl');
-const convert = require('convert-units');
-
 
 const mockFs = {
   readdirSync: jest.fn(),
@@ -10,14 +8,10 @@ const mockFs = {
   closeSync: jest.fn(),
 };
 
-const mockPath = {
-  join: jest.fn()
-};
-
 describe('ConvertImperialToJsonl', () => {
   let convertImperialToJsonlTester;
   beforeAll(() => {
-    convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs, mockPath);
+    convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs);
   });
   afterEach(() => {
     jest.restoreAllMocks();
@@ -54,7 +48,6 @@ describe('ConvertImperialToJsonl', () => {
     let mockedJsonFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
     beforeEach(() => {
       mockFs.readdirSync.mockClear();
-      mockPath.join.mockClear();
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -116,9 +109,8 @@ describe('ConvertImperialToJsonl', () => {
       { "date": "2020-07-18T18:40:00.000Z" }
     ];
     it('converts json files to jsonl files', () => {
-      convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs, mockPath);
+      convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs);
       mockFs.readdirSync.mockClear();
-      mockPath.join.mockClear();
       mockFs.readFileSync
         .mockReturnValueOnce(JSON.stringify([mockedData[0]]))
         .mockReturnValueOnce(JSON.stringify([mockedData[1]]));
@@ -134,9 +126,8 @@ describe('ConvertImperialToJsonl', () => {
       jest.restoreAllMocks();
     });
     it('works if there are no files to convert', () => {
-      convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs, mockPath);
+      convertImperialToJsonlTester = new ConvertImperialToJsonl(mockFs);
       mockFs.readdirSync.mockReset();
-      mockPath.join.mockReset();
       mockFs.readdirSync.mockReset();
       mockFs.readFileSync.mockReset();
       mockFs.openSync.mockReset();
