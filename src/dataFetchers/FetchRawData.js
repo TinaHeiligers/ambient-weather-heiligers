@@ -2,7 +2,7 @@
 const momentTZ = require('moment-timezone');
 const {
   calcMinutesDiff
-} = require('./helpers');
+} = require('../utils/helpers');
 
 const AW_CONSTANTS = {
   dataInterval: 5,
@@ -56,7 +56,8 @@ class FetchRawData {
   };
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
-    const directoryPath = this.path.join(__dirname, `data/${pathToFolder}`);
+    const directoryPath = this.path.join(__dirname.split('/src')[0], `data/${pathToFolder}`);
+    console.log()
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
@@ -92,7 +93,7 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         const { from, to } = this.extractDataInfo(result);
-        this.fs.writeFileSync(`./data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
+        this.fs.writeFileSync(`data/${this.pathToFiles}/${to.format('YYYYMMDD-T-hhmm')}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;

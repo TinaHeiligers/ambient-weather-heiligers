@@ -5,7 +5,7 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
-const FetchRawData = require('./FetchRawData');
+const FetchRawData = require('./src/dataFetchers/FetchRawData');
 const fetchRawDataTester = new FetchRawData(awApi, fs, path);
 const newData = fetchRawDataTester.getDataForDateRanges();
 

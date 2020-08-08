@@ -1,6 +1,6 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
-const mocks = require('./__mocks__/FetchRawData.js')
+const mocks = require('../../__mocks__/FetchRawData.js')
 
 const mockAWApi = mocks.mockAWApi;
 const mockFs = mocks.mockFs;
