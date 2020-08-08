@@ -1,19 +1,11 @@
-/* TODO: for testing, fs methods used are:
-  readdirSync
-  readFileSync
-  appendFileSync
-  closeSync
-*/
-
 class ConvertImperialToJsonl {
   #pathToJsonlFiles = 'ambient-weather-heiligers-imperial-jsonl';
   #pathToJsonFiles = 'ambient-weather-heiligers-imperial';
   #allJsonfilesArray = [];
   #convertedCount = 0;
   #filesConvertedToJsonl = [];
-  constructor(fs, path) {
+  constructor(fs) {
     this.fs = fs;
-    this.path = path;
   }
   get pathToJsonlFiles() {
     return this.#pathToJsonlFiles;
@@ -42,7 +34,7 @@ class ConvertImperialToJsonl {
 
   getArrayOfFiles(filetype) {
     const fullPath = filetype === 'json' ? this.pathToJsonFiles : this.pathToJsonlFiles;
-    const directoryPath = this.path.join(__dirname, `data/${fullPath}`);
+    const directoryPath = `data/${fullPath}`;
     const files = this.fs.readdirSync(directoryPath);
     let filesArray = [];
     files.forEach((file) => filesArray.push(`${file}`.split(".")[0]));
@@ -52,8 +44,8 @@ class ConvertImperialToJsonl {
     filesToConvert.forEach((entry) => {
       // skip an entry if it doesn't contain values
       if (Object.keys(entry).length === 0) return true;
-      const dataFileRead = JSON.parse(this.fs.readFileSync(`./data/${this.pathToJsonFiles}/${entry}.json`));
-      const openedDataForJsonlFile = this.fs.openSync(`./data/${this.pathToJsonlFiles}/${entry}.jsonl`, "w");
+      const dataFileRead = JSON.parse(this.fs.readFileSync(`data/${this.pathToJsonFiles}/${entry}.json`));
+      const openedDataForJsonlFile = this.fs.openSync(`data/${this.pathToJsonlFiles}/${entry}.jsonl`, "w");
       const arrayOfConvertedData = dataFileRead.map((element) => {
         this.fs.appendFileSync(openedDataForJsonlFile, JSON.stringify(element) + "\n")
         // should the following line not be outside of the .map? It's working on the file as an entry and not the data element within the file

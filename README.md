@@ -2,30 +2,40 @@
 Use at your own risk!
 This project is in progress and by no means do I declare it to be 'prod-ready'.
 
+## Ambient Weather Heiligers (weather station data)
+The data is will be indexed into ambient_weather_heiligers_imperial and ambient_weather_heiligers_metric indices with index patterns of the same name. The templates and aliases are versioned in the config folder.
+The data comes from my own weather station, mounted on my patio roof, just outside my office.
+
+## Duplicate data
+There's a high chance of duplicate entries because of the way the Ambient Weather REST API works (counting records backwards in time). Any duplicate data entries are removed with Logstash during a reindexing operation.
+
 ## Scripts:
 Install:
 `$npm install`
 
 Fetch new data:
-`$node fetchNewData.js`
+`$node runFetchNewData.js`
 
 Convert imperial data to jsonl:
-`$node convertImperialToJsonl.js`
+`$node runConvertImperialToJsonl.js`
+
+Run everything:
+`$npm start` or `$ ./fetchdata.sh`
 
 Test:
 `$npm test`
 
-## Historic data from Dark Sky
-The historic data is saved to gilbert_daily_data_historic index with index pattern of the same name. The template and alias setup didn't work as wanted to save the index to an alias.
-What I want to do is save all the data to rolling indexes that map to index patterns using an alias.
-The data is already in ES, so just fix it from here
-The modify filebeat and logstash to use a similar setup as for the dark sky data.
 ### Where the code lives:
- - index.js
- - toJsonl.js
+ - runFetchNewData.js (class)
+ - runConvertImperialToJsonl.js
 
+ **Not currently in use**
+ - convert_imperial_to_metric.js
+ - metric-data-to_jsonl.js
 
-## Reindexing and Aliases:
+## ELasticsearch info
+
+### Reindexing and Aliases:
 Updating mappings for fields that already exist can only be done by reindexing with the new, updated mapping.
 There's a great desciption given in [a blog post describing the process](https://www.objectrocket.com/blog/elasticsearch/elasticsearch-aliases/):
 >After reindexing, you still have to manage the cutover from the old index to the new index. Aliases allow you to make this cutover without downtime.<br></br> Here’s how:<br></br>_Let’s assume I have an index called oldIndex and I want to reindex it into newIndex._
@@ -45,40 +55,14 @@ POST /_aliases
 <br></br>5. Verify that you’re getting the results you expect with the alias and then you can remove *oldIndex* when you’re ready.
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
 
-## Ambient Weather Heiligers (weather station data)
-The data is will be indexed into ambient_weather_heiligers_imperial and ambient_weather_heiligers_metric indices with index patterns of the same name. The template and alias still need to be defined/refined with an alias so that rollover can happen to a new index based on the same templates.
-The data comes from my very own weather station, mounted on my porch roof, just outside my office.
-
-
-### Where the code lives:
- - fetchNewData.js (class)
- - convertImperialToJsonl.js
- - ambient-weather-heiligers-imperial_as_jsonl.js
-
- **Not currently in use**
- - convert_imperial_to_metric.js
- - metric-data-to_jsonl.js
-
-## Test branch: adding-elasticsearch-client
-Includes install of `@elastic/elasticsearch (major: 7)
-
-## Other solutions for sending data to ES
- - build filebeat from code
- - build logstash from code
-
 ## TODO:
 - ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
-- [WIP] finish tests for class fetch data method
-    - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
-    - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
-    - continue with tests for `getDataForDateRanges`. Note: I might want to refactor the method to make testing easier.
+- automate test runs before pushing to Github
+- set up CI
 - refactor metric conversion to class
-- refactor toJsonl files to a class
 - add new classes to their own call modules
-- add a main file to run through the whole chain of events.
-- figure out how I'm going to ship the data
-- if using es client, implement it
-- if not, build filebeat and logstash on pi
+- implement using es client to index without filebeat
+- automate de-duping entries
 
 ## Known bugs:
- - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
+ - still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
