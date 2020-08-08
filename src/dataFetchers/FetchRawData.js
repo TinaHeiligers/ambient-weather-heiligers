@@ -9,6 +9,14 @@ const AW_CONSTANTS = {
   maxNumRecords: 288,
 }
 
+/*
+ * Fetches data from Ambient-Weather
+ * All dates should be in utc
+ * args:
+ * awAPi AW API REST application
+ * fs: file-system
+ * returns: an array of dates for which data was retrieved
+ */
 class FetchRawData {
   #pathToFiles = 'ambient-weather-heiligers-imperial';
   #now = momentTZ.utc(momentTZ());

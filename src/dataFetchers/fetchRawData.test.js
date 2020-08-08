@@ -217,7 +217,7 @@ describe('FetchRawData', () => {
       spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
 
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200630-T-1201.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200630-T-0701.json')
       expect(mockFs.writeFileSync.mock.calls[0][1]).toBe(JSON.stringify(mockedData, null, 2))
       expect(mockFs.writeFileSync.mock.results[0].value).toBe(undefined)
       spy.mockRestore();
@@ -243,7 +243,7 @@ describe('FetchRawData', () => {
       await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
       spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200630-T-1201.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200630-T-0701.json')
       expect(mockFs.writeFileSync.mock.calls[0][0]).not.toBe('data/ambient-weather-heiligers-imperial/20200629-T-1201.json')
       spy.mockRestore();
     });
