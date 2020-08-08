@@ -4,13 +4,12 @@ const mocks = require('../../__mocks__/FetchRawData.js')
 
 const mockAWApi = mocks.mockAWApi;
 const mockFs = mocks.mockFs;
-const mockPath = mocks.mockPath;
 
 describe('FetchRawData', () => {
   let FetchRawDataTester;
   let testNow;
   beforeAll(() => {
-    FetchRawDataTester = new FetchRawData(mockAWApi, mockFs, mockPath);
+    FetchRawDataTester = new FetchRawData(mockAWApi, mockFs);
     testNow = FetchRawDataTester.now;
     nowInMST = momentTZ('2020-06-10');
   });
@@ -81,7 +80,7 @@ describe('FetchRawData', () => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
     });
-    rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+    rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     it('extracts dates from the data', async () => {
       const testDataArray = [{ "date": "2020-07-18T18:46:00.000Z" },
       { "date": "2020-07-18T18:40:00.000Z" },
@@ -110,10 +109,9 @@ describe('FetchRawData', () => {
     let mockedFiles = [];
     let mockedData = [];
     beforeAll(() => {
-      mockPath.join.mockClear();
       mockFs.readdirSync.mockClear();
       mockFs.readFileSync.mockClear();
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -122,7 +120,6 @@ describe('FetchRawData', () => {
       const resp = `./data/ambient-weather-heiligers-imperial`;
       mockedFiles = ['20200717-T-1055.json', '20200718-T-1055.json'];
       mockedData = [{ date: '2020-07-17T17:55:00.000Z' }, { date: '2020-07-18T17:55:00.000Z' }];
-      mockPath.join.mockReturnValueOnce(resp);
     })
     it('extracts the dates from the saved data and returns the most recent date data was saved for', async () => {
       mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
@@ -141,7 +138,7 @@ describe('FetchRawData', () => {
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     });
     it('waits for AWApi.userDevices to return a value then calls deviceData', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
@@ -182,8 +179,7 @@ describe('FetchRawData', () => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
       mockFs.writeFileSync.mockClear();
-      mockPath.join.mockClear();
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -258,13 +254,12 @@ describe('FetchRawData', () => {
       mockAWApi.userDevices.mockClear();
       mockAWApi.deviceData.mockClear();
       mockFs.writeFileSync.mockClear();
-      mockPath.join.mockClear();
     });
     afterEach(() => {
       jest.restoreAllMocks();
     })
     it("fetches data for a date", async () => {
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00Z');
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((date, numberOfRecords) => {
@@ -280,7 +275,7 @@ describe('FetchRawData', () => {
       expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
     it("fetches data if no date is provided", async () => {
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00Z');
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((date, numberOfRecords) => {
@@ -296,7 +291,7 @@ describe('FetchRawData', () => {
       expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
     it("fetches data in batches if the date range is more than 1 day", async () => {
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-15T17:55:00.000Z');
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData')
@@ -321,12 +316,12 @@ describe('FetchRawData', () => {
       expect(toDates).toEqual(['2020-07-18', '2020-07-17', '2020-07-16', '2020-07-15'])
     });
     it('works if a date is not provided', async () => {
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       const result = await rawDataFetcher.getDataForDateRanges();
       expect(result).toBeTruthy
     });
     it('Does not work:checks if the minimum time has passed since storing data', async () => {
-      rawDataFetcher = new FetchRawData(mockAWApi, mockFs, mockPath);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => '2020-07-18T17:55:00.000Z');
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {

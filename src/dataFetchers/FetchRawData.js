@@ -15,10 +15,9 @@ class FetchRawData {
   #numberOfRecords = 0;
   #datesArray = [];
   #failedDatesForDataFetch = [];
-  constructor(awApi, fs, path) {
+  constructor(awApi, fs) {
     this.AWApi = awApi;
     this.fs = fs;
-    this.path = path;
   }
   get numberOfRecords() {
     return this.#numberOfRecords;
@@ -56,8 +55,7 @@ class FetchRawData {
   };
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
-    const directoryPath = this.path.join(__dirname.split('/src')[0], `data/${pathToFolder}`);
-    console.log()
+    const directoryPath = `data/${pathToFolder}`;
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
