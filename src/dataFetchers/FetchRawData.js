@@ -2,7 +2,7 @@
 const momentTZ = require('moment-timezone');
 const {
   calcMinutesDiff
-} = require('../utils/helpers');
+} = require('../utils');
 
 const AW_CONSTANTS = {
   dataInterval: 5,

@@ -1,10 +1,3 @@
-/* TODO: for testing, fs methods used are:
-  readdirSync
-  readFileSync
-  appendFileSync
-  closeSync
-*/
-
 class ConvertImperialToJsonl {
   #pathToJsonlFiles = 'ambient-weather-heiligers-imperial-jsonl';
   #pathToJsonFiles = 'ambient-weather-heiligers-imperial';

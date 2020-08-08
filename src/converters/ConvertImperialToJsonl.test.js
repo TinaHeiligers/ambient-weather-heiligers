@@ -1,6 +1,4 @@
 const ConvertImperialToJsonl = require('./ConvertImperialToJsonl');
-const convert = require('convert-units');
-
 
 const mockFs = {
   readdirSync: jest.fn(),
