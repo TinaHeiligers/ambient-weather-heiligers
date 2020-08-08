@@ -4,9 +4,8 @@ class ConvertImperialToJsonl {
   #allJsonfilesArray = [];
   #convertedCount = 0;
   #filesConvertedToJsonl = [];
-  constructor(fs, path) {
+  constructor(fs) {
     this.fs = fs;
-    this.path = path;
   }
   get pathToJsonlFiles() {
     return this.#pathToJsonlFiles;
@@ -35,7 +34,7 @@ class ConvertImperialToJsonl {
 
   getArrayOfFiles(filetype) {
     const fullPath = filetype === 'json' ? this.pathToJsonFiles : this.pathToJsonlFiles;
-    const directoryPath = this.path.join(__dirname.split('/src')[0], `data/${fullPath}`);
+    const directoryPath = `data/${fullPath}`;
     const files = this.fs.readdirSync(directoryPath);
     let filesArray = [];
     files.forEach((file) => filesArray.push(`${file}`.split(".")[0]));
