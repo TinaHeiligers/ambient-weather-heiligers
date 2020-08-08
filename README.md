@@ -51,9 +51,8 @@ The data comes from my very own weather station, mounted on my porch roof, just 
 
 
 ### Where the code lives:
- - fetchNewData.js (class)
- - convertImperialToJsonl.js
- - ambient-weather-heiligers-imperial_as_jsonl.js
+ - runFetchNewData.js (class)
+ - runConvertImperialToJsonl.js
 
  **Not currently in use**
  - convert_imperial_to_metric.js
@@ -68,17 +67,12 @@ Includes install of `@elastic/elasticsearch (major: 7)
 
 ## TODO:
 - ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
-- [WIP] finish tests for class fetch data method
-    - add tests for `getLastRecordedUTCDate` moved to the class && sort out the known bug!.
-    - add additional mocks for helpers methods moved to the class (path.join, fs.readFileSync, fs.readDirSync)
-    - continue with tests for `getDataForDateRanges`. Note: I might want to refactor the method to make testing easier.
+- automate test runs before pushing to Github
+- set up CI
 - refactor metric conversion to class
-- refactor toJsonl files to a class
 - add new classes to their own call modules
-- add a main file to run through the whole chain of events.
-- figure out how I'm going to ship the data
-- if using es client, implement it
-- if not, build filebeat and logstash on pi
+- implement using es client to index without filebeat
+- automate de-duping entries
 
 ## Known bugs:
- - if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
+ - still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
