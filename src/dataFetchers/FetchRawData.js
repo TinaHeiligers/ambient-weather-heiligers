@@ -109,7 +109,6 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
-      const resultDates = result.map((entry => entry.date))
       if (result && result.length > 0) {
         const uniqueDataEntries = result.filter(((item, index) => this.allUniqueDates.indexOf(item.date) === -1))
         const { from, to } = this.extractDataInfo(uniqueDataEntries);
