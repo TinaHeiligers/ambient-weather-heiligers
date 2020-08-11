@@ -22,6 +22,7 @@ class FetchRawData {
   #now = momentTZ.utc(momentTZ());
   #numberOfRecords = 0;
   #datesArray = [];
+  #allUniqueDates = [];
   #failedDatesForDataFetch = [];
   constructor(awApi, fs) {
     this.AWApi = awApi;
@@ -38,6 +39,12 @@ class FetchRawData {
   }
   set datesArray(newArray) {
     this.#datesArray = newArray;
+  }
+  get allUniqueDates() {
+    return this.#allUniqueDates;
+  }
+  set allUniqueDates(newArray) {
+    this.#allUniqueDates = [...new Set(newArray)];
   }
   get failedDatesForDate() {
     return this.#failedDatesForDataFetch;
@@ -61,6 +68,12 @@ class FetchRawData {
     const dataTo = momentTZ.max(dataDates);
     return { from: dataFrom, to: dataTo };
   };
+
+  addDateEntries(dateArray) {
+    let uniqueDates = [... new Set(dateArray)];
+    this.allUniqueDates = uniqueDates;
+  };
+
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
     const directoryPath = `data/${pathToFolder}`;
@@ -69,10 +82,9 @@ class FetchRawData {
       const maxFileEntriesDatesArray = files.map((file) => {
         // get the max date from ONE file
         const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-        const dataDates = data.map((datum) => {
-          return momentTZ(datum.date);
-        });
-        return momentTZ.max(dataDates);
+        // add the dates to the unique date entries
+        this.addDateEntries(data.map((datum => datum.date)));
+        return momentTZ.max(data.map((datum) => momentTZ(datum.date)));
       });
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
       return momentTZ.utc(mostRecentDate);
@@ -97,10 +109,14 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
+      const resultDates = result.map((entry => entry.date))
       if (result && result.length > 0) {
-        const { from, to } = this.extractDataInfo(result);
-        const formattedfileName = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
-        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedfileName}.json`, JSON.stringify(result, null, 2));
+        const uniqueDataEntries = result.filter(((item, index) => this.allUniqueDates.indexOf(item.date) === -1))
+        const { from, to } = this.extractDataInfo(uniqueDataEntries);
+        const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
+        const formattedfileNameTo = momentTZ.utc(to).format('HHmm');
+        const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`
+        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;
