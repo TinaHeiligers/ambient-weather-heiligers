@@ -84,10 +84,7 @@ class FetchRawData {
         const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
         // add the dates to the unique date entries
         this.addDateEntries(data.map((datum => datum.date)));
-        const dataDates = data.map((datum) => {
-          return momentTZ(datum.date);
-        });
-        return momentTZ.max(dataDates);
+        return momentTZ.max(data.map((datum) => momentTZ(datum.date)));
       });
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
       return momentTZ.utc(mostRecentDate);
