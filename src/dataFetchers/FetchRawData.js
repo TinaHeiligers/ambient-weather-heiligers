@@ -99,8 +99,10 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         const { from, to } = this.extractDataInfo(result);
-        const formattedfileName = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
-        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedfileName}.json`, JSON.stringify(result, null, 2));
+        const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
+        const formattedfileNameTo = momentTZ.utc(to).format('HHmm');
+        const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`
+        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(result, null, 2));
         return ({ from, to });
       }
       return null;
