@@ -18,6 +18,12 @@
     "moment-timezone": "^0.5.31"
   },
   "devDependencies": {
+    "husky": "^4.2.5",
     "jest": "^26.0.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm test"
+    }
   }
 }
