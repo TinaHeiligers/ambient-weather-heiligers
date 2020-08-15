@@ -76,20 +76,21 @@ class FetchRawData {
 
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
+    const allFilesDatesArray = [];
     const directoryPath = `data/${pathToFolder}`;
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
         // get the max date from ONE file
         const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-        // add the dates to the unique date entries
-        this.addDateEntries(data.map((datum => datum.date)));
+        // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
+        data.forEach(datum => allFilesDatesArray.push(datum.date));
         return momentTZ.max(data.map((datum) => momentTZ(datum.date)));
       });
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
-      return momentTZ.utc(mostRecentDate);
+      return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
     }
-    return momentTZ.utc(momentTZ(this.now).subtract(1, 'days'));
+    return { mostRecentDate: momentTZ.utc(momentTZ(this.now).subtract(1, 'days')), allFilesDates: [... new Set(allFilesDatesArray)] };
   };
 
   async fetchRecentData(from, numRecords) {
@@ -110,12 +111,14 @@ class FetchRawData {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
-        const uniqueDataEntries = result.filter(((item, index) => this.allUniqueDates.indexOf(item.date) === -1))
-        const { from, to } = this.extractDataInfo(uniqueDataEntries);
+        let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
+        const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.date).concat(this.allUniqueDates))]
+        this.allUniqueDates = newDatesItems;
+        const { from, to } = this.extractDataInfo(actualNewDataEntries);
         const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
-        const formattedfileNameTo = momentTZ.utc(to).format('HHmm');
+        const formattedfileNameTo = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
         const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`
-        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(result, null, 2));
+        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(actualNewDataEntries, null, 2));
         return ({ from, to });
       }
       return null;
@@ -129,7 +132,11 @@ class FetchRawData {
       fromDate = this.now;
     }
     // this is all setup before I can start fetching the data
-    const dateOfLastDataSaved = this.getLastRecordedUTCDate(this.pathToFiles);
+    const results = this.getLastRecordedUTCDate(this.pathToFiles);
+    const dateOfLastDataSaved = results.mostRecentDate;
+    const allFilesDates = results.allFilesDates
+    // set the unique dates entry set to the class instance
+    this.allUniqueDates = allFilesDates;
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
