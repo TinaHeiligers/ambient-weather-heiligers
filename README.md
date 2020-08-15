@@ -57,7 +57,6 @@ POST /_aliases
 
 ## TODO:
 - ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
-- work out solution for not storing duplicate docs in code AND for not overwriting files which is happening right now.
 - automate test runs before pushing to Github
 - set up CI
 - refactor metric conversion to class
