@@ -14,7 +14,7 @@ Install:
 `$npm install`
 
 Fetch new data:
-`$node runFetchNewData.js`
+`$node runFetchRawData.js`
 
 Convert imperial data to jsonl:
 `$node runConvertImperialToJsonl.js`

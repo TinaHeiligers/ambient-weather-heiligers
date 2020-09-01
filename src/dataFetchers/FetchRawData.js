@@ -108,6 +108,7 @@ class FetchRawData {
   }
 
   async fetchAndStoreData(toDate, numRecords) {
+    console.log('toDate:', toDate)
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
