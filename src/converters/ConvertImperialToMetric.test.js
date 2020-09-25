@@ -1,4 +1,5 @@
 const ConvertImperialToMetric = require('./ConvertImperialToMetric');
+const { mockedImperialData, mockedMetricData } = require('./convertImperialToMetricFixtures');
 
 const mockFs = {
   readdirSync: jest.fn(),
@@ -10,6 +11,8 @@ const mockFs = {
 
 describe('ConvertImperialToMetric', () => {
   let convertImperialToMetricTester;
+  let imperialDataMock = mockedImperialData;
+  let metricDataMock = mockedMetricData;
   beforeAll(() => {
     convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
   });
@@ -66,20 +69,18 @@ describe('ConvertImperialToMetric', () => {
     });
   });
   // here I need to test that the data is converted from Imperial to Metric Units
-  describe.skip('class methods: convertFiles', () => {
-    const mockedData = [
-      { "date": "2020-07-18T18:46:00.000Z" },
-      { "date": "2020-07-18T18:40:00.000Z" }
-    ];
+  describe.only('class methods: convertDataAndWriteJsonlFile', () => {
     beforeEach(() => {
       mockFs.readFileSync
-        .mockReturnValueOnce(JSON.stringify([mockedData[0]]))
-        .mockReturnValueOnce(JSON.stringify([mockedData[1]]));
+        .mockReturnValueOnce(JSON.stringify([imperialDataMock[0]]))
+        .mockReturnValueOnce(JSON.stringify([imperialDataMock[1]]))
+        .mockReturnValueOnce(JSON.stringify([imperialDataMock[2]]));
       mockFs.openSync
-        .mockImplementationOnce(() => 1).mockImplementationOnce(() => 2);
+        .mockImplementationOnce(() => 1).mockImplementationOnce(() => 3);
       mockFs.appendFileSync
-        .mockImplementationOnce(() => JSON.stringify(mockedData[0]) + "\n")
-        .mockImplementationOnce(() => JSON.stringify(mockedData[1]) + "\n");
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[0]) + "\n")
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[1]) + "\n")
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[2]) + "\n");
       mockFs.closeSync
         .mockImplementation(() => true);
     });
@@ -87,18 +88,18 @@ describe('ConvertImperialToMetric', () => {
       jest.restoreAllMocks();
     });
     it('writes json file entries to a new file with line delimiting', () => {
-      const result = convertImperialToMetricTester.convertFiles([mockedData]);
+      const result = convertImperialToMetricTester.convertDataAndWriteJsonlFile([imperialDataMock]);
       expect(result).toEqual(true);
       expect(mockFs.appendFileSync).toHaveBeenCalledTimes(1)
       expect(mockFs.closeSync).toHaveBeenCalledTimes(1)
     });
     it('does not fail if the file does not have contents', () => {
-      const result = convertImperialToMetricTester.convertFiles([{}]);
+      const result = convertImperialToMetricTester.convertDataAndWriteJsonlFile([{}]);
       expect(result).toBeTruthy();
     });
     it('does not fail if the file contains an emty entry', () => {
-      const result = convertImperialToMetricTester.convertFiles([{ "date": "2020-07-18T18:46:00.000Z" }, {},
-      { "date": "2020-07-18T18:40:00.000Z" }]);
+      const result = convertImperialToMetricTester.convertDataAndWriteJsonlFile([imperialDataMock[0], {},
+      imperialDataMock[2]]);
       expect(result).toBeTruthy();
     });
   });
