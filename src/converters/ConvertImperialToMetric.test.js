@@ -104,7 +104,7 @@ describe('ConvertImperialToMetric', () => {
     });
   });
   // Here I need to test the entire process as one function
-  describe('class methods: convertRawImperialDataToJsonl', () => {
+  describe.skip('class methods: convertRawImperialDataToJsonl', () => {
     let mockedMetricFiles = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
     let mockedImperialFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
     const mockedImperialData = imperialDataMock;
