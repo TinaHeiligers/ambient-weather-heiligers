@@ -7,7 +7,7 @@ const convertTemp = function (f) {
 };
 
 const convertMPH = function (mph) {
-  const speedmph = cu(mph).from("m/h").to("m/s");
+  const speedmph = cu(mph).from("m/h").to("km/h");
   return Number(speedmph.toFixed(3));
 };
 
@@ -22,8 +22,8 @@ function convertToMetric(datum) {
     temp_inside_c: convertTemp(datum.tempinf),
     temp_outside_c: convertTemp(datum.tempf),
     battery_condition: datum.battout === 1 ? 'good' : 'bad',
-    windspeed_meters_per_second: convertMPH(datum.windspeedmph),
-    windgust_meters_per_second: convertMPH(datum.windgustmph),
+    windspeed_km_per_hr: convertMPH(datum.windspeedmph),
+    windgust_km_per_hr: convertMPH(datum.windgustmph),
     max_daily_gust: convertMPH(datum.maxdailygust),
     hourly_rain_mm: datum.hourlyrainin !== 0 ? cu(datum.hourlyrainin).from('in').to('mm') : 0.0,
     event_rain_mm: datum.eventrainin !== 0 ? cu(datum.eventrainin).from('in').to('mm') : 0.0,

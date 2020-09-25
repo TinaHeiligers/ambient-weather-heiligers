@@ -69,7 +69,7 @@ describe('ConvertImperialToMetric', () => {
     });
   });
   // here I need to test that the data is converted from Imperial to Metric Units
-  describe.only('class methods: convertDataAndWriteJsonlFile', () => {
+  describe('class methods: convertDataAndWriteJsonlFile', () => {
     beforeEach(() => {
       mockFs.readFileSync
         .mockReturnValueOnce(JSON.stringify([imperialDataMock[0]]))
@@ -104,44 +104,46 @@ describe('ConvertImperialToMetric', () => {
     });
   });
   // Here I need to test the entire process as one function
-  describe.skip('class methods: convertRawImperialDataToJsonl', () => {
-    let mockedJsonlFiles = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
-    let mockedJsonFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
-    const mockedData = [
-      { "date": "2020-07-18T18:46:00.000Z" },
-      { "date": "2020-07-18T18:40:00.000Z" }
-    ];
+  describe('class methods: convertRawImperialDataToJsonl', () => {
+    let mockedMetricFiles = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
+    let mockedImperialFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
+    const mockedImperialData = imperialDataMock;
+    const mockedMetricData = metricDataMock;
     it('converts json files to jsonl files', () => {
-      convertImperialToMetricTester = new ConvertImperialToJsonl(mockFs);
+      convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
       mockFs.readdirSync.mockClear();
       mockFs.readFileSync
-        .mockReturnValueOnce(JSON.stringify([mockedData[0]]))
-        .mockReturnValueOnce(JSON.stringify([mockedData[1]]));
+        .mockReturnValueOnce(JSON.stringify([mockedImperialData[0]]))
+        .mockReturnValueOnce(JSON.stringify([mockedImperialData[1]]))
+        .mockReturnValueOnce(JSON.stringify([mockedImperialData[2]]));
       mockFs.openSync
         .mockImplementationOnce(() => 1).mockImplementationOnce(() => 2);
       mockFs.appendFileSync
-        .mockImplementationOnce(() => JSON.stringify(mockedData[0]) + "\n")
-        .mockImplementationOnce(() => JSON.stringify(mockedData[1]) + "\n");
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[0]) + "\n")
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[1]) + "\n")
+        .mockImplementationOnce(() => JSON.stringify(mockedMetricData[2]) + "\n");
       mockFs.closeSync
         .mockImplementation(() => true);
-      mockFs.readdirSync.mockImplementationOnce(() => mockedJsonlFiles).mockImplementationOnce(() => mockedJsonFiles)
-      expect(convertImperialToMetricTester.convertRawImperialDataToJsonl()).toEqual(['20200719-T-1055']);
+      mockFs.readdirSync
+        .mockImplementationOnce(() => mockedMetricFiles)
+        .mockImplementationOnce(() => mockedImperialFiles);
+      expect(convertImperialToMetricTester.convertImperialDataToMetricJsonl()).toEqual(['20200719-T-1055']);
       jest.restoreAllMocks();
     });
     it('works if there are no files to convert', () => {
-      convertImperialToMetricTester = new ConvertImperialToJsonl(mockFs);
+      convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
       mockFs.readdirSync.mockReset();
       mockFs.readdirSync.mockReset();
       mockFs.readFileSync.mockReset();
       mockFs.openSync.mockReset();
       mockFs.appendFileSync.mockReset();
       mockFs.closeSync.mockReset();
-      mockedJsonl = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
-      mockedJson = ['20200717-T-1055.json', '20200718-T-1055.json'];
+      mockedMetric = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
+      mockedImperial = ['20200717-T-1055.json', '20200718-T-1055.json'];
       mockFs.readdirSync
-        .mockImplementationOnce(() => mockedJsonl)
-        .mockImplementationOnce(() => mockedJson)
-      expect(convertImperialToMetricTester.convertRawImperialDataToJsonl()).toEqual([]);
+        .mockImplementationOnce(() => mockedMetric)
+        .mockImplementationOnce(() => mockedImperial)
+      expect(convertImperialToMetricTester.convertImperialDataToMetricJsonl()).toEqual([]);
       jest.restoreAllMocks();
     });
   });
