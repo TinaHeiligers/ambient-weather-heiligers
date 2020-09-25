@@ -81,6 +81,7 @@ class ConvertImperialToMetric {
   // Main function that gets executed.
   convertImperialDataToMetricJsonl() {
     // fetch converted and unconverted file names without the .json/.jsonl;
+    console.log(`Running imperial to metric conversion at ${Date()}`)
     const allMetricJsonlFileNames = this.getArrayOfFiles('jsonl');
     const allImperialFileNames = this.getArrayOfFiles('json');
     // filter out the files that have already been converted
