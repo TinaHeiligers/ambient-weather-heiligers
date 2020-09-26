@@ -18,7 +18,16 @@ const calcMinutesDiff = (to, from) => {
 function convertToMetric(datum) {
   if (!datum) return;
   return {
-    ...datum,
+    date: datum.date,
+    dateutc: datum.dateutc,
+    loc: datum.loc,
+    last_rain: datum.lastRain,
+    uv: datum.uv,
+    wind_dir: datum.winddir,
+    humidity: datum.humidity,
+    humidity_inside: datum.humidityin,
+    barometer_abs_bar: datum.baromabsin * (3386.389) * 0.1,
+    barometer_rel_bar: datum.baromrelin * (3386.389) * 0.1,
     temp_inside_c: convertTemp(datum.tempinf),
     temp_outside_c: convertTemp(datum.tempf),
     battery_condition: datum.battout === 1 ? 'good' : 'bad',
