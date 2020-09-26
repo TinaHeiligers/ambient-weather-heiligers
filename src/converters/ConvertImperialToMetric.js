@@ -6,7 +6,6 @@ const { convertToMetric } = require('../utils');
 class ConvertImperialToMetric {
   #pathToMetricJsonlFiles = 'ambient-weather-heiligers-metric-jsonl'; // jsonl form of metric data already converted
   #pathToImperialDataFiles = 'ambient-weather-heiligers-imperial'; // raw imperial data in json form
-  // #pathToImperialDataFiles = 'trash_raw_imperial'; // raw imperial data in json form
   #allMetricJsonlfilesArray = [];
   #convertedToMetricCount = 0;
   #dataFilesConvertedToMetricJsonl = [];

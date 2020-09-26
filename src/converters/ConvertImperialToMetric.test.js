@@ -109,7 +109,7 @@ describe('ConvertImperialToMetric', () => {
     let mockedImperialFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
     const mockedImperialData = imperialDataMock;
     const mockedMetricData = metricDataMock;
-    it('converts json files to jsonl files', () => {
+    it('only converts files that need conversion', () => {
       convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
       mockFs.readdirSync.mockClear();
       mockFs.readdirSync
@@ -129,6 +129,7 @@ describe('ConvertImperialToMetric', () => {
         .mockImplementation(() => true);
       expect(convertImperialToMetricTester.convertImperialDataToMetricJsonl()).toEqual(['20200719-T-1055']);
       jest.restoreAllMocks();
+      expect()
     });
     it('works if there are no files to convert', () => {
       convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
