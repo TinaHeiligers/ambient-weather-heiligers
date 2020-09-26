@@ -1,15 +1,24 @@
 // Reads json form of imperial data from file
 // Converts from imperial to metric units
+const momentTZ = require("moment-timezone");
 const { convertToMetric } = require('../utils');
 // Writes the metric data directly to jsonl files
 class ConvertImperialToMetric {
   #pathToMetricJsonlFiles = 'ambient-weather-heiligers-metric-jsonl'; // jsonl form of metric data already converted
   #pathToImperialDataFiles = 'ambient-weather-heiligers-imperial'; // raw imperial data in json form
+  // #pathToImperialDataFiles = 'trash_raw_imperial'; // raw imperial data in json form
   #allMetricJsonlfilesArray = [];
   #convertedToMetricCount = 0;
   #dataFilesConvertedToMetricJsonl = [];
+  #now = momentTZ.utc(momentTZ());
   constructor(fs) {
     this.fs = fs;
+  }
+  get now() {
+    return this.#now;
+  }
+  set now(date) {
+    this.#now = date;
   }
   get pathToMetricJsonlFiles() {
     return this.#pathToMetricJsonlFiles;
@@ -81,7 +90,9 @@ class ConvertImperialToMetric {
   // Main function that gets executed.
   convertImperialDataToMetricJsonl() {
     // fetch converted and unconverted file names without the .json/.jsonl;
-    console.log(`Running imperial to metric conversion at ${Date()}`)
+    console.log(`Converting imperial to metric data`)
+    console.log(`UCT: ${this.now.format('YYYY-MM-DD HH:mm:ss')}`)
+    console.log(`MST: ${momentTZ().format('YYYY-MM-DD HH:mm:ss')}`)
     const allMetricJsonlFileNames = this.getArrayOfFiles('jsonl');
     const allImperialFileNames = this.getArrayOfFiles('json');
     // filter out the files that have already been converted

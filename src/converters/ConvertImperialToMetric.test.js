@@ -104,7 +104,7 @@ describe('ConvertImperialToMetric', () => {
     });
   });
   // Here I need to test the entire process as one function
-  describe.skip('class methods: convertRawImperialDataToJsonl', () => {
+  describe('class methods: convertRawImperialDataToJsonl', () => {
     let mockedMetricFiles = ['20200717-T-1055.jsonl', '20200718-T-1055.jsonl'];
     let mockedImperialFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '20200719-T-1055.json'];
     const mockedImperialData = imperialDataMock;
@@ -112,21 +112,21 @@ describe('ConvertImperialToMetric', () => {
     it('converts json files to jsonl files', () => {
       convertImperialToMetricTester = new ConvertImperialToMetric(mockFs);
       mockFs.readdirSync.mockClear();
+      mockFs.readdirSync
+        .mockImplementationOnce(() => mockedMetricFiles)
+        .mockImplementationOnce(() => mockedImperialFiles);
       mockFs.readFileSync
         .mockReturnValueOnce(JSON.stringify([mockedImperialData[0]]))
         .mockReturnValueOnce(JSON.stringify([mockedImperialData[1]]))
         .mockReturnValueOnce(JSON.stringify([mockedImperialData[2]]));
       mockFs.openSync
-        .mockImplementationOnce(() => 1).mockImplementationOnce(() => 2);
+        .mockImplementationOnce(() => 1).mockImplementationOnce(() => 3);
       mockFs.appendFileSync
         .mockImplementationOnce(() => JSON.stringify(mockedMetricData[0]) + "\n")
         .mockImplementationOnce(() => JSON.stringify(mockedMetricData[1]) + "\n")
         .mockImplementationOnce(() => JSON.stringify(mockedMetricData[2]) + "\n");
       mockFs.closeSync
         .mockImplementation(() => true);
-      mockFs.readdirSync
-        .mockImplementationOnce(() => mockedMetricFiles)
-        .mockImplementationOnce(() => mockedImperialFiles);
       expect(convertImperialToMetricTester.convertImperialDataToMetricJsonl()).toEqual(['20200719-T-1055']);
       jest.restoreAllMocks();
     });

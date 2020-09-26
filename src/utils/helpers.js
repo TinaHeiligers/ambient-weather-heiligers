@@ -15,6 +15,14 @@ const calcMinutesDiff = (to, from) => {
   return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
 };
 
+function convertRainReading(reading) {
+  if (reading !== 0) {
+    const converted = cu(reading).from('in').to('mm');
+    return Number((converted).toFixed(0));
+  }
+  return 0.0;
+};
+
 function convertToMetric(datum) {
   if (!datum) return;
   return {
@@ -26,21 +34,21 @@ function convertToMetric(datum) {
     wind_dir: datum.winddir,
     humidity: datum.humidity,
     humidity_inside: datum.humidityin,
-    barometer_abs_bar: datum.baromabsin * (3386.389) * 0.1,
-    barometer_rel_bar: datum.baromrelin * (3386.389) * 0.1,
+    barometer_abs_bar: Number((datum.baromabsin * (3386.389) * 0.1).toFixed(6)),
+    barometer_rel_bar: Number((datum.baromrelin * (3386.389) * 0.1).toFixed(6)),
     temp_inside_c: convertTemp(datum.tempinf),
     temp_outside_c: convertTemp(datum.tempf),
     battery_condition: datum.battout === 1 ? 'good' : 'bad',
     windspeed_km_per_hr: convertMPH(datum.windspeedmph),
     windgust_km_per_hr: convertMPH(datum.windgustmph),
-    max_daily_gust: convertMPH(datum.maxdailygust),
-    hourly_rain_mm: datum.hourlyrainin !== 0 ? cu(datum.hourlyrainin).from('in').to('mm') : 0.0,
-    event_rain_mm: datum.eventrainin !== 0 ? cu(datum.eventrainin).from('in').to('mm') : 0.0,
-    daily_rain_mm: datum.dailyrainin !== 0 ? cu(datum.dailyrainin).from('in').to('mm') : 0.0,
-    weekly_rain_mm: datum.weeklyrainin !== 0 ? cu(datum.weeklyrainin).from('in').to('mm') : 0.0,
-    monthly_rain_mm: datum.monthlyrain !== 0 ? cu(datum.monthlyrainin).from('in').to('mm') : 0.0,
-    total_rain_mm: datum.totalrainin !== 0 ? cu(datum.totalrainin).from('in').to('mm') : 0.0,
-    solar_radiation_watt_per_square_meter: datum.solarradiation,
+    max_daily_gust_km_per_hr: convertMPH(datum.maxdailygust),
+    hourly_rain_mm: convertRainReading(datum.hourlyrainin),
+    event_rain_mm: convertRainReading(datum.eventrainin),
+    daily_rain_mm: convertRainReading(datum.dailyrainin),
+    weekly_rain_mm: convertRainReading(datum.weeklyrainin),
+    monthly_rain_mm: convertRainReading(datum.monthlyrainin),
+    total_rain_mm: convertRainReading(datum.totalrainin),
+    solar_radiation_W_per_sq_m: datum.solarradiation,
     feels_like_outside_c: convertTemp(datum.feelsLike),
     dewpoint_c: convertTemp(datum.dewPoint),
     feelslike_inside_c: convertTemp(datum.feelsLikein),
