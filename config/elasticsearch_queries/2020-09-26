@@ -35,20 +35,20 @@ GET ambient_weather_heiligers_imperial_2020_09_12/_search
 # Add a new index for manual rollover
 # Add the new index as the write index for the alias and change the write index setting for the previous one to be false.
 POST /_aliases
-PUT ambient_weather_heiligers_imperial_2020_09_12
+PUT ambient_weather_metric_2020_09_26
 {
   "actions": [
     {
       "add": {
-        "index": "ambient_weather_heiligers_imperial_2020_09_12",
-        "alias": "all-ambient-weather-heiligers-imperial",
+        "index": "ambient_weather_metric_2020_10_01", // still to create this index.
+        "alias": "all-ambient-weather-metric",
         "is_write_index": true
       }
     },
     {
       "remove": {
-        "index": "ambient_weather_heiligers_daily_2020_09_12",
-        "alias": "all-ambient-weather-heiligers-imperial"
+        "index": "ambient_weather_metric_2020_09_26", // using this one for dev
+        "alias": "all-ambient-weather-metric"
       }
     }
   ]
