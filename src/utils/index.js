@@ -1,6 +1,7 @@
-const { convertTemp, convertMPH, calcMinutesDiff } = require('./helpers');
+const { convertTemp, convertMPH, calcMinutesDiff, convertToMetric } = require('./helpers');
 module.exports = {
   convertTemp,
   convertMPH,
-  calcMinutesDiff
+  calcMinutesDiff,
+  convertToMetric
 }

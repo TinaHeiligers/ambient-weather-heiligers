@@ -1,2 +1,3 @@
 const ConvertImperialToJsonl = require('./ConvertImperialToJsonl');
-module.exports = ConvertImperialToJsonl;
+const ConvertImperialToMetric = require('./ConvertImperialToMetric');
+module.exports = { ConvertImperialToJsonl, ConvertImperialToMetric };
