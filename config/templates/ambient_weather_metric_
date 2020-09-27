@@ -1,4 +1,4 @@
-PUT _template/ambient_weather_imperial
+PUT _template/ambient_weather_metric
 {
   "order" : 0,
   "version" : 1,
