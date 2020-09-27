@@ -1,0 +1,55 @@
+GET _cat/indices/*ambient*?v
+
+GET _cat/aliases/*ambient*?v
+
+GET /_cat/shards/ambient_weather_heiligers_imperial_2020_06_30?v
+
+GET deduped_ambient_weather_heiligers_imperial_2020_07_25/_search
+{
+  "sort": [
+    {
+      "dateutc": {
+        "order": "desc"
+      }
+    }
+  ],
+  "size": 1,
+  "_source": ["dateutc", "date"]
+}
+GET ambient_weather_heiligers_imperial_2020_09_12/_search
+{
+  "sort": [
+    {
+      "date": {
+        "order": "desc"
+      }
+    }
+  ],
+  "size": 288,
+  "_source": ["agent.hostname", "date"]
+}
+
+GET ambient_weather_heiligers_imperial_2020_09_12/_mapping
+
+GET ambient_weather_heiligers_imperial_2020_09_12/_search
+# Add a new index for manual rollover
+# Add the new index as the write index for the alias and change the write index setting for the previous one to be false.
+POST /_aliases
+PUT ambient_weather_heiligers_imperial_2020_09_12
+{
+  "actions": [
+    {
+      "add": {
+        "index": "ambient_weather_heiligers_imperial_2020_09_12",
+        "alias": "all-ambient-weather-heiligers-imperial",
+        "is_write_index": true
+      }
+    },
+    {
+      "remove": {
+        "index": "ambient_weather_heiligers_daily_2020_09_12",
+        "alias": "all-ambient-weather-heiligers-imperial"
+      }
+    }
+  ]
+}

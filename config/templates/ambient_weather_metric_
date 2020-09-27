@@ -1,0 +1,269 @@
+PUT _template/ambient_weather_imperial
+{
+  "order" : 0,
+  "version" : 1,
+  "index_patterns" : [
+    "ambient_weather_metric_*"
+  ],
+  "settings" : {
+    "index" : {
+      "number_of_shards" : "1"
+    }
+  },
+  "mappings" : {
+    "dynamic_date_formats" : [
+      "strict_date_optional_time",
+      "yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z||strict_date_time"
+    ],
+    "numeric_detection" : true,
+    "_meta" : { },
+    "dynamic" : "true",
+    "_source" : {
+      "enabled" : true
+    },
+    "dynamic_templates" : [ ],
+    "date_detection" : true,
+    "properties" : {
+      "date" : {
+        "type" : "date"
+      },
+      "temp_outside_c" : {
+        "type" : "float"
+      },
+      "loc" : {
+        "ignore_above" : 256,
+        "type" : "keyword"
+      },
+      "agent" : {
+        "properties" : {
+          "hostname" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "id" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "ephemeral_id" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "type" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "version" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          }
+        }
+      },
+      "total_rain_mm" : {
+        "type" : "float"
+      },
+      "log" : {
+        "properties" : {
+          "file" : {
+            "properties" : {
+              "path" : {
+                "type" : "text",
+                "fields" : {
+                  "keyword" : {
+                    "ignore_above" : 256,
+                    "type" : "keyword"
+                  }
+                }
+              }
+            }
+          },
+          "offset" : {
+            "type" : "long"
+          }
+        }
+      },
+      "feelslike_inside_c" : {
+        "type" : "float"
+      },
+      "last_rain" : {
+        "format" : "strict_date_optional_time",
+        "type" : "date"
+      },
+      "dewpoint_inside_c" : {
+        "type" : "float"
+      },
+      "monthly_rain_mm" : {
+        "type" : "float"
+      },
+      "daily_rain_mm" : {
+        "type" : "float"
+      },
+      "solar_radiation_W_per_sq_m" : {
+        "type" : "float"
+      },
+      "ecs" : {
+        "properties" : {
+          "version" : {
+            "ignore_above" : 256,
+            "type" : "keyword"
+          }
+        }
+      },
+      "humidity_inside" : {
+        "type" : "long"
+      },
+      "@version" : {
+        "type" : "long"
+      },
+      "host" : {
+        "properties" : {
+          "name" : {
+            "ignore_above" : 256,
+            "type" : "keyword"
+          }
+        }
+      },
+      "humidity" : {
+        "type" : "long"
+      },
+      "max_daily_gust_km_per_hr" : {
+        "type" : "float"
+      },
+      "fulldate" : {
+        "properties" : {
+          "monthday" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "hour" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "month" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "year" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          },
+          "minute" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "ignore_above" : 256,
+                "type" : "keyword"
+              }
+            }
+          }
+        }
+      },
+      "uv" : {
+        "type" : "long"
+      },
+      "windspeed_km_per_hr" : {
+        "type" : "long"
+      },
+      "event_rain_mm" : {
+        "type" : "long"
+      },
+      "hourly_rain_mm" : {
+        "type" : "long"
+      },
+      "wind_dir" : {
+        "type" : "long"
+      },
+      "barometer_abs_bar" : {
+        "type" : "float"
+      },
+      "dewpoint_c" : {
+        "type" : "float"
+      },
+      "temp_inside_c" : {
+        "type" : "float"
+      },
+      "battery_condition" : {
+        "type" : "keyword",
+        "ignore_above" : 256
+      },
+      "tags" : {
+        "ignore_above" : 256,
+        "type" : "keyword"
+      },
+      "feels_like_outside_c" : {
+        "type" : "float"
+      },
+      "dateutc" : {
+        "type" : "long"
+      },
+      "windgust_km_per_hr" : {
+        "type" : "float"
+      },
+      "@timestamp" : {
+        "format" : "strict_date_optional_time",
+        "type" : "date"
+      },
+      "barometer_rel_bar" : {
+        "type" : "float"
+      },
+      "fields" : {
+        "properties" : {
+          "data_type" : {
+            "ignore_above" : 256,
+            "type" : "keyword"
+          }
+        }
+      },
+      "weekly_rain_mm" : {
+        "type" : "long"
+      }
+    }
+  },
+  "aliases" : {
+    "all-ambient-weather-metric" : { }
+  }
+}
