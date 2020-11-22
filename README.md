@@ -65,4 +65,6 @@ POST /_aliases
 - automate de-duping entries
 
 ## Known bugs:
- - still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
+ - If the last saved data file is an empty array, the rawDataFatcher doesn't fetch new data.
+ - ~~still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.~~
+
