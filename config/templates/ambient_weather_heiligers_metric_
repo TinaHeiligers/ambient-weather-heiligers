@@ -1,9 +1,9 @@
-PUT _template/ambient_weather_metric
+PUT _template/ambient_weather_heiligers_metric
 {
   "order" : 0,
   "version" : 1,
   "index_patterns" : [
-    "ambient_weather_metric_*"
+    "ambient_weather_heiligers_metric_*"
   ],
   "settings" : {
     "index" : {
@@ -264,6 +264,6 @@ PUT _template/ambient_weather_metric
     }
   },
   "aliases" : {
-    "all-ambient-weather-metric" : { }
+    "all-ambient-weather-heiligers-metric" : { }
   }
 }
