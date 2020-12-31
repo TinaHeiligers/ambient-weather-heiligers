@@ -68,3 +68,13 @@ POST /_aliases
  - If the last saved data file is an empty array, the rawDataFatcher doesn't fetch new data.
  - ~~still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.~~
 
+## Current aliases:
+| alias | index | filter | routing.index | routing.search | is_write_index (if blank, defaults to true) |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| all-deduped-ambient-weather-heiligers-imperial | deduped_ambient_weather_heiligers_imperial_2020_07_25 - | - | - | - |
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_09_12 | - | - | - | false |
+| all-ambient-weather-heiligers-metric | ambient_weather_heiligers_metric_2020_12_31 | - | - | - | true |
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_08_03 | - | - | - | false |
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_06_30 | - | - | - | false |
+| all-ambient-weather-heiligers-metric | ambient_weather_heiligers_metric_2020_09_27 | - | - | - | false |
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_12_31 | - | - | - | true |
