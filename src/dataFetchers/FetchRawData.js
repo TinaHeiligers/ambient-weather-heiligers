@@ -81,11 +81,17 @@ class FetchRawData {
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
+        console.log('the file is: ', file)
         // get the max date from ONE file
-        const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-        // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
-        data.forEach(datum => allFilesDatesArray.push(datum.date));
-        return momentTZ.max(data.map((datum) => momentTZ(datum.date)));
+        if (file === '.DS_Store') {
+          return
+        } else {
+          const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
+          // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
+          data.forEach(datum => allFilesDatesArray.push(datum.date));
+          const result = momentTZ.max(data.map((datum) => momentTZ(datum.date)));
+          return result
+        }
       });
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
       return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
@@ -100,6 +106,7 @@ class FetchRawData {
       try {
         return await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
       } catch (err) {
+        console.error(err)
         throw err;
       }
     } else {
@@ -124,7 +131,8 @@ class FetchRawData {
       }
       return null;
     } catch (err) {
-      console.log('error in fetchAndStoreData', err)
+      console.error('error in fetchAndStoreData', err)
+      throw err
     }
   }
   async getDataForDateRanges(fromDate) {
@@ -134,6 +142,7 @@ class FetchRawData {
     }
     // this is all setup before I can start fetching the data
     const results = this.getLastRecordedUTCDate(this.pathToFiles);
+
     const dateOfLastDataSaved = results.mostRecentDate;
     const allFilesDates = results.allFilesDates
     // set the unique dates entry set to the class instance

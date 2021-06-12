@@ -12,6 +12,8 @@ const convertMPH = function (mph) {
 };
 
 const calcMinutesDiff = (to, from) => {
+  console.log('what is to?', to)
+  console.log('what is from?', from)
   return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
 };
 
