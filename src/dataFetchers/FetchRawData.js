@@ -111,8 +111,12 @@ class FetchRawData {
     console.log('toDate:', toDate)
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
+      // console.log('the result from fetchRecentData is', result.length)
+      // console.log('typeof result', typeof result)
       if (result && result.length > 0) {
-        let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
+        let actualNewDataEntries = result.filter((entry) => {
+          return !this.allUniqueDates.includes(entry.date);
+        })
         const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.date).concat(this.allUniqueDates))]
         this.allUniqueDates = newDatesItems;
         const { from, to } = this.extractDataInfo(actualNewDataEntries);
