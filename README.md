@@ -13,13 +13,17 @@ There's a high chance of duplicate entries because of the way the Ambient Weathe
 Install:
 `$npm install`
 
-Fetch new data:
+To fetch and convert data:
+1. Fetch new data:
 `$node runFetchRawData.js`
 
-Convert imperial data to jsonl:
+2. Convert imperial data to jsonl:
 `$node runConvertImperialToJsonl.js`
 
-Run everything:
+3. Handle metric and json -> jsonl conversion
+`$node runConvertImperialToMetric.js`
+
+This does not work:
 `$npm start` or `$ ./fetchdata.sh`
 
 Test:

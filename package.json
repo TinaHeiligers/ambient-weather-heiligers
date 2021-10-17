@@ -4,7 +4,7 @@
   "description": "collect data from Heiligers weather station",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "./node_modules/.bin/jest",
     "start": "node runFetchRawData.js && node runConvertImperialToJsonl.js && node runConvertImperialToMetric.js"
   },
   "author": "Tina Heiligers",
@@ -18,12 +18,7 @@
     "moment-timezone": "^0.5.31"
   },
   "devDependencies": {
-    "husky": "^4.2.5",
-    "jest": "^26.0.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-push": "npm test"
-    }
+    "jest": "^27.0.4",
+    "jest-cli": "^27.0.4"
   }
 }
