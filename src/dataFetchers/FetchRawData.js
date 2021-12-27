@@ -81,7 +81,6 @@ class FetchRawData {
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
       const maxFileEntriesDatesArray = files.map((file) => {
-        console.log('the file is: ', file)
         // get the max date from ONE file
         if (file === '.DS_Store') {
           return
@@ -115,7 +114,6 @@ class FetchRawData {
   }
 
   async fetchAndStoreData(toDate, numRecords) {
-    console.log('toDate:', toDate)
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {

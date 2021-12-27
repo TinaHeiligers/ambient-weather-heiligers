@@ -90,8 +90,6 @@ class ConvertImperialToMetric {
   convertImperialDataToMetricJsonl() {
     // fetch converted and unconverted file names without the .json/.jsonl;
     console.log(`Converting imperial to metric data`)
-    console.log(`UCT: ${this.now.format('YYYY-MM-DD HH:mm:ss')}`)
-    console.log(`MST: ${momentTZ().format('YYYY-MM-DD HH:mm:ss')}`)
     const allMetricJsonlFileNames = this.getArrayOfFiles('jsonl');
     const allImperialFileNames = this.getArrayOfFiles('json');
     // filter out the files that have already been converted
