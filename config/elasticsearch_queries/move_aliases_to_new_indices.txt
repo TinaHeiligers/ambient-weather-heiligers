@@ -1,0 +1,24 @@
+PUT /ambient_weather_heiligers_imperial_2021_12_30
+PUT /ambient_weather_heiligers_metric_2021_12_30
+
+# Note: do the same for the imperial index
+POST /_aliases
+{
+  "actions": [
+    {
+      "remove": {
+        "index": "ambient_weather_heiligers_metric_2021_12_30",
+        "alias": "ambinet_weather_heiligers_metric",
+        "is_write_index": true
+      }
+    }
+  ]
+}
+
+GET _cat/aliases/all-ambient-weather-heiligers-metric?v
+
+# remove write index from old index
+PUT ambient_weather_heiligers_metric_2021_12_30/_alias/all-ambient-weather-heiligers-metric
+{
+  "is_write_index": true
+}
