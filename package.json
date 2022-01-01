@@ -12,6 +12,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "^7.16.0",
     "ambient-weather-api": "0.0.6",
+    "assert": "^2.0.0",
     "convert-units": "^2.3.4",
     "file-system": "^2.2.2",
     "moment": "^2.26.0",
