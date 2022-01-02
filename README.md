@@ -60,20 +60,19 @@ POST /_aliases
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
 
 ## TODO:
-- ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
-- automate test runs before pushing to Github -> not doing with husky, something went wrong and I don't feel like figuring it out.
-- set up CI -> eventually, not needed right now
-
-- refactor metric conversion to class
-- add new classes to their own call modules
-
-- implement using es client to index without filebeat
-- automate de-duping entries
-
+1. Code:
+- Refactor to use modules rather than a mix of modules and common js
+- Refactor metric conversion to class
+- Implement using es client to index without filebeat
+- Automate de-duping entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch Old solution was to use logstash but it's very manual
+- Set up ILM to automatically rollover the indices (metric, imperial & deduped entries)
+- Automate test runs before pushing to Github -> not doing with husky, something went wrong and I don't feel like figuring it out.
+- Set up monitoring for the pi
+- Set up CI -> eventually, not needed right now
+2. Kibana index pattern to match the aliases
 ## Known bugs:
  - If the last saved data file is an empty array, the rawDataFatcher doesn't fetch new data.
- - ~~still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.~~
-
+ - If there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
 ## Current aliases:
 | alias | index | filter | routing.index | routing.search | is_write_index (if blank, defaults to true) |
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
