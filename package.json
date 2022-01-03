@@ -19,6 +19,7 @@
     "moment-timezone": "^0.5.31"
   },
   "devDependencies": {
+    "@elastic/elasticsearch-mock": "^0.3.1",
     "jest": "^27.0.4",
     "jest-cli": "^27.0.4"
   }
