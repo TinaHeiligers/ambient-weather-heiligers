@@ -61,15 +61,18 @@ POST /_aliases
 
 ## TODO:
 1. Code:
-- Refactor to use modules rather than a mix of modules and common js
-- Refactor metric conversion to class
+- Refactor to use modules rather than a mix of modules and common js: where possible
+- ~~Refactor metric conversion to class~~ Done
 - Implement using es client to index without filebeat
+    We can use the dates returned from FetchRawData.getDataForDateRanges ([{from <Moment>, to <Moment>}]) to read the file names matching those dates (or that include those dates)
 - Automate de-duping entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch Old solution was to use logstash but it's very manual
 - Set up ILM to automatically rollover the indices (metric, imperial & deduped entries)
 - Automate test runs before pushing to Github -> not doing with husky, something went wrong and I don't feel like figuring it out.
 - Set up monitoring for the pi
 - Set up CI -> eventually, not needed right now
-2. Kibana index pattern to match the aliases
+- convert to typescript
+2. Kibana:
+- index pattern to match the aliases
 ## Known bugs:
  - If the last saved data file is an empty array, the rawDataFatcher doesn't fetch new data.
  - If there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.

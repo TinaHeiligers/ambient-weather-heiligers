@@ -78,6 +78,7 @@ class ConvertImperialToMetric {
     });
     return true;
   }
+
   logResult(filesToConvert) {
     if (this.convertedToMetricCount === filesToConvert.length) {
       console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);

@@ -74,7 +74,7 @@ describe('FetchRawData', () => {
       expect(FetchRawDataTester.failedDatesForDate).toEqual(['2020-06-30'])
     })
   });
-  describe('class methods: extractDataInfo', () => {
+  describe('class methods: extractDatesFromData', () => {
     let rawDataFetcher;
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
@@ -93,7 +93,7 @@ describe('FetchRawData', () => {
       { "date": "2020-07-18T18:05:00.000Z" },
       { "date": "2020-07-18T18:00:00.000Z" },
       { "date": "2020-07-18T17:55:00.000Z" }];
-      const { to, from } = await rawDataFetcher.extractDataInfo(testDataArray);
+      const { to, from } = await rawDataFetcher.extractDatesFromData(testDataArray);
       expect(to).toBeInstanceOf(momentTZ);
       expect(from).toBeInstanceOf(momentTZ);
       expect(to.format('YYYY-MM-DDTHH:MM'))
@@ -191,7 +191,7 @@ describe('FetchRawData', () => {
       const from1 = "2020-06-19";
       const from2 = "2020-06-21";
       const testArray = [{ date: from1 }, { date: from2 }];
-      expect(rawDataFetcher.extractDataInfo(testArray)).toEqual({
+      expect(rawDataFetcher.extractDatesFromData(testArray)).toEqual({
         from: momentTZ(from1),
         to: momentTZ(from2),
       });
@@ -205,8 +205,8 @@ describe('FetchRawData', () => {
         days.push({ date: day.toDate() });
         day = day.clone().add(1, 'd');
       }
-      expect(rawDataFetcher.extractDataInfo(days).from.format('YYYY-MM-DD')).toEqual(startOfWeek.format('YYYY-MM-DD'));
-      expect(rawDataFetcher.extractDataInfo(days).to.format('YYYY-MM-DD')).toEqual(endOfWeek.format('YYYY-MM-DD'));
+      expect(rawDataFetcher.extractDatesFromData(days).from.format('YYYY-MM-DD')).toEqual(startOfWeek.format('YYYY-MM-DD'));
+      expect(rawDataFetcher.extractDatesFromData(days).to.format('YYYY-MM-DD')).toEqual(endOfWeek.format('YYYY-MM-DD'));
     });
     it('calls fetchRecentData with date and record count provided', async () => {
       const mockedData = [
@@ -353,6 +353,3 @@ describe('FetchRawData', () => {
   });
 });
 
-const formatExpectedDate = () => {
-  return momentTZ.utc(momentTZ().subtract(1, 'days')).format('YYYY-MM-DD')
-}

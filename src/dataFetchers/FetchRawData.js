@@ -62,11 +62,9 @@ class FetchRawData {
     return this.#pathToFiles;
   }
 
-  extractDataInfo = (dataArray) => {
+  extractDatesFromData = (dataArray) => {
     const dataDates = dataArray.map((datum) => momentTZ(datum.date));
-    const dataFrom = momentTZ.min(dataDates);
-    const dataTo = momentTZ.max(dataDates);
-    return { from: dataFrom, to: dataTo };
+    return { from: momentTZ.min(dataDates), to: momentTZ.max(dataDates) };
   };
 
   addDateEntries(dateArray) {
@@ -118,9 +116,11 @@ class FetchRawData {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && result.length > 0) {
         let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
+        // actual new data in imperial format
         const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.date).concat(this.allUniqueDates))]
         this.allUniqueDates = newDatesItems;
-        const { from, to } = this.extractDataInfo(actualNewDataEntries);
+        // setting up to store data in files
+        const { from, to } = this.extractDatesFromData(actualNewDataEntries);
         const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
         const formattedfileNameTo = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
         const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`
@@ -133,6 +133,7 @@ class FetchRawData {
       throw err
     }
   }
+  // main function for this class
   async getDataForDateRanges(fromDate) {
     console.log('in getDataForDateRanges')
     if (!fromDate) {
@@ -148,9 +149,11 @@ class FetchRawData {
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
+
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
+
     if (estNumberOfBatches >= 1) {
       console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
@@ -194,6 +197,7 @@ class FetchRawData {
         console.log('PROBLEM in single day fetch!', err)
       }
     }
+    console.log(this.datesArray)
     return this.datesArray;
   };
 }
