@@ -1,5 +1,5 @@
 const esClient = require('./esClient');
-const { pingCluster } = require('./esClientMethods');
+const { pingCluster, getClusterAliases } = require('./esClientMethods');
 
 /*
 What do I want to do here?
@@ -23,6 +23,16 @@ class IndexData {
   }
   async ensureConnection() {
     return await pingCluster(this.client);
+  }
+  // TODO: handle dynamically getting indices for different data types ('metric' | 'imperial')
+  async getCurrentIndices(dataType = 'metric') {
+    let requiredIndex;
+    const clusterAliasesResult = await getClusterAliases(this.client)
+    const currentWriteIndices = clusterAliasesResult.filter(entry => entry.is_write_index === 'true');
+    requiredIndex = dataType === 'metric'
+      ? currentWriteIndices.filter((entry => entry.alias.includes('metric')))
+      : currentWriteIndices.filter((entry => entry.alias.includes('imperial')));
+    return requiredIndex[0].index;
   }
 }
 

@@ -23,7 +23,9 @@ async function pingCluster(client = esClient) {
   return pingResult.body;
 }
 
-const getClusterIndices = async function (client = esClient) {
+// params: esClient = elasticsearch client, dataType <string> 'metric' | 'imperial'
+// returns: all cluster indices, including system indices
+const getClusterIndices = async function (client = require('./esClient'), dataType) {
   let clusterIndices;
   try {
     clusterIndices = await esClient.cat.indices({
@@ -36,11 +38,12 @@ const getClusterIndices = async function (client = esClient) {
   } catch (err) {
     console.error(err)
   }
-  console.log('clusterIndices', clusterIndices)
+  console.log('clusterIndices', clusterIndices);
   return clusterIndices;
 }
-
-const getClusterAliases = async function (client = esClient) {
+// params: esClient = elasticsearch client
+// returns: array of objects containing alias <string>, index <string>, is_write_index: <boolean>
+const getClusterAliases = async function (client = require('./esClient')) {
   let clusterAliasesResult;
   let error;
   try {
@@ -83,6 +86,6 @@ const clientMethods = {
 // clientMethods.catIndices()
 // clientMethods.catAliases()
 // clientMethods.activeIndices();
-module.exports = { pingCluster };
+module.exports = { pingCluster, getClusterAliases };
 
 
