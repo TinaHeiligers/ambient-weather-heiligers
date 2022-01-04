@@ -71,6 +71,7 @@ POST /_aliases
 - Set up monitoring for the pi
 - Set up CI -> eventually, not needed right now
 - convert to typescript
+- add jsdocs
 2. Kibana:
 - index pattern to match the aliases
 ## Known bugs:
