@@ -66,13 +66,15 @@ describe('FetchRawData', () => {
       expect(FetchRawDataTester.failedDatesForDate).toEqual([])
       FetchRawDataTester.failedDatesForDate = newArray;
       expect(FetchRawDataTester.failedDatesForDate).toEqual(newArray)
-    })
+    });
     it("sets the failed dates array for data that wasn't fetched", () => {
       let originalArray = FetchRawDataTester.failedDatesForDate;
       FetchRawDataTester.failedDatesForDate = ['2020-06-30'];
       expect(FetchRawDataTester.failedDatesForDate).not.toEqual(originalArray)
       expect(FetchRawDataTester.failedDatesForDate).toEqual(['2020-06-30'])
-    })
+    });
+    it.todo('adds tests for recentDataFileNames')
+    it.todo('adds tests for skipSave')
   });
   describe('class methods: extractDatesFromData', () => {
     let rawDataFetcher;
@@ -287,7 +289,7 @@ describe('FetchRawData', () => {
           to: momentTZ('2020-07-18').add((288 * 5), 'minutes'),
         }
       });
-      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
+      const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
       expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
@@ -303,7 +305,7 @@ describe('FetchRawData', () => {
           to: momentTZ('2020-07-18').add((288 * 5), 'minutes'),
         }
       });
-      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
+      const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
       expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
@@ -326,7 +328,7 @@ describe('FetchRawData', () => {
         .mockImplementationOnce(() => {
           return { from: momentTZ('2020-07-16T17:50:00-07:00'), to: momentTZ('2020-07-15T17:55:00-07:00') }
         });
-      const result = await rawDataFetcher.getDataForDateRanges('2020-07-19');
+      const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(4);
       const fromDates = result.map(resultItem => resultItem.from.format('YYYY-MM-DD'))
@@ -346,7 +348,7 @@ describe('FetchRawData', () => {
       jest.spyOn(rawDataFetcher, 'fetchAndStoreData').mockImplementation((a, b) => {
         return { from: momentTZ('2020-07-18T17:55:00-07:00'), to: momentTZ('2020-07-19T17:50:00-07:00') }
       });
-      const result = await rawDataFetcher.getDataForDateRanges('2020-07-18T17:55:00.000Z');
+      const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-18T17:55:00.000Z');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(0);
     })

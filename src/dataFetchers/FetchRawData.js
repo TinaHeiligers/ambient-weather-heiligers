@@ -24,6 +24,8 @@ class FetchRawData {
   #datesArray = [];
   #allUniqueDates = [];
   #failedDatesForDataFetch = [];
+  #recentDataFileNames = []; // array of filename strings for the data fetched during the run.
+  #skipSave = false;
   constructor(awApi, fs) {
     this.AWApi = awApi;
     this.fs = fs;
@@ -60,6 +62,27 @@ class FetchRawData {
   }
   get pathToFiles() {
     return this.#pathToFiles;
+  }
+  get recentDataFileNames() {
+    return this.#recentDataFileNames;
+  }
+  set recentDataFileNames(fileNames) {
+    this.#recentDataFileNames = Array.isArray(fileNames) ? this.#recentDataFileNames.concat(fileNames) : this.#recentDataFileNames.concat([fileNames]);
+  }
+  get skipSave() {
+    return this.#skipSave;
+  }
+  set skipSave(bool) {
+    this.#skipSave = !!bool;
+  }
+
+  clearFileNames() {
+    if (this.#recentDataFileNames && this.#recentDataFileNames.length > 0) {
+      console.log(`clearing ${this.recentDataFileNames.length()} file names`);
+      this.#recentDataFileNames = [];
+    } else {
+      console.log(`No filenames to clear`)
+    }
   }
 
   extractDatesFromData = (dataArray) => {
@@ -114,6 +137,7 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
+      // console.log('the result from fetching the most recent data is:', result)
       if (result && result.length > 0) {
         let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
         // actual new data in imperial format
@@ -123,22 +147,26 @@ class FetchRawData {
         const { from, to } = this.extractDatesFromData(actualNewDataEntries);
         const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
         const formattedfileNameTo = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
-        const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`
-        this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(actualNewDataEntries, null, 2));
+        const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`;
+        this.recentDataFileNames = formattedFileName
+        if (!this.skipSave) {
+          this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(actualNewDataEntries, null, 2));
+        }
         return ({ from, to });
       }
       return null;
     } catch (err) {
       console.error('error in fetchAndStoreData', err)
-      throw err
+      throw err;
     }
   }
   // main function for this class
-  async getDataForDateRanges(fromDate) {
+  async getDataForDateRanges(skipSave = false, fromDate) {
     console.log('in getDataForDateRanges')
     if (!fromDate) {
       fromDate = this.now;
     }
+    this.skipSave = skipSave;
     // this is all setup before I can start fetching the data
     const results = this.getLastRecordedUTCDate(this.pathToFiles);
 
@@ -155,10 +183,10 @@ class FetchRawData {
     // multi-day data fetch
 
     if (estNumberOfBatches >= 1) {
-      console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
+      // console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
-        console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
+        // console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
           const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (resultDatesObject) {
@@ -181,9 +209,9 @@ class FetchRawData {
       if (resultDatesObject) {
         const { from, to } = resultDatesObject;
         this.datesArray = this.datesArray.concat({ from, to })
-        return this.datesArray;
+        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       } else {
-        return this.datesArray;
+        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       }
     } else {
 
@@ -197,8 +225,8 @@ class FetchRawData {
         console.log('PROBLEM in single day fetch!', err)
       }
     }
-    console.log(this.datesArray)
-    return this.datesArray;
+    console.log('this.datesArray', this.datesArray)
+    return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
   };
 }
 module.exports = FetchRawData;

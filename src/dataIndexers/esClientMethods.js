@@ -3,7 +3,7 @@ const { indexDoesNotExist, indexExistsError } = require('./errors');
 const { errors } = require('@elastic/elasticsearch');
 const Logger = require('../logger');
 
-const cclogger = new Logger('cclogger');
+const esClientLogger = new Logger('esClientLogger');
 // gets the current cluster info
 /**
  *
@@ -15,9 +15,9 @@ const getClusterInfo = async function (client = esClient) {
   try {
     result = await esClient.info();
   } catch (err) {
-    cclogger.logWarning('oops', err);
+    esClientLogger.logWarning('[getClusterInfo] [ERROR]', err);
   }
-  cclogger.logInfo('clusterInfo:', result)
+  esClientLogger.logInfo('[getClusterInfo] [SUCCESS]', result)
   return result;
 }
 
@@ -31,7 +31,7 @@ async function pingCluster(client = esClient) {
   try {
     pingResult = await esClient.ping();
   } catch (err) {
-    cclogger.logError(err);
+    esClientLogger.logError('[pingCluster] [ERROR]', err);
   }
   return pingResult.body;
 }
@@ -53,9 +53,9 @@ const getAllAmbientWeatherIndices = async function (client = require('./esClient
       expand_wildcards: 'all',
     });
   } catch (err) {
-    cclogger.logError(err)
+    esClientLogger.logError('[getAllAmbientWeatherIndices] [ERROR]', err)
   }
-  cclogger.logInfo('clusterIndices', clusterIndices.body);
+  esClientLogger.logInfo('[getAllAmbientWeatherIndices] [SUCCESS]', clusterIndices.body);
   return clusterIndices.body;
 }
 /**
@@ -87,9 +87,9 @@ const getAmbientWeatherAliases = async function (client = require('./esClient'))
     }
   } catch (err) {
     error = err;
-    cclogger.logError(err)
+    esClientLogger.logError('[getAmbientWeatherAliases] [ERROR]', err)
   }
-  cclogger.logInfo("clusterAliasesResult:", clusterAliasesResult)
+  esClientLogger.logInfo('[getAmbientWeatherAliases] [SUCCESS]', clusterAliasesResult)
   return clusterAliasesResult; // returns body, statusCode, headers, meta
 }
 /* params:
@@ -121,13 +121,13 @@ const createIndex = async function (client = require('./esClient'), indexName, i
     }, { ignore: [404] });
   } catch (err) {
     if (!indexExistsError(err)) {
-      cclogger.logError(`cannot create the index: ${indexName}`, err)
+      esClientLogger.logError(`[createIndex] [ERROR] cannot create the index: ${indexName}`, err)
       throw err;
     } else {
-      cclogger.logWarning(`index ${indexName} already exists`, err)
+      esClientLogger.logWarning(`[createIndex] [WARNING] index ${indexName} already exists`, err)
     }
   }
-  cclogger.logInfo('createIndexResult:', createIndexResult);
+  esClientLogger.logInfo('[createIndex] [SUCCESS]', createIndexResult);
   return createIndexResult;
 }
 
@@ -155,20 +155,27 @@ const deleteIndex = async function (client = require('./esClient'), indexName) {
     })
   } catch (err) {
     if (indexDoesNotExist(err)) {
-      cclogger.logInfo('index does not exist', err)
+      esClientLogger.logInfo('[deleteIndex] [INFO] index does not exist', err)
     } else {
-      cclogger.logError(err)
+      esClientLogger.logError('[deleteIndex] [ERROR]', err)
       throw new Error('unhandled exception error from deleteIndex', err)
     }
   }
-  cclogger.logInfo(`deleteResult: ${deleteResult}`)
+  esClientLogger.logInfo('[deleteIndex] [SUCCESS]', deleteResult)
   return deleteResult.body;
 }
-// given the configured elasticsearch client, data to index and the target index, bulk indexes data
-// returns
-const bulkIndexData = async function (client = require('./esClient'), data = [], dataType) {
-  // do stuff
-}
+
+// const getMostRecentDocs = async function (client = require('./esClient'), indexName) {
+//   const result = await client.search({
+//     index:
+//   });
+//   //implement me using esClient.search with decending order and retrieving only 1 doc.
+// }
+// // given the configured elasticsearch client, data to index and the target index, bulk indexes data
+// // returns
+// const bulkIndexData = async function (client = require('./esClient'), data = [], dataType) {
+//   // do stuff
+// }
 
 
 
