@@ -1,5 +1,5 @@
 
-export { newData } from './runFetchRawData';
+export { newDataDatesAndFileNames } from './runFetchRawData';
 export { convertImperialToJsonl } from './runConvertImperialToJsonl';
 export { convertedMetricData } from './runConvertImperialToJsonl';
 export { currentMetricIndex } from './runIndexData';

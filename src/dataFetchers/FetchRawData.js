@@ -183,10 +183,10 @@ class FetchRawData {
     // multi-day data fetch
 
     if (estNumberOfBatches >= 1) {
-      // console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
+      console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
-        // console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
+        console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
         try {
           const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (resultDatesObject) {
