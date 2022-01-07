@@ -4,18 +4,19 @@ const { errors } = require('@elastic/elasticsearch');
 const Logger = require('../logger');
 
 const esClientLogger = new Logger('esClientLogger');
+
 // gets the current cluster info
 /**
  *
  * @param {Class} client configured elasticsearch client
  * @returns cluster information
  */
-const getClusterInfo = async function (client = esClient) {
+async function getClusterInfo(client = esClient) {
   let result;
   try {
     result = await esClient.info();
   } catch (err) {
-    esClientLogger.logWarning('[getClusterInfo] [ERROR]', err);
+    esClientLogger.logError('[getClusterInfo] [ERROR]', err);
   }
   esClientLogger.logInfo('[getClusterInfo] [SUCCESS]', result)
   return result;
@@ -42,7 +43,7 @@ async function pingCluster(client = esClient) {
  * @returns array of ambient_weather_heiligers_* indices (see getAllAmbientWeatherIndicesResult in ./exampleAPICallResponses)
  */
 
-const getAllAmbientWeatherIndices = async function (client = require('./esClient')) {
+async function getAllAmbientWeatherIndices(client = require('./esClient')) {
   let clusterIndices;
   try {
     clusterIndices = await esClient.cat.indices({
@@ -69,7 +70,7 @@ const getAllAmbientWeatherIndices = async function (client = require('./esClient
 *   is_write_index: 'false'
 *  }]
  */
-const getAmbientWeatherAliases = async function (client = require('./esClient')) {
+async function getAmbientWeatherAliases(client = require('./esClient')) {
   let clusterAliasesResult;
   let error;
   try {
@@ -86,10 +87,9 @@ const getAmbientWeatherAliases = async function (client = require('./esClient'))
       error = new Error(`Problem with getting the cluster aliases with code ${statusCode}`)
     }
   } catch (err) {
-    error = err;
     esClientLogger.logError('[getAmbientWeatherAliases] [ERROR]', err)
   }
-  esClientLogger.logInfo('[getAmbientWeatherAliases] [SUCCESS]', clusterAliasesResult)
+  // esClientLogger.logInfo('[getAmbientWeatherAliases] [SUCCESS]', clusterAliasesResult)
   return clusterAliasesResult; // returns body, statusCode, headers, meta
 }
 /* params:
@@ -110,7 +110,7 @@ const getAmbientWeatherAliases = async function (client = require('./esClient'))
     headers: {..., date: 'Tue, 04 Jan 2022 21:23:29 GMT'},
     meta: {...}
  */
-const createIndex = async function (client = require('./esClient'), indexName, indexMappings) {
+async function createIndex(client = require('./esClient'), indexName, indexMappings) {
   let createIndexResult;
   try {
     createIndexResult = await client.indices.create({
@@ -139,7 +139,7 @@ const createIndex = async function (client = require('./esClient'), indexName, i
  * @returns {object} body of es response
  * @example { acknowledged: true }
  */
-const deleteIndex = async function (client = require('./esClient'), indexName) {
+async function deleteIndex(client = require('./esClient'), indexName) {
   let deleteResult;
   const deleteIndexDefaultArgs = {
     timeout: '30s',
@@ -165,14 +165,37 @@ const deleteIndex = async function (client = require('./esClient'), indexName) {
   return deleteResult.body;
 }
 
-// const getMostRecentDocs = async function (client = require('./esClient'), indexName) {
-//   const result = await client.search({
-//     index:
-//   });
-//   //implement me using esClient.search with decending order and retrieving only 1 doc.
-// }
-// // given the configured elasticsearch client, data to index and the target index, bulk indexes data
-// // returns
+
+
+async function getMostRecentDoc(client = require('./esClient'), indexName, opts) {
+  esClientLogger.logInfo('indexName', indexName)
+  const searchConfig = {
+    expand_wildcards: 'all', // for using wildcard expressions
+    sort: ["dateutc:desc"], // default sort order is descending with the most recent doc first
+    size: 2,
+    ...opts
+  };
+  let searchResultBody;
+  try {
+    const { body, headers, statusCode, meta } = await client.search({
+      ...searchConfig,
+      index: indexName,
+      body: {
+        query: {
+          match_all: {}
+        }
+      }
+    });
+    searchResultBody = body.hits.hits;
+    esClientLogger.logInfo('result of search request:', searchResultBody)
+  } catch (err) {
+    esClientLogger.logError('search request error:', err)
+  }
+  return searchResultBody;
+  //implement me using esClient.search with decending order and retrieving only 1 doc.
+}
+// given the configured elasticsearch client, data to index and the target index, bulk indexes data
+// returns
 // const bulkIndexData = async function (client = require('./esClient'), data = [], dataType) {
 //   // do stuff
 // }
@@ -185,7 +208,8 @@ const clientMethods = {
   getAllAmbientWeatherIndices,
   getAmbientWeatherAliases,
   createIndex,
-  deleteIndex
+  deleteIndex,
+  getMostRecentDoc,
 }
 // clientMethods.getClusterInfo();
 // clientMethods.pingCluster();
@@ -193,16 +217,17 @@ const clientMethods = {
 // clientMethods.getClusterIndices();
 // clientMethods.getAmbientWeatherAliases();
 // clientMethods.getAmbientWeatherAliases();
-const testMappings = {
-  properties: {
-    id: { type: 'integer' },
-    text: { type: 'text' },
-    user: { type: 'keyword' },
-    time: { type: 'date' }
-  }
-}
+// clientMethods.getMostRecentDoc(require('./esClient'), ['ambient_weather_heiligers_imperial_*', 'ambient_weather_heiligers_metric_*'], opts = { size: 4, _source: ['date', 'dateutc', '@timestamp'] })
+// const testMappings = {
+//   properties: {
+//     id: { type: 'integer' },
+//     text: { type: 'text' },
+//     user: { type: 'keyword' },
+//     time: { type: 'date' }
+//   }
+// }
 // clientMethods.createIndex(require('./esClient'), 'tweets', testMappings)
 // clientMethods.deleteIndex(require('./esClient'), 'tweets')
-module.exports = { pingCluster, getAmbientWeatherAliases, createIndex };
+module.exports = { pingCluster, getAmbientWeatherAliases, createIndex, getMostRecentDoc };
 
 
