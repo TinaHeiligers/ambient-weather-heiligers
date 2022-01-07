@@ -3,7 +3,8 @@ const {
   convertTemp,
   convertMPH,
   calcMinutesDiff,
-  convertToMetric
+  convertToMetric,
+  dateStringToFileNamePartialString
 } = require("./helpers");
 
 describe("helpers", () => {
@@ -96,4 +97,7 @@ describe("helpers", () => {
       expect(actualResult).toEqual(expectedMetricDatum);
     });
   });
+  describe("dateStringToFileNamePartialString", () => {
+    it.todo('takes a string date and converts it to the momentDate format to match filenames')
+  })
 });

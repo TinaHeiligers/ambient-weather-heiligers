@@ -1,6 +1,7 @@
 const esClient = require('./esClient');
 const { pingCluster, getAmbientWeatherAliases, getMostRecentDoc } = require('./esClientMethods');
 const Logger = require('../logger');
+const { dateStringToFileNamePartialString } = require('../utils')
 /*
 What do I want to do here?
 - ensure we have a connection to es
@@ -31,6 +32,8 @@ class IndexData {
   #dataToIndex = [];
   #writeIndex = [];
   #currentWriteIndices = [];
+  #dateOflatestIndexedMetricDoc = ''; // dateString
+  #dateOflatestIndexedImperialDoc = ''; // dateString
 
   constructor(esClient) {
     this.client = esClient;
@@ -54,12 +57,26 @@ class IndexData {
   set currentWriteIndices(indexNameArray) {
     this.#currentWriteIndices = Array.isArray(indexNameArray) ? indexNameArray : [indexNameArray];
   };
+  get dateOflatestIndexedMetricDoc() {
+    return this.#dateOflatestIndexedMetricDoc;
+  }
+
+  set dateOflatestIndexedMetricDoc(dateString) {
+    this.#dateOflatestIndexedMetricDoc = dateString;
+  }
+  get dateOflatestIndexedImperialDoc() {
+    return this.#dateOflatestIndexedImperialDoc;
+  }
+  set dateOflatestIndexedImperialDoc(dateString) {
+    this.#dateOflatestIndexedImperialDoc = dateString;
+  }
+
   /**
    * @param
    * @returns {boolean} response from pinging the cluster
    */
   // using arrow to bind to the instance that calls this. See https://dmitripavlutin.com/differences-between-arrow-and-regular-functions/
-  ensureConnection = async () => {
+  async ensureConnection() {
     return await pingCluster(this.client);
   }
   /**
@@ -111,15 +128,32 @@ class IndexData {
       }]
    */
   async getMostRecentIndexedDocuments() {
-    this.logger.logInfo('[getMostRecentIndexedDocuments] [START]')
-    // call signature: clientMethods.getMostRecentDoc(require('./esClient'), ['ambient_weather_heiligers_imperial_*', 'ambient_weather_heiligers_metric_*'], opts = { size: 4, _source: ['date', 'dateutc', '@timestamp'] })
-    const indexToSearch = this.currentWriteIndices;
-    const opts = { size: 2, _source: ['date', 'dateutc', '@timestamp'] }
-    const latestDoc = await getMostRecentDoc(this.client, indexToSearch, opts);
-    this.logger.logInfo('[getMostRecentIndexedDocuments] [RESULT]', latestDoc)
-    return latestDoc;
+    // this.logger.logInfo('[getMostRecentIndexedDocuments] [START]')
+    const metricIndexToSearch = this.currentWriteIndices.filter(name => name.includes('metric'))[0];
+    const imperialIndexToSearch = this.currentWriteIndices.filter(name => name.includes('imperial'))[0];
+    const opts = { size: 1, _source: ['date', 'dateutc', '@timestamp'], sortBy: [{ field: "dateutc", direction: "desc" }], expandWildcards: 'all' }
+    const latestMetricDoc = await getMostRecentDoc(this.client, metricIndexToSearch, opts);
+    const latestImperialDoc = await getMostRecentDoc(this.client, imperialIndexToSearch, opts);
+    // this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', latestMetricDoc)
+    // this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', latestImperialDoc)
+    this.dateOflatestIndexedMetricDoc = latestMetricDoc[0]._source.date;
+    this.dateOflatestIndexedImperialDoc = latestImperialDoc[0]._source.date;
+    return { latestMetricDoc: latestMetricDoc, latestImperialDoc: latestImperialDoc };
   }
 
+  /**
+   * converts the date string for the most recently indexed documents to the same format used in the file names.
+   * @returns {obj} dateOflatestIndexedImperialDoc <string>, dateOflatestIndexedMetricDoc <string>
+   * @example
+   { imperial: '20211230-T-1905', metric: '20211230-T-1905'}
+   * note: in dev, the dates might not be the same. In prod, they should be the same.
+   */
+  updateLatestIndexedDocsDates() {
+    return {
+      imperial: dateStringToFileNamePartialString(this.dateOflatestIndexedImperialDoc),
+      metric: dateStringToFileNamePartialString(this.dateOflatestIndexedMetricDoc)
+    }
+  }
   // as the name implies, we need to define how we determine what's 'new' data
   // async indexNewData(newData) {
   //   // either the subclasses need to imit what the new data is or we need to fetch it from file
@@ -132,23 +166,22 @@ class IndexData {
   /**
    * @returns {boolean} result from bulk indexing data
    */
-  async run() {
+  async initialize() {
     const haveConnection = await this.ensureConnection();
     if (!haveConnection) {
       // retryForCount(this.ensureConnection) --> implement later, see https://github.com/elastic/kibana/blob/main/src/core/server/elasticsearch/client/retry_call_cluster.ts
       this.logger.logWarning('Cannot establish a connection with remote cluster')
     } else {
+      // main workflow through here to setup and prepare for bulk indexing
       // get the current write indices
       await this.getActiveWriteIndices();
       if (this.currentWriteIndices && this.currentWriteIndices.length > 0) {
-        await this.getMostRecentIndexedDocuments();
+        const { latestMetricDoc, latestImperialDoc } = await this.getMostRecentIndexedDocuments();
+        this.updateLatestIndexedDocsDates();
       }
-
-
-
-      // do stuff
       // await bulkIndexData(this.client, data, dataType);
     }
+    return { imperial: this.dateOflatestIndexedImperialDoc, metric: this.dateOflatestIndexedMetricDoc }
   }
 }
 

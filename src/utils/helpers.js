@@ -56,9 +56,14 @@ function convertToMetric(datum) {
   }
 }
 
+const dateStringToFileNamePartialString = (stringDate) => {
+  return momentTZ.utc(stringDate).format('YYYYMMDD-T-HHmm')
+}
+
 module.exports = {
   convertTemp,
   convertMPH,
   calcMinutesDiff,
-  convertToMetric
+  convertToMetric,
+  dateStringToFileNamePartialString
 };

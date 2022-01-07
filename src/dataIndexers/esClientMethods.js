@@ -169,12 +169,17 @@ async function deleteIndex(client = require('./esClient'), indexName) {
 
 async function getMostRecentDoc(client = require('./esClient'), indexName, opts) {
   esClientLogger.logInfo('indexName', indexName)
+  if (opts && opts.sort && opts.sort.length > 0) {
+    opts.sortReq = opts.sortBy.map((entry) => `${entry.field}:${entry.direction ?? 'asc'}`).join(',')
+  }
+
   const searchConfig = {
-    expand_wildcards: 'all', // for using wildcard expressions
-    sort: ["dateutc:desc"], // default sort order is descending with the most recent doc first
-    size: 2,
-    ...opts
+    expand_wildcards: opts.expandWildcards ?? 'all', // for using wildcard expressions
+    sort: opts.sortReq ?? ["dateutc:desc"], // default sort order is descending with the most recent doc first
+    size: opts.size || 10,
+    _source: opts._source ?? []
   };
+
   let searchResultBody;
   try {
     const { body, headers, statusCode, meta } = await client.search({

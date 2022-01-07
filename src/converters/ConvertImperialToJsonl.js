@@ -48,7 +48,6 @@ class ConvertImperialToJsonl {
       const openedDataForJsonlFile = this.fs.openSync(`data/${this.pathToJsonlFiles}/${entry}.jsonl`, "w");
       const arrayOfConvertedData = dataFileRead.map((element) => {
         this.fs.appendFileSync(openedDataForJsonlFile, JSON.stringify(element) + "\n")
-        // should the following line not be outside of the .map? It's working on the file as an entry and not the data element within the file
         this.filesConvertedToJsonl = this.filesConvertedToJsonl.concat(entry);
         return element;
       });
