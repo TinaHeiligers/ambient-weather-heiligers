@@ -5,4 +5,5 @@ data/*
 **/.DS_Store
 crontab.txt
 pi-README.txt
+*.log
 
