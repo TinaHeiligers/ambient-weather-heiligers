@@ -176,7 +176,7 @@ class FetchRawData {
     this.allUniqueDates = allFilesDates;
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
     // return early if it's too soon to fetch new data
-    if (minSinceLastData < AW_CONSTANTS.dataInterval) return;
+    if (minSinceLastData < AW_CONSTANTS.dataInterval) return 'too early';
 
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
@@ -209,9 +209,11 @@ class FetchRawData {
       if (resultDatesObject) {
         const { from, to } = resultDatesObject;
         this.datesArray = this.datesArray.concat({ from, to })
-        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+        return finalResult;
       } else {
-        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+        return finalResult;
       }
     } else {
 
@@ -220,13 +222,16 @@ class FetchRawData {
         console.log(`Fewer than a 288-batch records required. Setting up request for ${estTotalNumRecordsToFetch} records`)
         const result = await this.fetchAndStoreData(this.now, estTotalNumRecordsToFetch);
         this.datesArray = this.datesArray.concat(result)
-        return this.datesArray
+
+        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+        return finalResult;
       } catch (err) {
         console.log('PROBLEM in single day fetch!', err)
       }
     }
     console.log('this.datesArray', this.datesArray)
-    return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+    const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+    return finalResult;
   };
 }
 module.exports = FetchRawData;

@@ -81,9 +81,9 @@ class ConvertImperialToMetric {
 
   logResult(filesToConvert) {
     if (this.convertedToMetricCount === filesToConvert.length) {
-      console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
+      console.log(`converted metric data files for ${filesToConvert.length} files: ${filesToConvert}`);
     } else {
-      console.log(`couldn't convert files for ${filesToConvert.length - this.convertedToMetricCount} files`);
+      console.log(`couldn't convert metric data files for ${filesToConvert.length - this.convertedToMetricCount} files`);
     }
   }
 

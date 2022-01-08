@@ -61,9 +61,9 @@ class ConvertImperialToJsonl {
   }
   logResult(filesToConvert) {
     if (this.convertedCount === filesToConvert.length) {
-      console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
+      console.log(`converted imperial data files for ${filesToConvert.length} files: ${filesToConvert}`);
     } else {
-      console.log(`couldn't convert files for ${filesToConvert.length - this.convertedCount} files`);
+      console.log(`couldn't convert imperial data files for ${filesToConvert.length - this.convertedCount} files`);
     }
   }
   convertRawImperialDataToJsonl() {

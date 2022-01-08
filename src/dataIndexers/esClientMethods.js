@@ -168,7 +168,7 @@ async function deleteIndex(client = require('./esClient'), indexName) {
 
 
 async function getMostRecentDoc(client = require('./esClient'), indexName, opts) {
-  esClientLogger.logInfo('indexName', indexName)
+  // esClientLogger.logInfo('indexName', indexName)
   if (opts && opts.sort && opts.sort.length > 0) {
     opts.sortReq = opts.sortBy.map((entry) => `${entry.field}:${entry.direction ?? 'asc'}`).join(',')
   }
@@ -192,7 +192,7 @@ async function getMostRecentDoc(client = require('./esClient'), indexName, opts)
       }
     });
     searchResultBody = body.hits.hits;
-    esClientLogger.logInfo('result of search request:', searchResultBody)
+    // esClientLogger.logInfo('result of search request:', searchResultBody)
   } catch (err) {
     esClientLogger.logError('search request error:', err)
   }

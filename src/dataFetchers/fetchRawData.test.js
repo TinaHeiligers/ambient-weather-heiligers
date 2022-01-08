@@ -292,8 +292,8 @@ describe('FetchRawData', () => {
       const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
-      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
-      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
+      expect(result.dataFetchForDates[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
+      expect(result.dataFetchForDates[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
     it("fetches data if no date is provided", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
@@ -308,8 +308,8 @@ describe('FetchRawData', () => {
       const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(1);
-      expect(result[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
-      expect(result[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
+      expect(result.dataFetchForDates[0].from.format('YYYY-MM-DD')).toEqual('2020-07-18')
+      expect(result.dataFetchForDates[0].to.format('YYYY-MM-DD')).toEqual('2020-07-19')
     });
     it("fetches data in batches if the date range is more than 1 day", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
@@ -331,8 +331,8 @@ describe('FetchRawData', () => {
       const result = await rawDataFetcher.getDataForDateRanges(false, '2020-07-19');
       expect(rawDataFetcher.getLastRecordedUTCDate).toHaveBeenCalled();
       expect(rawDataFetcher.fetchAndStoreData.mock.calls.length).toEqual(4);
-      const fromDates = result.map(resultItem => resultItem.from.format('YYYY-MM-DD'))
-      const toDates = result.map(resultItem => resultItem.to.format('YYYY-MM-DD'))
+      const fromDates = result.dataFetchForDates.map(resultItem => resultItem.from.format('YYYY-MM-DD'))
+      const toDates = result.dataFetchForDates.map(resultItem => resultItem.to.format('YYYY-MM-DD'))
       expect(fromDates).toEqual(['2020-07-19', '2020-07-18', '2020-07-17', '2020-07-16'])
       expect(toDates).toEqual(['2020-07-18', '2020-07-17', '2020-07-16', '2020-07-15'])
     });

@@ -87,7 +87,7 @@ class IndexData {
 
    */
   async getActiveWriteIndices() {
-    this.logger.logInfo('[getActiveWriteIndices] [START]')
+    // this.logger.logInfo('[getActiveWriteIndices] [START]')
     const aliasesResults = await getAmbientWeatherAliases(this.client);
     const currentIndices = aliasesResults
       .filter(aliasEntry => (aliasEntry.is_write_index === 'true'))
@@ -95,7 +95,7 @@ class IndexData {
     if (currentIndices && currentIndices.length > 0) {
       this.currentWriteIndices = currentIndices;
     }
-    this.logger.logInfo('[getActiveWriteIndices] [ RESULT ]:', this.currentWriteIndices)
+    // this.logger.logInfo('[getActiveWriteIndices] [ RESULT ]:', this.currentWriteIndices)
     return currentIndices;
   }
   /**
@@ -178,7 +178,7 @@ class IndexData {
       if (this.currentWriteIndices && this.currentWriteIndices.length > 0) {
         const { latestMetricDoc, latestImperialDoc } = await this.getMostRecentIndexedDocuments();
       }
-      return { lastImperialDataDate: this.dateOflatestIndexedImperialDoc, lastMetricDataDate: this.dateOflatestIndexedMetricDoc }
+      return { lastIndexedImperialDataDate: this.dateOflatestIndexedImperialDoc, lastIndexedMetricDataDate: this.dateOflatestIndexedMetricDoc }
       // await bulkIndexData(this.client, data, dataType);
     }
   }
