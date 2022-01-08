@@ -148,10 +148,10 @@ class IndexData {
    { imperial: '20211230-T-1905', metric: '20211230-T-1905'}
    * note: in dev, the dates might not be the same. In prod, they should be the same.
    */
-  updateLatestIndexedDocsDates() {
+  latestIndexedDocsDatesInFileNameFormat() {
     return {
-      imperial: dateStringToFileNamePartialString(this.dateOflatestIndexedImperialDoc),
-      metric: dateStringToFileNamePartialString(this.dateOflatestIndexedMetricDoc)
+      imperialDataFileNameEnding: dateStringToFileNamePartialString(this.dateOflatestIndexedImperialDoc),
+      metricDataFileNameEnding: dateStringToFileNamePartialString(this.dateOflatestIndexedMetricDoc)
     }
   }
   // as the name implies, we need to define how we determine what's 'new' data
@@ -177,11 +177,10 @@ class IndexData {
       await this.getActiveWriteIndices();
       if (this.currentWriteIndices && this.currentWriteIndices.length > 0) {
         const { latestMetricDoc, latestImperialDoc } = await this.getMostRecentIndexedDocuments();
-        this.updateLatestIndexedDocsDates();
       }
+      return { lastImperialDataDate: this.dateOflatestIndexedImperialDoc, lastMetricDataDate: this.dateOflatestIndexedMetricDoc }
       // await bulkIndexData(this.client, data, dataType);
     }
-    return { imperial: this.dateOflatestIndexedImperialDoc, metric: this.dateOflatestIndexedMetricDoc }
   }
 }
 
