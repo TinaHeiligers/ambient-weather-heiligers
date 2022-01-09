@@ -77,22 +77,36 @@ class FetchRawData {
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
     const allFilesDatesArray = [];
+    console.log('allFilesDatesArray', allFilesDatesArray)
     const directoryPath = `data/${pathToFolder}`;
+    // console.log('directorypath', directoryPath)
     const files = this.fs.readdirSync(directoryPath);
     if (files && files.length > 0) {
+      // console.log('files.length:', files.length)
       const maxFileEntriesDatesArray = files.map((file) => {
+        // console.log('file:', file)
         // get the max date from ONE file
         if (file === '.DS_Store') {
           return
         } else {
           const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
+          // console.log('data:', data)
           // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
-          data.forEach(datum => allFilesDatesArray.push(datum.date));
+          data.forEach(datum => {
+            // console.log('datum.date?', datum.date)
+            return allFilesDatesArray.push(datum.date)
+          });
+
           const result = momentTZ.max(data.map((datum) => momentTZ(datum.date)));
-          return result
+          console.log('result:', result)
+          return result;
         }
       });
+
+      // let withoutUndefined = maxFileEntriesDatesArray.filter((entry => entry !== undefined))
+
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
+      // console.log('mostRecentDate:', mostRecentDate)
       return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
     }
     return { mostRecentDate: momentTZ.utc(momentTZ(this.now).subtract(1, 'days')), allFilesDates: [... new Set(allFilesDatesArray)] };
@@ -142,6 +156,8 @@ class FetchRawData {
     const results = this.getLastRecordedUTCDate(this.pathToFiles);
 
     const dateOfLastDataSaved = results.mostRecentDate;
+    console.log('dateOfLastDataSaved', dateOfLastDataSaved)
+    return;
     const allFilesDates = results.allFilesDates
     // set the unique dates entry set to the class instance
     this.allUniqueDates = allFilesDates;
