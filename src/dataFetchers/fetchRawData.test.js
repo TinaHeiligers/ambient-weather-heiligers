@@ -135,7 +135,7 @@ describe('FetchRawData', () => {
       expect(JSON.stringify(result.mostRecentDate.format('YYYY-MM-DD'))).toEqual(JSON.stringify(momentTZ.utc(momentTZ().subtract(1, 'days')).format('YYYY-MM-DD')));
       expect(result.allFilesDates).toEqual([]);
     });
-    it.only('filters out any undefined dates', async () => {
+    it('filters out any undefined dates', async () => {
       const mockedFiles = ['20220108-T-2320_20220109-T-1830.json', '20220108-T-2105_20220108-T-2315.json', '20220108-T-2320_20220108-T-2325.json'];
       mockedData = [{ date: "2022-01-09T18:30:00.000Z" }, { date: "2022-01-08T23:15:00.000Z" }, { date: "2022-01-08T23:25:00.000Z" }];
       mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
@@ -145,7 +145,7 @@ describe('FetchRawData', () => {
         .mockReturnValueOnce(JSON.stringify([mockedData[2]]))
       const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
       expect(Object.keys(result)).toEqual(["mostRecentDate", "allFilesDates"]);
-      expect(JSON.stringify(result.mostRecentDate)).toEqual(JSON.stringify('2020-07-18T17:55:00.000Z'));
+      expect(JSON.stringify(result.mostRecentDate)).toEqual(JSON.stringify('2022-01-09T18:30:00.000Z'));
     })
   });
   describe('class methods: fetchRecentData', () => {

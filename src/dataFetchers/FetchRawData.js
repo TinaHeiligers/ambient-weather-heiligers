@@ -103,9 +103,9 @@ class FetchRawData {
         }
       });
 
-      // let withoutUndefined = maxFileEntriesDatesArray.filter((entry => entry !== undefined))
+      const withoutUndefined = maxFileEntriesDatesArray.filter((entry => entry !== undefined))
 
-      const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
+      const mostRecentDate = momentTZ.max(withoutUndefined);
       // console.log('mostRecentDate:', mostRecentDate)
       return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
     }
@@ -157,7 +157,6 @@ class FetchRawData {
 
     const dateOfLastDataSaved = results.mostRecentDate;
     console.log('dateOfLastDataSaved', dateOfLastDataSaved)
-    return;
     const allFilesDates = results.allFilesDates
     // set the unique dates entry set to the class instance
     this.allUniqueDates = allFilesDates;
