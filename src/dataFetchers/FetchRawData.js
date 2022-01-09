@@ -1,13 +1,14 @@
 
 const momentTZ = require('moment-timezone');
 const {
-  calcMinutesDiff
+  calcMinutesDiff,
+  timeConstants
 } = require('../utils');
-
 const AW_CONSTANTS = {
   dataInterval: 5,
   maxNumRecords: 288,
 }
+
 
 /*
  * Fetches data from Ambient-Weather
@@ -19,7 +20,7 @@ const AW_CONSTANTS = {
  */
 class FetchRawData {
   #pathToFiles = 'ambient-weather-heiligers-imperial';
-  #now = momentTZ.utc(momentTZ());
+  #now = (new Date()).getTime();
   #numberOfRecords = 0;
   #datesArray = [];
   #allUniqueDates = [];
@@ -94,45 +95,30 @@ class FetchRawData {
     let uniqueDates = [... new Set(dateArray)];
     this.allUniqueDates = uniqueDates;
   };
-
-  //generic mostRecentDate getter from existing data files
-  getLastRecordedUTCDate = (pathToFolder) => {
-    console.log('getLastRecordedUTCDate', pathToFolder)
-    const allFilesDatesArray = [];
-    console.log('allFilesDatesArray', allFilesDatesArray)
-    const directoryPath = `data/${pathToFolder}`;
-    // console.log('directorypath', directoryPath)
-    const files = this.fs.readdirSync(directoryPath);
+  /**
+   *
+   * @param {array} files : array of files that have been read from a path to a folder
+   * @returns {array} array of unix timestamps
+   */
+  extractUniqueDatesFromFiles(pathToFolder) {
+    let allDates = [];
+    const files = this.fs.readdirSync(`data/${pathToFolder}`);
     if (files && files.length > 0) {
-      // console.log('files.length:', files.length)
-      const maxFileEntriesDatesArray = files.map((file) => {
-        // console.log('file:', file)
-        // get the max date from ONE file
-        if (file === '.DS_Store') {
-          return
-        } else {
-          const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-          // console.log('data:', data)
-          // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
-          data.forEach(datum => {
-            // console.log('datum.date?', datum.date)
-            return allFilesDatesArray.push(datum.date)
-          });
-
-          const result = momentTZ.max(data.map((datum) => momentTZ(datum.date)));
-          console.log('result:', result)
-          return result;
-        }
+      files.forEach((file) => {
+        if (file === '.DS_Store') return;
+        const dataFromFile = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`));
+        const datesFromSingleFile = dataFromFile.map(datum => datum.dateutc).filter(datum => datum !== undefined);
+        allDates = allDates.concat(datesFromSingleFile);
       });
-
-      const withoutUndefined = maxFileEntriesDatesArray.filter((entry => entry !== undefined))
-
-      const mostRecentDate = momentTZ.max(withoutUndefined);
-      // console.log('mostRecentDate:', mostRecentDate)
-      return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
+      return [...new Set(allDates)];
     }
-    return { mostRecentDate: momentTZ.utc(momentTZ(this.now).subtract(1, 'days')), allFilesDates: [... new Set(allFilesDatesArray)] };
+    return [...new Set(allDates)];
   };
+
+  getLastRecordedUTCDate = (allDatesFromFiles) => {
+    const unqueUtcDatesArray = [...new Set(allDatesFromFiles)];
+    return Math.max(...unqueUtcDatesArray);
+  }
 
   async fetchRecentData(from, numRecords) {
     // the call takes in the endDate and counts backwards in time
@@ -148,16 +134,23 @@ class FetchRawData {
       return;
     }
   }
-
+  /**
+   *
+   * @param {integer} toDate date-time in milliseconds since the Unix epoch time
+   * @param {integer} numRecords number of records to fetch from API (max = 288, min = 1)
+   * @returns {obj} { from: date-time as milliseconds since Unix epock time, to: date-time as milliseconds since Unix epoch time}
+   */
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       // console.log('the result from fetching the most recent data is:', result)
       if (result && result.length > 0) {
-        let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
+        let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.dateutc))
         // actual new data in imperial format
-        const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.date).concat(this.allUniqueDates))]
+        console.log('allUniqueDates  before newData added:', this.allUniqueDates.length)
+        const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.dateutc).concat(this.allUniqueDates))]
         this.allUniqueDates = newDatesItems;
+        console.log('allUniqueDatesAfternewData added:', this.allUniqueDates.length)
         // setting up to store data in files
         const { from, to } = this.extractDatesFromData(actualNewDataEntries);
         const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
@@ -177,27 +170,28 @@ class FetchRawData {
   }
   // main function for this class
   async getDataForDateRanges(skipSave = false, fromDate) {
-    // console.log('in getDataForDateRanges')
+    console.log('in getDataForDateRanges')
     if (!fromDate) {
       fromDate = this.now;
     }
+    const dayBeforeNow = this.now - timeConstants.one_day_as_milliseconds;
     this.skipSave = skipSave;
-    // console.log('DEBUG: 1. what is now?', fromDate)
     // this is all setup before I can start fetching the data
-    const results = this.getLastRecordedUTCDate(this.pathToFiles);
-
-    const dateOfLastDataSaved = results.mostRecentDate;
-    console.log('dateOfLastDataSaved', dateOfLastDataSaved)
-    const allFilesDates = results.allFilesDates
-
+    const allDatesFromFiles = this.extractUniqueDatesFromFiles(this.pathToFiles);
+    const dateOfLastDataSaved = (allDatesFromFiles && allDatesFromFiles.length > 0)
+      ? this.getLastRecordedUTCDate(allDatesFromFiles)
+      : dayBeforeNow;
     // set the unique dates entry set to the class instance
-    this.allUniqueDates = allFilesDates;
-    const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
+    this.allUniqueDates = allDatesFromFiles;
+
+    const minSinceLastData = Math.floor((fromDate - dateOfLastDataSaved) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute));
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return 'too early';
 
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
+    console.log('estTotalNumRecordsToFetch', estTotalNumRecordsToFetch)
+    console.log('estNumberOfBatches', estNumberOfBatches)
     // multi-day data fetch
 
     if (estNumberOfBatches >= 1) {

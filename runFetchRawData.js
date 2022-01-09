@@ -5,9 +5,9 @@ const awApi = new AmbientWeatherApi({
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
 const FetchRawData = require('./src/dataFetchers');
-const fetchRawDataTester = new FetchRawData(awApi, fs);
-const newDataDatesAndFileNames = fetchRawDataTester.getDataForDateRanges(true)
-  .then(res => console.log('return value from fetchRawDataTester.getDataForDateRanges', res))
+const rawDataFetcher = new FetchRawData(awApi, fs);
+const newDataDatesAndFileNames = rawDataFetcher.getDataForDateRanges(true)
+  .then(res => console.log('return value from fetchRawDataTester.getDataForDateRanges', res) && res)
   .catch(err => console.log('error from fetchRawDataTester.getDataForDateRanges', err));
 module.exports = newDataDatesAndFileNames;
 

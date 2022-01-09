@@ -7,6 +7,7 @@ const {
   dateStringToFileNamePartialString,
   minDateFromDateObjectsArray
 } = require("./helpers");
+const timeConstants = require('./constants');
 
 describe("helpers", () => {
   describe("convertTemp", () => {
@@ -26,13 +27,21 @@ describe("helpers", () => {
     });
   });
   describe("calcMinutesDiff", () => {
-    it("calculates the difference between two date times in minutes", () => {
+    it("calculates the difference between two moment-timezone objects in minutes", () => {
       const dateTime1 = momentTZ('2020-06-01').add(1, 'days');
       const dateTime2 = momentTZ('2020-06-01');
       const expected = 24 * 60;
       const actual = calcMinutesDiff(dateTime1, dateTime2);
+      console.log(actual)
       expect(actual).toEqual(expected);
     });
+    it("calculates the difference between two dates as date-time milliseconds since the unix epoch in minutes", () => {
+      const dateTime1 = (new Date('2020-06-01')).getTime() + timeConstants.one_day_as_milliseconds;
+      const dateTime2 = (new Date('2020-06-01')).getTime();
+      const expected = 24 * 60;
+      const actual = calcMinutesDiff(dateTime1, dateTime2);
+      expect(actual).toEqual(expected)
+    })
   });
   describe("convertToMetric", () => {
     it("converts imperial units to metric units", () => {
