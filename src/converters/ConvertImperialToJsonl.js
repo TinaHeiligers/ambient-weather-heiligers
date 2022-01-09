@@ -79,7 +79,8 @@ class ConvertImperialToJsonl {
     } else {
       console.log('There are no unconverted files')
     }
-    return this.filesConvertedToJsonl;
+    // this.filesConvertedToJsonl = filesToConvert;
+    return filesToConvert;
   }
 }
 

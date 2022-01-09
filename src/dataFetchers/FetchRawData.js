@@ -97,6 +97,7 @@ class FetchRawData {
 
   //generic mostRecentDate getter from existing data files
   getLastRecordedUTCDate = (pathToFolder) => {
+    console.log('getLastRecordedUTCDate', pathToFolder)
     const allFilesDatesArray = [];
     const directoryPath = `data/${pathToFolder}`;
     const files = this.fs.readdirSync(directoryPath);
@@ -110,9 +111,11 @@ class FetchRawData {
           // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
           data.forEach(datum => allFilesDatesArray.push(datum.date));
           const result = momentTZ.max(data.map((datum) => momentTZ(datum.date)));
-          return result
+          console.log('max from data', result)
+          return result;
         }
       });
+      // console.log('maxFileEntriesDatesArray', maxFileEntriesDatesArray)
       const mostRecentDate = momentTZ.max(maxFileEntriesDatesArray);
       return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
     }
@@ -162,16 +165,19 @@ class FetchRawData {
   }
   // main function for this class
   async getDataForDateRanges(skipSave = false, fromDate) {
-    console.log('in getDataForDateRanges')
+    // console.log('in getDataForDateRanges')
     if (!fromDate) {
       fromDate = this.now;
     }
     this.skipSave = skipSave;
+    // console.log('DEBUG: 1. what is now?', fromDate)
     // this is all setup before I can start fetching the data
     const results = this.getLastRecordedUTCDate(this.pathToFiles);
 
     const dateOfLastDataSaved = results.mostRecentDate;
+    console.log('DEBUG: 2. results.allFilesDates?', results.allFilesDates)
     const allFilesDates = results.allFilesDates
+
     // set the unique dates entry set to the class instance
     this.allUniqueDates = allFilesDates;
     const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);

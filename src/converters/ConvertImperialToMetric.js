@@ -95,6 +95,7 @@ class ConvertImperialToMetric {
     const allImperialFileNames = this.getArrayOfFiles('json');
     // filter out the files that have already been converted
     const fileNamesToConvertToMetric = allImperialFileNames.filter((fileName) => allMetricJsonlFileNames.indexOf(fileName) === -1);
+
     // read and write the file contents as newline delimited data
     if (fileNamesToConvertToMetric.length > 0) {
       this.convertDataAndWriteJsonlFile(fileNamesToConvertToMetric);
@@ -102,7 +103,8 @@ class ConvertImperialToMetric {
     } else {
       console.log('There are no unconverted files')
     }
-    return this.dataFilesConvertedToMetricJsonl;
+    // this.dataFilesConvertedToMetricJsonl = fileNamesToConvertToMetric;
+    return fileNamesToConvertToMetric;
   }
 }
 

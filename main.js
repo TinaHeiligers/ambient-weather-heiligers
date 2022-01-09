@@ -68,7 +68,8 @@ async function main() {
   try {
     const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
     if (getNewDataPromiseResult === "too early") {
-      throw new Error(getNewDataPromiseResult)
+      // throw new Error(getNewDataPromiseResult)
+      console.log('too early')
     }
     datesForNewData = getNewDataPromiseResult.dataFetchForDates;
   } catch (err) {
@@ -78,31 +79,55 @@ async function main() {
   const { lastIndexedImperialDataDate,
     lastIndexedMetricDataDate } = await dataIndexer.initialize();
 
+  // check if new data needs to be indexed based on the dates of the new data that's fetched vs date of most recently indexed documents
   if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedImperialDataDate)) {
     indexImperialDocsNeeded = true;
+    mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
   }
   if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedMetricDataDate)) {
     indexMetricDocsNeeded = true;
+    mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
   }
 
-  mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
-  mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
-
-
   //   mainLogger.logInfo('beginning new data file conversion: json => jsonl')
-  //   imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl()
-  //   metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl();
-  //   mainLogger.logInfo('imperialDataJSONLFileNames', imperialDataJSONLFileNames)
-  //   mainLogger.logInfo('metricDataJSONLFileNames', metricDataJSONLFileNames)
-  //   return { newImperialFiles: imperialDataJSONLFileNames, newMetricFiles: metricDataJSONLFileNames }
-  //   // now read the data in all the new files and compare the data date with that in the index. If the late is newer (more recent)
-  //   // than the date in the index, add the datapoint to what needs to be formatted for bulk indexing.
+  imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl()
+  metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl();
+  mainLogger.logInfo('imperialDataJSONLFileNames', imperialDataJSONLFileNames)
+  mainLogger.logInfo('metricDataJSONLFileNames', metricDataJSONLFileNames)
+  // now read the data in all the new files and compare the data date with that in the index. If the late is newer (more recent)
+  // than the date in the index, add the datapoint to what needs to be formatted for bulk indexing.
+
+  // The following workflow is to index new data as we get it. What this doesn't do is index data that we have on file but that isn't yet in the cluster indices.
+  // convert and prepare for the bulk indexing call.
+  if (indexImperialDocsNeeded === true) {
+    //read all data from the imperialDataJSONLFileNames array
+    // this is a prepareDataForBulkIndex method
+    const dataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataFileNames, 'imperial');
+    console.log('dataReadyForBulkCall', dataReadyForBulkCall)
+
+  }
 };
 
-// the following workflow is to index new data as we get it. What this doesn't do is index data that we have on file but that isn't yet in the cluster indices.
-// convert and prepare for the bulk indexing call.
-// if (dataFileNames && dataFileNames.length > 0 && indexDocsNeeded) {
-// main()
+function prepareDataForBulkIndex(fileNamesArray, dataType) {
+  let preparedData = [];
+  const fullPathToFilesToRead = `/data/ambient-weather-heiligers-${dataType}-jsonl`;
+  const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}`);
+  return fullFilePaths.map(fullPath => {
+    if (Object.keys(fullPath).length === 0) return true;
+    const readJsonlData = JSON.parse(fs.readFileSync(fullPath));
+    const dataWithIndexAdded = readJsonlData.flatMap(doc => [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, doc]);
+    console.log('dataWithIndexAdded', dataWithIndexAdded)
+    preparedData.push(dataWithIndexAdded);
+    console.log('preparedData', preparedData)
+    return preparedData;
+    // read the data and add the extra stuff we need for bulkIndexing.
+    // convert it to the shape we expect to pass into bulkIndex,
+    // example doc is:
+    // {"date":"2022-01-09T00:55:00.000Z","dateutc":1641689700000,"loc":"ambient-prod-1","last_rain":"2022-01-01T10:43:00.000Z","uv":0,"wind_dir":320,"humidity":56,"humidity_inside":39,"barometer_abs_bar":9718.259152,"barometer_rel_bar":10194.385446,"temp_inside_c":21.778,"temp_outside_c":14.5,"battery_condition":"good","windspeed_km_per_hr":0,"windgust_km_per_hr":0,"max_daily_gust_km_per_hr":11.104,"hourly_rain_mm":0,"event_rain_mm":0,"daily_rain_mm":0,"weekly_rain_mm":0,"monthly_rain_mm":10,"total_rain_mm":305,"solar_radiation_W_per_sq_m":0,"feels_like_outside_c":14.5,"dewpoint_c":5.828,"feelslike_inside_c":21.056,"dewpoint_inside_c":7.222}
+  });
+
+}
+
 module.exports = (async () => {
   try {
     var result = await main();

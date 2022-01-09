@@ -61,8 +61,6 @@ POST /_aliases
 
 ## TODO:
 1. Code:
-- Refactor to use modules rather than a mix of modules and common js: where possible
-- ~~Refactor metric conversion to class~~ Done
 - Implement using es client to index without filebeat
     We can use the dates returned from FetchRawData.getDataForDateRanges ([{from <Moment>, to <Moment>}]) to read the file names matching those dates (or that include those dates)
 - Automate de-duping entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch Old solution was to use logstash but it's very manual
@@ -72,6 +70,7 @@ POST /_aliases
 - Set up CI -> eventually, not needed right now
 - convert to typescript
 - add jsdocs
+
 2. Kibana:
 - index pattern to match the aliases
 ## Known bugs:
