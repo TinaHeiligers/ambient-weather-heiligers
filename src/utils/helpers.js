@@ -1,5 +1,6 @@
 const cu = require("convert-units");
 const momentTZ = require("moment-timezone");
+const moment = require('moment')
 
 const convertTemp = function (f) {
   const tempInC = cu(f).from("F").to("C");
@@ -60,10 +61,21 @@ const dateStringToFileNamePartialString = (stringDate) => {
   return momentTZ.utc(stringDate).format('YYYYMMDD-T-HHmm').toString();
 }
 
+const minDateFromDateObjectsArray = (objArray) => {
+  const allDates = objArray.reduce(function (acc, obj) {
+    for (const [key, value] of Object.entries(obj)) {
+      if (acc.indexOf(value) === -1) acc.push(value) // collect all the dates
+    }
+    return acc;
+  }, []);
+  return momentTZ.utc(moment.min(allDates));
+}
+
 module.exports = {
   convertTemp,
   convertMPH,
   calcMinutesDiff,
   convertToMetric,
-  dateStringToFileNamePartialString
+  dateStringToFileNamePartialString,
+  minDateFromDateObjectsArray
 };

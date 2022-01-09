@@ -4,7 +4,7 @@ const FetchRawData = require('./src/dataFetchers');
 const { ConvertImperialToJsonl, ConvertImperialToMetric } = require('./src/converters');
 const IndexData = require('./src/dataIndexers');
 const Logger = require('./src/logger');
-const momentTZ = require('moment-timezone')
+const { minDateFromDateObjectsArray } = require('./src/utils');
 
 // initialize the classes;
 
@@ -29,29 +29,64 @@ const dataIndexer = new IndexData();
 //     return newDataInUTC > momentTZ(values[1].lastIndexedImperialDataDate)
 //   }
 // }
+/**
+ *
+ * @param {*} objArray
+ * @example
+ const datesForNewData = getNewDataPromiseResult.dataFetchForDates;
+ geoupBy(etNewDataPromiseResult.dataFetchForDates) = [
+  Moment<2022-01-07T14:05:00-07:00>,
+  Moment<2022-01-08T14:00:00-07:00>,
+  Moment<2022-01-06T14:10:00-07:00>,
+  Moment<2022-01-07T14:00:00-07:00>,
+  Moment<2022-01-05T14:15:00-07:00>,
+  Moment<2022-01-06T14:05:00-07:00>,
+  Moment<2022-01-04T14:20:00-07:00>,
+  Moment<2022-01-05T14:10:00-07:00>,
+  Moment<2022-01-03T14:25:00-07:00>,
+  Moment<2022-01-04T14:15:00-07:00>,
+  Moment<2022-01-02T14:20:00-07:00>,
+  Moment<2022-01-03T14:20:00-07:00>,
+  Moment<2022-01-01T14:25:00-07:00>,
+  Moment<2022-01-02T14:15:00-07:00>,
+  Moment<2021-12-31T14:30:00-07:00>,
+  Moment<2022-01-01T14:20:00-07:00>,
+  Moment<2021-12-31T12:00:00-07:00>,
+  Moment<2021-12-31T14:25:00-07:00>
+]
+ */
+
 
 async function main() {
   let datesForNewData;
   let imperialDataJSONLFileNames;
   let metricDataJSONLFileNames;
-  let indexDocsNeeded = false;
+  let indexImperialDocsNeeded = false;
+  let indexMetricDocsNeeded = false;
   mainLogger.logInfo('starting main function', new Date());
 
   try {
-    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
+    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
+    if (getNewDataPromiseResult === "too early") {
+      throw new Error(getNewDataPromiseResult)
+    }
     datesForNewData = getNewDataPromiseResult.dataFetchForDates;
   } catch (err) {
-    throw new Error('no return from fetchRawDataTester.getDataForDateRanges(false)', err)
+    throw err;
   }
-
 
   const { lastIndexedImperialDataDate,
     lastIndexedMetricDataDate } = await dataIndexer.initialize();
 
-  mainLogger.logInfo('datesForNewData', datesForNewData) // now get the minimum of all these dates and check agains the last indexed data dates
+  if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedImperialDataDate)) {
+    indexImperialDocsNeeded = true;
+  }
+  if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedMetricDataDate)) {
+    indexMetricDocsNeeded = true;
+  }
 
-  mainLogger.logInfo('lastIndexedImperialDataDate', lastIndexedImperialDataDate)
-  mainLogger.logInfo('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
+  mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
+  mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
 
 
   //   mainLogger.logInfo('beginning new data file conversion: json => jsonl')
@@ -73,6 +108,7 @@ module.exports = (async () => {
     var result = await main();
     console.log(result);
   } catch (err) {
+    // I'll want to log these results rather than throw.
     throw err;
   }
 })()
