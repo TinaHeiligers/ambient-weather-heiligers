@@ -165,18 +165,18 @@ describe('FetchRawData', () => {
       await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).toHaveBeenCalled();
-    })
+    });
     it('does not call deviceData if userDevices does not return a value', async () => {
       const deviceDataSpy = jest.spyOn(mockAWApi, 'deviceData');
       mockAWApi.userDevices.mockReturnValueOnce(false);
-      await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      const result = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(mockAWApi.userDevices).toHaveBeenCalled();
       expect(deviceDataSpy).not.toHaveBeenCalled();
-    })
+    });
     it('accepts two args: a date in UTC and the number of records to fetch', async () => {
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
-      }])
+      }]);
       mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
       const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(data).toBeTruthy();
@@ -184,11 +184,17 @@ describe('FetchRawData', () => {
     it('returns an array of data', async () => {
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
-      }])
+      }]);
       mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
       const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(data.length).toEqual(1)
-    })
+    });
+    it('returns undefined if the userDevices does not return a value', async () => {
+      mockAWApi.userDevices.mockReturnValueOnce(false);
+      const result = await rawDataFetcher.fetchRecentData(nowInMST, 1);
+      expect(mockAWApi.userDevices).toHaveBeenCalled();
+      expect(result).toBe(undefined);
+    });
   });
   describe('class methods: fetchAndStoreData', () => {
     let rawDataFetcher;
