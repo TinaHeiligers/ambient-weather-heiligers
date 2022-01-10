@@ -119,10 +119,20 @@ class FetchRawData {
     }
     return [...new Set(allDates)];
   };
+  /**
+   *
+   * @param {array} allDatesFromFiles: array of date-time integers since Unix epoch in milliseconds
+   * @returns {number} the most recent date-time for which we have data on file. Defaults to 1 day ago from present time if the array is empty
+   */
 
   getLastRecordedUTCDate = (allDatesFromFiles) => {
-    const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
-    return Math.max(...uniqueUtcDatesArray);
+    if (allDatesFromFiles.every(item => typeof item === "number")) {
+      const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
+      console.log('input:', allDatesFromFiles)
+      return Math.max(...uniqueUtcDatesArray);
+    } else {
+      return (this.now - timeConstants.one_day_as_milliseconds);
+    }
   }
   /**
    * The AWApi call uses the from date and counts backwards (numRecords * 5 min) in time to fetch data.
@@ -197,13 +207,11 @@ class FetchRawData {
       fromDate = this.now;
     }
     fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] args: skipSave, fromDate', { skipSave: !!skipSave, fromDate: fromDate });
-    const dayBeforeNow = this.now - timeConstants.one_day_as_milliseconds;
+
     this.skipSave = skipSave;
     // this is all setup before I can start fetching the data
     const allDatesFromFiles = this.extractUniqueDatesFromFiles(this.pathToFiles);
-    const dateOfLastDataSaved = (allDatesFromFiles && allDatesFromFiles.length > 0)
-      ? this.getLastRecordedUTCDate(allDatesFromFiles)
-      : dayBeforeNow;
+    const dateOfLastDataSaved = this.getLastRecordedUTCDate(allDatesFromFiles);
     // set the unique dates entry set to the class instance
     this.allUniqueDates = allDatesFromFiles;
 
