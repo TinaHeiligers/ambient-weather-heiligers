@@ -103,7 +103,7 @@ describe('FetchRawData', () => {
       expect(from).toEqual((new Date(dateArray[dateArray.length - 1].date)).getTime())
     });
   });
-  describe.only('class methods: extractUniqueDatesFromFiles', () => {
+  describe('class methods: extractUniqueDatesFromFiles', () => {
     let rawDataFetcher;
     let mockedFiles = [];
     let mockedData = [];
@@ -111,7 +111,6 @@ describe('FetchRawData', () => {
       mockFs.readdirSync.mockClear();
       mockFs.readFileSync.mockClear();
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
-
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -137,7 +136,7 @@ describe('FetchRawData', () => {
       const result = await rawDataFetcher.extractUniqueDatesFromFiles('ambient-weather-heiligers-imperial');
       expect(result).toEqual([]);
     });
-    it.only('filters out any undefined dates', async () => {
+    it('filters out any undefined dates', async () => {
       mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
       mockFs.readFileSync
         .mockReturnValueOnce(JSON.stringify([mockedData[0]]))
@@ -149,19 +148,20 @@ describe('FetchRawData', () => {
     });
   });
 
-  describe.skip('class methods: getLastRecordedUTCDate', () => {
+  describe('class methods: getLastRecordedUTCDate', () => {
+    let rawDataFetcher;
     beforeAll(() => {
-      let rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
+      rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       rawDataFetcher.now = (new Date('2022-01-10')).getTime();
     });
-    it('extracts all the utc date-time integers from an array of raw data as json objects', async () => {
-      let testData = [{ dateutc: '1595008500000' }, { dateutc: '1595094900000' }, { dateutc: '1641684000000' }, { dateutc: '1641752700000' }]
+    it('returns the most recent entry from an array of date-times', async () => {
+      let testData = [1595008500000, 1595094900000, 1641684000000, 1641752700000];
       const result = await rawDataFetcher.getLastRecordedUTCDate(testData);
       expect(typeof result).toBe("number")
       expect(result).toEqual(1641752700000);
     });
     it('works when there are no dates', async () => {
-      const result = await rawDataFetcher.getLastRecordedUTCDate();
+      const result = await rawDataFetcher.getLastRecordedUTCDate([]);
       expect(result).toEqual((new Date('2022-01-09')).getTime());
       // const expected = ;
     });

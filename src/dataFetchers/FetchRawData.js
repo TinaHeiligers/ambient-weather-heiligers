@@ -111,9 +111,15 @@ class FetchRawData {
     if (files && files.length > 0) {
       files.forEach((file) => {
         if (file === '.DS_Store') return;
-        const dataFromFile = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`));
-        const datesFromSingleFile = (dataFromFile && dataFromFile.length > 0) ? dataFromFile.map(datum => datum.dateutc) : [];
-        allDates = allDates.concat(datesFromSingleFile);
+        const dataReadFromFile = this.fs.readFileSync(`data/${pathToFolder}/${file}`);
+        // handle the tricky case when all the file contains is an empty array
+        if (dataReadFromFile !== undefined) {
+          const parsedDataFromFile = JSON.parse(dataReadFromFile);
+          const datesFromSingleFile = (parsedDataFromFile && parsedDataFromFile.length > 0) ? parsedDataFromFile.map(datum => datum.dateutc) : [];
+          allDates = allDates.concat(datesFromSingleFile);
+        } else {
+          fetchRawDataLogger.logWarning('[FetchRawData: extractUniqueDatesFromFiles] [WARNING] file with no entries:', file)
+        }
       });
       return [...new Set(allDates)];
     }
@@ -125,8 +131,8 @@ class FetchRawData {
    * @returns {number} the most recent date-time for which we have data on file. Defaults to 1 day ago from present time if the array is empty
    */
 
-  getLastRecordedUTCDate = (allDatesFromFiles) => {
-    if (allDatesFromFiles.every(item => typeof item === "number")) {
+  getLastRecordedUTCDate = (allDatesFromFiles = []) => {
+    if (allDatesFromFiles.length > 0 && allDatesFromFiles.every(item => typeof item === "number")) {
       const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
       return Math.max(...uniqueUtcDatesArray);
     } else {
