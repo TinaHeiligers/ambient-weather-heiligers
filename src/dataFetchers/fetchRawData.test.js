@@ -111,14 +111,14 @@ describe('FetchRawData', () => {
       mockFs.readdirSync.mockClear();
       mockFs.readFileSync.mockClear();
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
-      rawDataFetcher.now = (new Date('2022-01-10')).getTime();
+
     });
     afterEach(() => {
       jest.restoreAllMocks();
     });
     beforeEach(() => {
       mockedFiles = ['20200717-T-1055.json', '20200718-T-1055.json', '1641684000000_1641752460000.json', '1641752700000_1641839100000.json'];
-      mockedData = [{ dateutc: '1595008500000' }, { dateutc: '1595094900000' }, { dateutc: '1641684000000' }, { dateutc: '1641752700000' }]
+      mockedData = [{ dateutc: '1595008500000' }, { dateutc: '1595094900000' }, { dateutc: '1641684000000' }, { dateutc: '1641752700000' }];
     })
     it('extracts the dates from the saved data and returns the most recent date data was saved for', async () => {
       mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
@@ -135,42 +135,37 @@ describe('FetchRawData', () => {
       mockFs.readdirSync.mockImplementationOnce(() => undefined);
       mockFs.readFileSync.mockReturnValueOnce()
       const result = await rawDataFetcher.extractUniqueDatesFromFiles('ambient-weather-heiligers-imperial');
-
       expect(result).toEqual([]);
-    })
-  });
-  describe.skip('class methods: getLastRecordedUTCDate', () => {
-    beforeEach(() => {
-      const rawV1DataMocked = [{ date: '2020-07-17T17:55:00.000Z' }, { date: '2020-07-18T17:55:00.000Z' }]
-      const rawV2DataMocked = [{ dateutc: '1641684000000' }, { date: '1641752700000' }];
     });
-    it('extracts all the utc date-time integers from an array of raw data as json objects', async () => {
-      let testData = [...rawV1DataMocked.map((entry => ({ ...entry, dateutc: (new Date(entry.date)).getTime() }))), ...rawV2DataMocked];
-      const result = await rawDataFetcher.getLastRecordedUTCDate(mockedData);
-      console.log('result', result)
-      expect(typeof result).toBe("number")
-      expect(result).toEqual(1641752700000);
-    });
-    it('works when there are no files', async () => {
-      mockFs.readdirSync.mockImplementationOnce(() => []);
-      const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
-      console.log('result', result)
-      expect(JSON.stringify(result.mostRecentDate.format('YYYY-MM-DD'))).toEqual(JSON.stringify(momentTZ.utc(momentTZ().subtract(1, 'days')).format('YYYY-MM-DD')));
-      expect(result.allFilesDates).toEqual([]);
-      // const expected = (new Date('2022-01-09')).getTime();
-    });
-    it('filters out any undefined dates', async () => {
-      const mockedFiles = ['20220108-T-2320_20220109-T-1830.json', '20220108-T-2105_20220108-T-2315.json', '20220108-T-2320_20220108-T-2325.json'];
-      mockedData = [{ date: "2022-01-09T18:30:00.000Z" }, { date: "2022-01-08T23:15:00.000Z" }, { date: "2022-01-08T23:25:00.000Z" }];
+    it.only('filters out any undefined dates', async () => {
       mockFs.readdirSync.mockImplementationOnce(() => mockedFiles);
       mockFs.readFileSync
         .mockReturnValueOnce(JSON.stringify([mockedData[0]]))
         .mockReturnValueOnce(JSON.stringify([mockedData[1]]))
         .mockReturnValueOnce(JSON.stringify([mockedData[2]]))
-      const result = await rawDataFetcher.getLastRecordedUTCDate('ambient-weather-heiligers-imperial');
-      expect(Object.keys(result)).toEqual(["mostRecentDate", "allFilesDates"]);
-      expect(JSON.stringify(result.mostRecentDate)).toEqual(JSON.stringify('2022-01-09T18:30:00.000Z'));
-    })
+        .mockReturnValueOnce(JSON.stringify([]));
+      const result = await rawDataFetcher.extractUniqueDatesFromFiles('ambient-weather-heiligers-imperial');
+      expect(result).toEqual(['1595008500000', '1595094900000', '1641684000000']);
+    });
+  });
+
+  describe.skip('class methods: getLastRecordedUTCDate', () => {
+    beforeAll(() => {
+      let rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
+      rawDataFetcher.now = (new Date('2022-01-10')).getTime();
+    });
+    it('extracts all the utc date-time integers from an array of raw data as json objects', async () => {
+      let testData = [{ dateutc: '1595008500000' }, { dateutc: '1595094900000' }, { dateutc: '1641684000000' }, { dateutc: '1641752700000' }]
+      const result = await rawDataFetcher.getLastRecordedUTCDate(testData);
+      expect(typeof result).toBe("number")
+      expect(result).toEqual(1641752700000);
+    });
+    it('works when there are no dates', async () => {
+      const result = await rawDataFetcher.getLastRecordedUTCDate();
+      expect(result).toEqual((new Date('2022-01-09')).getTime());
+      // const expected = ;
+    });
+
   });
   describe.skip('class methods: fetchRecentData', () => {
     // FIX ME

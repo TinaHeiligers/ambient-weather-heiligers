@@ -112,7 +112,7 @@ class FetchRawData {
       files.forEach((file) => {
         if (file === '.DS_Store') return;
         const dataFromFile = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`));
-        const datesFromSingleFile = dataFromFile.map(datum => datum.dateutc).filter(datum => datum !== undefined);
+        const datesFromSingleFile = (dataFromFile && dataFromFile.length > 0) ? dataFromFile.map(datum => datum.dateutc) : [];
         allDates = allDates.concat(datesFromSingleFile);
       });
       return [...new Set(allDates)];
@@ -128,7 +128,6 @@ class FetchRawData {
   getLastRecordedUTCDate = (allDatesFromFiles) => {
     if (allDatesFromFiles.every(item => typeof item === "number")) {
       const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
-      console.log('input:', allDatesFromFiles)
       return Math.max(...uniqueUtcDatesArray);
     } else {
       return (this.now - timeConstants.one_day_as_milliseconds);
