@@ -1,7 +1,7 @@
 const FetchRawData = require('./FetchRawData');
 const momentTZ = require('moment-timezone');
 const mocks = require('../../__mocks__/FetchRawData.js')
-const timeConstants = require('../utils');
+const { timeConstants } = require('../utils');
 
 const mockAWApi = mocks.mockAWApi;
 const mockFs = mocks.mockFs;
@@ -12,7 +12,7 @@ describe('FetchRawData', () => {
   beforeAll(() => {
     FetchRawDataTester = new FetchRawData(mockAWApi, mockFs);
     testNow = FetchRawDataTester.now;
-    nowInMST = (new Date('2020-06-10')).getTime();
+    nowInMST = (new Date('2020-06-10'))
   });
   afterEach(() => {
     jest.restoreAllMocks();
@@ -95,12 +95,12 @@ describe('FetchRawData', () => {
       { "date": "2020-07-18T18:05:00.000Z" },
       { "date": "2020-07-18T18:00:00.000Z" },
       { "date": "2020-07-18T17:55:00.000Z" }];
-      const testDataArray = dateArray.map(entry => ({ ...entry, dateutc: (new Date(entry.date)).getTime() }));
+      const testDataArray = dateArray.map(entry => ({ ...entry, dateutc: (Date.parse(entry.date)) }));
       const { to, from } = await rawDataFetcher.extractDatesFromData(testDataArray);
       expect(typeof to).toBe("number");
       expect(typeof from).toBe("number");
-      expect(to).toEqual((new Date(dateArray[0].date)).getTime())
-      expect(from).toEqual((new Date(dateArray[dateArray.length - 1].date)).getTime())
+      expect(to).toEqual((Date.parse(dateArray[0].date)))
+      expect(from).toEqual(Date.parse(dateArray[dateArray.length - 1].date))
     });
   });
   describe('class methods: extractUniqueDatesFromFiles', () => {
@@ -152,7 +152,7 @@ describe('FetchRawData', () => {
     let rawDataFetcher;
     beforeAll(() => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
-      rawDataFetcher.now = (new Date('2022-01-10')).getTime();
+      rawDataFetcher.now = (Date.parse('2022-01-10'))
     });
     it('returns the most recent entry from an array of date-times', async () => {
       let testData = [1595008500000, 1595094900000, 1641684000000, 1641752700000];
@@ -162,13 +162,11 @@ describe('FetchRawData', () => {
     });
     it('works when there are no dates', async () => {
       const result = await rawDataFetcher.getLastRecordedUTCDate([]);
-      expect(result).toEqual((new Date('2022-01-09')).getTime());
-      // const expected = ;
+      expect(result).toEqual((Date.parse('2022-01-09')));
     });
 
   });
-  describe.skip('class methods: fetchRecentData', () => {
-    // FIX ME
+  describe('class methods: fetchRecentData', () => {
     let rawDataFetcher;
     beforeEach(() => {
       mockAWApi.userDevices.mockClear();
@@ -195,7 +193,7 @@ describe('FetchRawData', () => {
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
       }]);
-      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
+      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: Date.parse(nowInMST).toString() } }])
       const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(data).toBeTruthy();
     });
@@ -203,7 +201,7 @@ describe('FetchRawData', () => {
       mockAWApi.userDevices.mockReturnValueOnce([{
         macAddress: "F4:CF:A2:CD:9B:12"
       }]);
-      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: new Date(nowInMST).toString() } }])
+      mockAWApi.deviceData.mockReturnValueOnce([{ data: { date: Date.parse(nowInMST).toString() } }])
       const data = await rawDataFetcher.fetchRecentData(nowInMST, 1);
       expect(data.length).toEqual(1)
     });
@@ -214,8 +212,7 @@ describe('FetchRawData', () => {
       expect(result).toBe(undefined);
     });
   });
-  describe.skip('class methods: fetchAndStoreData', () => {
-    // FIX ME
+  describe('class methods: fetchAndStoreData', () => {
     let rawDataFetcher;
     beforeAll(() => {
       mockAWApi.userDevices.mockClear();
@@ -226,28 +223,8 @@ describe('FetchRawData', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     })
-    it("should extract the min and max dates for an array of data containing dates", () => {
-      const from1 = "2020-06-19";
-      const from2 = "2020-06-21";
-      const testArray = [{ date: from1 }, { date: from2 }];
-      expect(rawDataFetcher.extractDatesFromData(testArray)).toEqual({
-        from: momentTZ(from1),
-        to: momentTZ(from2),
-      });
-    });
-    it("should extract the min and max dates for an array of data containing dates for a week", () => {
-      let days = [];
-      let startOfWeek = momentTZ('2020-07-12').startOf('week');
-      let endOfWeek = momentTZ('2020-07-18').endOf('week');
-      let day = startOfWeek;
-      while (day <= endOfWeek) {
-        days.push({ date: day.toDate() });
-        day = day.clone().add(1, 'd');
-      }
-      expect(rawDataFetcher.extractDatesFromData(days).from.format('YYYY-MM-DD')).toEqual(startOfWeek.format('YYYY-MM-DD'));
-      expect(rawDataFetcher.extractDatesFromData(days).to.format('YYYY-MM-DD')).toEqual(endOfWeek.format('YYYY-MM-DD'));
-    });
     it('calls fetchRecentData with date and record count provided', async () => {
+      const fromDate = (Date.parse('2020-06-30'))
       const mockedData = [
         { "date": "2020-06-29T22:00:00.000Z" },
         { "date": "2020-06-29T21:55:00.000Z" },
@@ -256,18 +233,18 @@ describe('FetchRawData', () => {
         { "date": "2020-06-29T21:40:00.000Z" },
         { "date": "2020-06-29T21:35:00.000Z" },
         { "date": "2020-06-29T21:30:00.000Z" }
-      ];
+      ].map((entry => ({ ...entry, dateutc: (Date.parse(entry.date)) })));
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
-      await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      await rawDataFetcher.fetchAndStoreData(fromDate, 1);
       expect(rawDataFetcher.fetchRecentData).toHaveBeenCalled();
-      expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe('2020-06-30')
+      expect(rawDataFetcher.fetchRecentData.mock.calls[0][0]).toBe(fromDate)
       expect(rawDataFetcher.fetchRecentData.mock.calls[0][1]).toBe(1)
       expect(rawDataFetcher.fetchRecentData.mock.results[0].value).toEqual(mockedData)
 
       spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
 
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200629-T-2130_20200629-T-2200.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/1593466200000_1593468000000.json')
       expect(mockFs.writeFileSync.mock.calls[0][1]).toBe(JSON.stringify(mockedData, null, 2))
       expect(mockFs.writeFileSync.mock.results[0].value).toBe(undefined)
       spy.mockRestore();
@@ -279,6 +256,7 @@ describe('FetchRawData', () => {
       spy.mockRestore();
     });
     it('extracts the min and max date from the data and returns that', async () => {
+      const fromDate = (Date.parse('2020-06-29'))
       const mockedData = [
         { "date": "2020-06-29T12:00:00.000Z" },
         { "date": "2020-06-29T11:55:00.000Z" },
@@ -287,21 +265,21 @@ describe('FetchRawData', () => {
         { "date": "2020-06-29T11:40:00.000Z" },
         { "date": "2020-06-29T11:35:00.000Z" },
         { "date": "2020-06-29T11:30:00.000Z" }
-      ];
+      ].map((entry => ({ ...entry, dateutc: (Date.parse(entry.date)) })));;
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
-      const result = await rawDataFetcher.fetchAndStoreData('2020-06-29', 1);
-      expect(result.from).toEqual(momentTZ("2020-06-29T11:30:00.000Z"))
-      expect(result.to).toEqual(momentTZ("2020-06-29T12:00:00.000Z"))
+      const result = await rawDataFetcher.fetchAndStoreData(fromDate, 1);
+      expect(result.from).toEqual(mockedData[mockedData.length - 1].dateutc)
+      expect(result.to).toEqual(mockedData[0].dateutc)
       expect(result.to > result.from).toBeTruthy
       spy.mockRestore();
     });
     it('dynamically sets the filename based on the max date from the data', async () => {
-      const mockedData = [{ date: '2020-06-29' }, { date: '2020-06-30' }];
+      const mockedData = [{ dateutc: (Date.parse('2020-06-29')) }, { dateutc: (Date.parse('2020-06-30')) }];
       let spy = jest.spyOn(rawDataFetcher, 'fetchRecentData').mockImplementationOnce(() => mockedData);
-      await rawDataFetcher.fetchAndStoreData('2020-06-30', 1);
+      await rawDataFetcher.fetchAndStoreData((Date.parse('2020-06-30')), 1);
       spy = jest.spyOn(mockFs, 'writeFileSync').mockImplementationOnce(() => true);
       expect(mockFs.writeFileSync).toHaveBeenCalled();
-      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/20200629-T-1130_20200629-T-1200.json')
+      expect(mockFs.writeFileSync.mock.calls[0][0]).toBe('data/ambient-weather-heiligers-imperial/1593430200000_1593432000000.json')
       expect(mockFs.writeFileSync.mock.calls[0][0]).not.toBe('data/ambient-weather-heiligers-imperial/20200629-T-1201_1201.json')
       spy.mockRestore();
     });

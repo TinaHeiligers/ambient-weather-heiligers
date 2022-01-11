@@ -181,7 +181,6 @@ class FetchRawData {
   async fetchAndStoreData(toDate, numRecords) {
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
-      // console.log('the result from fetching the most recent data is:', result)
       if (result && Array.isArray(result) && result.length > 0) {
         const actualNewDataEntries = this.addNewDataDatesToUniqueDataEntries(result)
         // setting up to store data in files
