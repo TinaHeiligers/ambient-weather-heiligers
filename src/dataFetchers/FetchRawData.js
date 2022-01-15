@@ -1,14 +1,16 @@
 
 const momentTZ = require('moment-timezone');
 const {
-  calcMinutesDiff
+  calcMinutesDiff,
+  timeConstants
 } = require('../utils');
-
+const Logger = require('../logger');
 const AW_CONSTANTS = {
   dataInterval: 5,
   maxNumRecords: 288,
 }
 
+const fetchRawDataLogger = new Logger('fetchRawData');
 /*
  * Fetches data from Ambient-Weather
  * All dates should be in utc
@@ -19,7 +21,7 @@ const AW_CONSTANTS = {
  */
 class FetchRawData {
   #pathToFiles = 'ambient-weather-heiligers-imperial';
-  #now = momentTZ.utc(momentTZ());
+  #now = (new Date()).getTime();
   #numberOfRecords = 0;
   #datesArray = [];
   #allUniqueDates = [];
@@ -78,92 +80,114 @@ class FetchRawData {
 
   clearFileNames() {
     if (this.#recentDataFileNames && this.#recentDataFileNames.length > 0) {
-      console.log(`clearing ${this.recentDataFileNames.length()} file names`);
+      fetchRawDataLogger.logInfo(`clearing ${this.recentDataFileNames.length()} file names`);
       this.#recentDataFileNames = [];
     } else {
-      console.log(`No filenames to clear`)
+      fetchRawDataLogger.logWarning(`No filenames to clear`)
     }
   }
-
+  /**
+   *
+   * @param {array} dataArray: dates as date-time since unix epoch time in utc
+   * @returns {obj} { from, to } min, max from dataArray as date-time integers since unix epoch
+   */
   extractDatesFromData = (dataArray) => {
-    const dataDates = dataArray.map((datum) => momentTZ(datum.date));
-    return { from: momentTZ.min(dataDates), to: momentTZ.max(dataDates) };
+    const dataDates = dataArray.map((datum) => datum.dateutc);
+    return { from: Math.min(...dataDates), to: Math.max(...dataDates) };
   };
 
   addDateEntries(dateArray) {
     let uniqueDates = [... new Set(dateArray)];
     this.allUniqueDates = uniqueDates;
   };
-
-  //generic mostRecentDate getter from existing data files
-  getLastRecordedUTCDate = (pathToFolder) => {
-    console.log('getLastRecordedUTCDate', pathToFolder)
-    const allFilesDatesArray = [];
-    console.log('allFilesDatesArray', allFilesDatesArray)
-    const directoryPath = `data/${pathToFolder}`;
-    // console.log('directorypath', directoryPath)
-    const files = this.fs.readdirSync(directoryPath);
+  /**
+   *
+   * @param pathToFiles {string} directory path to files to read
+   * @returns {set/array} array of unique unix datetime integers in milliseconds
+   */
+  extractUniqueDatesFromFiles(pathToFiles) {
+    let allDates = [];
+    const files = this.fs.readdirSync(`data/${pathToFiles}`);
     if (files && files.length > 0) {
-      // console.log('files.length:', files.length)
-      const maxFileEntriesDatesArray = files.map((file) => {
-        // console.log('file:', file)
-        // get the max date from ONE file
-        if (file === '.DS_Store') {
-          return
+      files.forEach((file) => {
+        if (file === '.DS_Store') return;
+        const dataReadFromFile = this.fs.readFileSync(`data/${pathToFiles}/${file}`);
+        // handle the tricky case when all the file contains is an empty array
+        if (dataReadFromFile !== undefined) {
+          const parsedDataFromFile = JSON.parse(dataReadFromFile);
+          const datesFromSingleFile = (parsedDataFromFile && parsedDataFromFile.length > 0) ? parsedDataFromFile.map(datum => datum.dateutc) : [];
+          allDates = allDates.concat(datesFromSingleFile);
         } else {
-          const data = JSON.parse(this.fs.readFileSync(`data/${pathToFolder}/${file}`)); // is an array of objects
-          // console.log('data:', data)
-          // add the dates to the unique date entries TODO: this is being overwritten for each file :facepalm!!!!!
-          data.forEach(datum => {
-            // console.log('datum.date?', datum.date)
-            return allFilesDatesArray.push(datum.date)
-          });
-
-          const result = momentTZ.max(data.map((datum) => momentTZ(datum.date)));
-          console.log('result:', result)
-          return result;
+          fetchRawDataLogger.logWarning('[FetchRawData: extractUniqueDatesFromFiles] [WARNING] file with no entries:', file)
         }
       });
-
-      const withoutUndefined = maxFileEntriesDatesArray.filter((entry => entry !== undefined))
-
-      const mostRecentDate = momentTZ.max(withoutUndefined);
-      // console.log('mostRecentDate:', mostRecentDate)
-      return { mostRecentDate: momentTZ.utc(mostRecentDate), allFilesDates: [...new Set(allFilesDatesArray)] };
+      return [...new Set(allDates)];
     }
-    return { mostRecentDate: momentTZ.utc(momentTZ(this.now).subtract(1, 'days')), allFilesDates: [... new Set(allFilesDatesArray)] };
+    return [...new Set(allDates)];
   };
+  /**
+   *
+   * @param {array} allDatesFromFiles: array of date-time integers since Unix epoch in milliseconds
+   * @returns {number} the most recent date-time for which we have data on file. Defaults to 1 day ago from present time if the array is empty
+   */
 
+  getLastRecordedUTCDate = (allDatesFromFiles = this.allUniqueDates) => {
+    if (allDatesFromFiles.length > 0 && allDatesFromFiles.every(item => typeof item === "number")) {
+      const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
+      return Math.max(...uniqueUtcDatesArray);
+    } else {
+      return (this.now - timeConstants.one_day_as_milliseconds);
+    }
+  }
+  /**
+   * The AWApi call uses the from date and counts backwards (numRecords * 5 min) in time to fetch data.
+   * @param {integer} from: date-time as integer of Unix time in milliseconds since epoch
+   * @param {integer} numRecords: number of records to fetch
+   * @returns {array} if the device is available: array of json data containing the raw data from the AWApi call, else undefined
+   * @example
+   [{ "dateutc": 1641683700000, "tempinf": 71.2, "humidityin": 39,...},
+    { "dateutc": 1641683400000, "tempinf": 71.2, "humidityin": 39, ...}]
+   */
   async fetchRecentData(from, numRecords) {
-    // the call takes in the endDate and counts backwards in time
     const devices = await this.AWApi.userDevices();
     if (devices && devices.length > 0) {
       try {
         return await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
       } catch (err) {
-        console.error(err)
+        fetchRawDataLogger.logError('[FetchRawData: fetchRecentData] [ERROR]', err)
         throw err;
       }
     } else {
       return;
     }
   }
-
+  /**
+   *
+   * @param {array} dataArray : array of json data returdned from `fetchRecentData`
+   * @returns {array} new data that we don't already have on file (dependency is that we do not call for new data over a time range that we don't have local data for stored on file)
+   */
+  addNewDataDatesToUniqueDataEntries = (dataArray) => {
+    const actualNewDataEntries = dataArray.filter(entry => !this.allUniqueDates.includes(entry?.dateutc));
+    const newDatesItems = [...new Set(actualNewDataEntries.map(newEntry => newEntry?.dateutc))].concat(this.allUniqueDates)
+    this.allUniqueDates = newDatesItems;
+    return actualNewDataEntries;
+  }
+  /**
+   *
+   * @param {integer} toDate date-time in milliseconds since the Unix epoch time
+   * @param {integer} numRecords number of records to fetch from API (max = 288, min = 1)
+   * @returns {obj} { from, to }: date-times as milliseconds since Unix epoch time for which data was fetched
+   */
   async fetchAndStoreData(toDate, numRecords) {
+
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
-      // console.log('the result from fetching the most recent data is:', result)
-      if (result && result.length > 0) {
-        let actualNewDataEntries = result.filter(x => !this.allUniqueDates.includes(x.date))
-        // actual new data in imperial format
-        const newDatesItems = [...new Set(actualNewDataEntries.map(y => y.date).concat(this.allUniqueDates))]
-        this.allUniqueDates = newDatesItems;
+      if (result && Array.isArray(result) && result.length > 0) {
+        const actualNewDataEntries = this.addNewDataDatesToUniqueDataEntries(result)
         // setting up to store data in files
         const { from, to } = this.extractDatesFromData(actualNewDataEntries);
-        const formattedfileNameFrom = momentTZ.utc(from).format('YYYYMMDD-T-HHmm');
-        const formattedfileNameTo = momentTZ.utc(to).format('YYYYMMDD-T-HHmm');
-        const formattedFileName = `${formattedfileNameFrom}_${formattedfileNameTo}`;
-        this.recentDataFileNames = formattedFileName
+        const formattedFileName = `${from}_${to}`; // BREAKING CHANGE: uses integers now
+        this.recentDataFileNames = formattedFileName;
         if (!this.skipSave) {
           this.fs.writeFileSync(`data/${this.pathToFiles}/${formattedFileName}.json`, JSON.stringify(actualNewDataEntries, null, 2));
         }
@@ -171,44 +195,46 @@ class FetchRawData {
       }
       return null;
     } catch (err) {
-      console.error('error in fetchAndStoreData', err)
+      fetchRawDataLogger.logError('[FetchRawData: fetchAndStoreData] [ERROR] error in fetchAndStoreData', err)
       throw err;
     }
   }
+  /**
+   * main method for FetchRawData class: fetches data that we don't yet have on file up to fromDate
+   * @param {boolean} skipSave: saving to file is skipped if true
+   * @param {integer} fromDate: date until which to fetch new data for (calls are made going back in time)
+   * @returns {obj} { dataFetchForDates: <array>, dataFileNames: <array } array of date-times in milliseconds since epoch, array of filenames where the data was/>would have been stored
+   */
   // main function for this class
   async getDataForDateRanges(skipSave = false, fromDate) {
-    // console.log('in getDataForDateRanges')
+
     if (!fromDate) {
       fromDate = this.now;
     }
-    this.skipSave = skipSave;
-    // console.log('DEBUG: 1. what is now?', fromDate)
-    // this is all setup before I can start fetching the data
-    const results = this.getLastRecordedUTCDate(this.pathToFiles);
+    fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] args: skipSave, fromDate', { skipSave: !!skipSave, fromDate: fromDate });
 
-    const dateOfLastDataSaved = results.mostRecentDate;
-    console.log('dateOfLastDataSaved', dateOfLastDataSaved)
-    const allFilesDates = results.allFilesDates
+    this.skipSave = skipSave;
+    // this is all setup before I can start fetching the data
 
     // set the unique dates entry set to the class instance
-    this.allUniqueDates = allFilesDates;
-    const minSinceLastData = calcMinutesDiff(fromDate, dateOfLastDataSaved);
+    this.allUniqueDates = this.extractUniqueDatesFromFiles(this.pathToFiles);
+    const dateOfLastDataSaved = this.getLastRecordedUTCDate();
+    const minSinceLastData = Math.floor((fromDate - dateOfLastDataSaved) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute));
     // return early if it's too soon to fetch new data
     if (minSinceLastData < AW_CONSTANTS.dataInterval) return 'too early';
-
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
 
     if (estNumberOfBatches >= 1) {
-      console.log(`Setting up batched requests for ${estNumberOfBatches} batches`)
+      fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
-        console.log(`Issueing batch request ${i} of ${Math.floor(estNumberOfBatches)}`)
+        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Issueing batch request:', { i: i })
         try {
-          const resultDatesObject = await this.fetchAndStoreData(this.now, this.numberOfRecords);
-          if (resultDatesObject) {
-            const { from, to } = resultDatesObject;
+          const fetchedData = await this.fetchAndStoreData(this.now, this.numberOfRecords);
+          if (fetchedData) {
+            const { from, to } = fetchedData;
             this.now = from;
             this.datesArray = this.datesArray.concat({ from, to });
           } else {
@@ -216,38 +242,42 @@ class FetchRawData {
             break;
           }
         } catch (err) {
-          console.log('PROBLEM in multi day fetch!', err)
+          fetchRawDataLogger.logError('[FetchRawData: getDataForDateRanges] [multi-day fetch] PROBLEM!', err)
         }
       }
       // fetch the last lot of data that doesn't fall into a batch
-      const lastRecordsFromDate = momentTZ.min(this.datesArray.map((entry) => momentTZ(entry.from)));
+      const lastRecordsFromDate = Math.min(...this.datesArray.map((entry) => entry.from));
       const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
-      console.log(`Setting up final collection for ${lastRecordsLimit} records.`)
-      const resultDatesObject = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
-      if (resultDatesObject) {
-        const { from, to } = resultDatesObject;
+
+      fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Setting up final collection for record count:', { lastRecordsLimit: lastRecordsLimit });
+
+      const fetchedData = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
+      if (fetchedData) {
+        const { from, to } = fetchedData;
         this.datesArray = this.datesArray.concat({ from, to })
         const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+
         return finalResult;
       } else {
+
         const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+
         return finalResult;
       }
     } else {
-
       // single day data fetch
       try {
-        console.log(`Fewer than a 288-batch records required. Setting up request for ${estTotalNumRecordsToFetch} records`)
+        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count:', { estTotalNumRecordsToFetch: estTotalNumRecordsToFetch })
         const result = await this.fetchAndStoreData(this.now, estTotalNumRecordsToFetch);
         this.datesArray = this.datesArray.concat(result)
 
         const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
+
         return finalResult;
       } catch (err) {
-        console.log('PROBLEM in single day fetch!', err)
+        fetchRawDataLogger.logError('[FetchRawData: getDataForDateRanges] [single-day fetch] PROBLEM!', err)
       }
     }
-    console.log('this.datesArray', this.datesArray)
     const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
     return finalResult;
   };

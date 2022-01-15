@@ -1,6 +1,7 @@
 const cu = require("convert-units");
 const momentTZ = require("moment-timezone");
 const moment = require('moment')
+const timeConstants = require('./constants')
 
 const convertTemp = function (f) {
   const tempInC = cu(f).from("F").to("C");
@@ -11,10 +12,17 @@ const convertMPH = function (mph) {
   const speedmph = cu(mph).from("m/h").to("km/h");
   return Number(speedmph.toFixed(3));
 };
-
+/**
+ * calculate the number of minutes between two date-times in milliseconds
+ * note: javascript uses milliseconds as the unit to `getTime()`
+ * @param {number} to date-time in milliseconds
+ * @param {number} from date-time in milliseconds
+ * @returns number of minutes difference
+ */
 const calcMinutesDiff = (to, from) => {
-  return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
+  return Math.floor((to - from) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute))
 };
+
 
 function convertRainReading(reading) {
   if (reading !== 0) {

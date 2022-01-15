@@ -1,22 +1,23 @@
 class Logger {
   constructor(name) {
     this.name = name;
-  }
-
-  logMessage(message, meta = {}) {
-    console.log(`${this.name}:`, message, meta)
   };
 
-  logError(error, meta = {}) {
-    console.error(`${this.name}:`, error, meta)
+  logMessage(message, meta = null) {
+    !!meta ? console.log(`${this.name}:`, message, meta) : console.log(`${this.name}:`, message)
+
   };
 
-  logInfo(info, meta = {}) {
-    console.log(`${this.name}:`, info, meta)
+  logError(error, meta) {
+    !!meta ? console.error(`${this.name}:`, error, meta) : console.error(`${this.name}:`, error)
   };
 
-  logWarning(warning, meta = {}) {
-    console.warn(`${this.name}:`, warning, meta)
+  logInfo(info, meta) {
+    !!meta ? console.log(`${this.name}:`, info, meta) : console.log(`${this.name}:`, info)
+  };
+
+  logWarning(warning, meta) {
+    !!meta ? console.warn(`${this.name}:`, warning, meta) : console.warn(`${this.name}:`, warning)
   };
 }
 module.exports = Logger;
