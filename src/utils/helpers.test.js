@@ -4,8 +4,7 @@ const {
   convertMPH,
   calcMinutesDiff,
   convertToMetric,
-  dateStringToFileNamePartialString,
-  minDateFromDateObjectsArray
+  minDateFromDateObjects
 } = require("./helpers");
 const timeConstants = require('./constants');
 
@@ -107,20 +106,25 @@ describe("helpers", () => {
       expect(actualResult).toEqual(expectedMetricDatum);
     });
   });
-  describe("dateStringToFileNamePartialString", () => {
-    it.todo('takes a string date and converts it to the momentDate format to match filenames')
-  });
-  describe("minDateFromDateObjectsArray", () => {
-    it("extracts all dates from objects in the array and combines them into a single array", () => {
-      const testFromToObj1 = { from: momentTZ('2022-01-07T14:05:00-07:00'), to: momentTZ('2022-01-06T14:10:00-07:00') };
-      const testFromToObj2 = { from: momentTZ('2022-01-07T14:00:00-07:00'), to: momentTZ('2022-01-05T14:15:00-07:00') };
+  describe("minDateFromDateObjects", () => {
+    it("returns the minimum datetime", () => {
+      const testFromToObj1 = { from: Date.parse(momentTZ('2022-01-07T14:05:00-07:00')), to: Date.parse(momentTZ('2022-01-06T14:10:00-07:00')) };
+      const testFromToObj2 = { from: Date.parse(momentTZ('2022-01-07T14:00:00-07:00')), to: Date.parse(momentTZ('2022-01-05T14:15:00-07:00')) };
       const testArray = [testFromToObj1, testFromToObj2];
-      const expectedMin = momentTZ.utc('2022-01-05T21:15:00.000Z');
-      const actualMin = minDateFromDateObjectsArray(testArray);
-      // comparing the dates directly throws "serializes to the same string". We use the alternative "isBefore" and "isAfter" instead
-      expect(actualMin.isAfter(expectedMin)).toBe(false);
-      expect(actualMin.isBefore(expectedMin)).toBe(false);
+      const expectedMin = Date.parse(momentTZ.utc('2022-01-05T21:15:00.000Z'));
+      const actualMin = minDateFromDateObjects(testArray);
+      // as integers, we can compare the difference in dates to be less than or greater than 0
+      expect((expectedMin - actualMin) > 0).toBe(false);
+    });
+    it("handles mixed date-time strings and numbers", () => {
+      const testFromToObj1 = { from: Date.parse(momentTZ('2022-01-07T14:05:00-07:00')), to: Date.parse(momentTZ('2022-01-06T14:10:00-07:00')) };
+      const testFromToObj2 = { from: Date.parse(momentTZ('2022-01-07T14:00:00-07:00')), to: Date.parse(momentTZ('2022-01-05T14:15:00-07:00')) };
+      const testArray = [testFromToObj1, testFromToObj2];
+      const expectedMin = Date.parse(momentTZ.utc('2022-01-05T21:15:00.000Z'));
+      const actualMin = minDateFromDateObjects(testArray);
+      // as integers, we can compare the difference in dates to be less than or greater than 0
+      expect((expectedMin - actualMin) > 0).toBe(false);
     })
   })
-
+  const testFromToObj1 = { from: momentTZ('2022-01-07T14:05:00-07:00'), to: momentTZ('2022-01-06T14:10:00-07:00') };
 });

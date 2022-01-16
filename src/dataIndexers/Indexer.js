@@ -1,7 +1,6 @@
 const esClient = require('./esClient');
 const { pingCluster, getAmbientWeatherAliases, getMostRecentDoc } = require('./esClientMethods');
 const Logger = require('../logger');
-const { dateStringToFileNamePartialString } = require('../utils')
 /*
 What do I want to do here?
 - ensure we have a connection to es
@@ -17,14 +16,6 @@ What do I want to do here?
 - add new indices
 - add new templates
 */
-function retryForCount(fn, count = 0) {
-  if (count < 9) {
-    setTimeout(fn, count * 1000)
-  } else {
-    throw Error('exceeded max number of retries asked for');
-  }
-}
-
 /**
  * @implements elasticsearch client to communicate with the cluster
  */
@@ -140,28 +131,6 @@ class IndexData {
     this.dateOflatestIndexedImperialDoc = latestImperialDoc[0]._source.dateutc; // use dateutc instead
     return { latestMetricDoc: latestMetricDoc, latestImperialDoc: latestImperialDoc };
   }
-
-  /**
-   * converts the date string for the most recently indexed documents to the same format used in the file names.
-   * @returns {obj} dateOflatestIndexedImperialDoc <string>, dateOflatestIndexedMetricDoc <string>
-   * @example
-   { imperial: '20211230-T-1905', metric: '20211230-T-1905'}
-   * note: in dev, the dates might not be the same. In prod, they should be the same.
-   */
-  latestIndexedDocsDatesInFileNameFormat() {
-    return {
-      imperialDataFileNameEnding: dateStringToFileNamePartialString(this.dateOflatestIndexedImperialDoc),
-      metricDataFileNameEnding: dateStringToFileNamePartialString(this.dateOflatestIndexedMetricDoc)
-    }
-  }
-  // as the name implies, we need to define how we determine what's 'new' data
-  // async indexNewData(newData) {
-  //   // either the subclasses need to imit what the new data is or we need to fetch it from file
-  //   const mostRecentMetricEntry = await getMostRecentDoc('metric');
-  //   const mostRecentImperialEntry = await getMostRecentDoc('imperial');
-  //   // we can now search through all the data we have on file for more recent json objects
-
-  // }
 
   /**
    * @returns {boolean} result from bulk indexing data

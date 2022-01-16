@@ -4,7 +4,7 @@ const FetchRawData = require('./src/dataFetchers');
 const { ConvertImperialToJsonl, ConvertImperialToMetric } = require('./src/converters');
 const IndexData = require('./src/dataIndexers');
 const Logger = require('./src/logger');
-const { minDateFromDateObjectsArray } = require('./src/utils');
+const { minDateFromDateObjects } = require('./src/utils');
 
 // initialize the classes;
 
@@ -91,14 +91,14 @@ async function main() {
   console.log('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
   // check if new data needs to be indexed based on the dates of the new data that's fetched vs date of most recently indexed documents
 
-  console.log('minDateFromDateObjectsArray(datesForNewData)', minDateFromDateObjectsArray(datesForNewData))
-  console.log('(minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0', (minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0)
+  console.log('minDateFromDateObjects(datesForNewData)', minDateFromDateObjects(datesForNewData))
+  console.log('(minDateFromDateObjects(datesForNewData) - lastIndexedImperialDataDate) > 0', (minDateFromDateObjects(datesForNewData) - lastIndexedImperialDataDate) > 0)
   const dateArrayNeeded = datesForNewData.map((fromToObj => fromToObj.to))
-  if ((minDateFromDateObjectsArray(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
+  if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
     indexImperialDocsNeeded = true;
     mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
   }
-  if ((minDateFromDateObjectsArray(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
+  if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
     indexMetricDocsNeeded = true;
     mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
   }
@@ -152,3 +152,21 @@ module.exports = (async () => {
     throw err;
   }
 })()
+
+
+// CURRENT STATE:
+/**
+main: starting main function 2022-01-16T00:04:03.195Z
+fetchRawData: [FetchRawData: getDataForDateRanges] args: skipSave, fromDate { skipSave: false, fromDate: 1642291443194 }
+fetchRawData: [FetchRawData: getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count: { estTotalNumRecordsToFetch: 1 }
+datesForNewData [ { from: 1642291200000, to: 1642291200000 } ]
+lastIndexedImperialDataDate 1641664200000
+lastIndexedMetricDataDate 1641664200000
+minDateFromDateObjectsArray(datesForNewData) 1642291200000
+(minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0 true
+converted imperial data files for 1 files: 1642291200000_1642291200000
+Converting imperial to metric data
+converted metric data files for 1 files: 1642291200000_1642291200000
+main: imperialDataJSONLFileNames [ '1642291200000_1642291200000' ]
+main: metricDataJSONLFileNames [ '1642291200000_1642291200000' ]
+no new data to index */

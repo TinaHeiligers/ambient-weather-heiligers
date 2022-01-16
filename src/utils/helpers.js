@@ -64,19 +64,25 @@ function convertToMetric(datum) {
     dewpoint_inside_c: convertTemp(datum.dewPointin),
   }
 }
-
-const dateStringToFileNamePartialString = (stringDate) => {
-  return momentTZ.utc(stringDate).format('YYYYMMDD-T-HHmm').toString();
-}
-
-const minDateFromDateObjectsArray = (unixMillisObj) => {
-  const allDates = unixMillisObj.reduce(function (acc, obj) {
+/**
+ *
+ * @param {Array} fromToObjsArray: array of { from: <datetime>, to: <datetime> }
+ * objects where datetime could either be a momentTZ datestring or a date-time in
+ * milliseconds
+ */
+const minDateFromDateObjects = (fromToObjsArray) => {
+  const allDates = fromToObjsArray.reduce(function (acc, obj) {
     for (const [key, value] of Object.entries(obj)) {
       if (acc.indexOf(value) === -1) acc.push(value) // collect all the dates
     }
     return acc;
   }, []);
-  return Math.min(allDates);
+  if (allDates.every(item => typeof item === Number)) {
+    return Math.min(...allDates);
+  } else {
+    const allDatesAsNumbers = allDates.map((item => typeof item !== Number ? Date.parse(momentTZ(item)) : item));
+    return Math.min(...allDatesAsNumbers);
+  }
 }
 
 module.exports = {
@@ -84,6 +90,5 @@ module.exports = {
   convertMPH,
   calcMinutesDiff,
   convertToMetric,
-  dateStringToFileNamePartialString,
-  minDateFromDateObjectsArray
+  minDateFromDateObjects
 };
