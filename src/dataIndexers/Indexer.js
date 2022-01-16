@@ -22,7 +22,6 @@ What do I want to do here?
 class IndexData {
   #dataToIndex = [];
   #writeIndex = [];
-  #currentWriteIndices = [];
   #dateOflatestIndexedMetricDoc = ''; // dateString
   #dateOflatestIndexedImperialDoc = ''; // dateString
 
@@ -41,12 +40,6 @@ class IndexData {
   };
   set writeIndex(indexName) {
     this.#writeIndex = indexName;
-  };
-  get currentWriteIndices() {
-    return this.#currentWriteIndices;
-  };
-  set currentWriteIndices(indexNameArray) {
-    this.#currentWriteIndices = Array.isArray(indexNameArray) ? indexNameArray : [indexNameArray];
   };
   get dateOflatestIndexedMetricDoc() {
     return this.#dateOflatestIndexedMetricDoc;
@@ -78,16 +71,18 @@ class IndexData {
 
    */
   async getActiveWriteIndices() {
-    // this.logger.logInfo('[getActiveWriteIndices] [START]')
+    this.logger.logInfo('[getActiveWriteIndices] [START]')
+    let result;
     const aliasesResults = await getAmbientWeatherAliases(this.client);
     const currentIndices = aliasesResults
       .filter(aliasEntry => (aliasEntry.is_write_index === 'true'))
       .map((entry => entry.index))
     if (currentIndices && currentIndices.length > 0) {
       this.currentWriteIndices = currentIndices;
+      result = currentIndices;
     }
     // this.logger.logInfo('[getActiveWriteIndices] [ RESULT ]:', this.currentWriteIndices)
-    return currentIndices;
+    return result;
   }
   /**
    * @param
@@ -119,39 +114,49 @@ class IndexData {
       }]
    */
   async getMostRecentIndexedDocuments() {
-    // this.logger.logInfo('[getMostRecentIndexedDocuments] [START]')
+    this.logger.logInfo('[getMostRecentIndexedDocuments] [START]')
+    console.log()
     const metricIndexToSearch = this.currentWriteIndices.filter(name => name.includes('metric'))[0];
     const imperialIndexToSearch = this.currentWriteIndices.filter(name => name.includes('imperial'))[0];
     const opts = { size: 1, _source: ['date', 'dateutc', '@timestamp'], sortBy: [{ field: "dateutc", direction: "desc" }], expandWildcards: 'all' }
-    const latestMetricDoc = await getMostRecentDoc(this.client, metricIndexToSearch, opts);
-    const latestImperialDoc = await getMostRecentDoc(this.client, imperialIndexToSearch, opts);
-    // this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', latestMetricDoc)
-    // this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', latestImperialDoc)
-    this.dateOflatestIndexedMetricDoc = latestMetricDoc[0]._source.dateutc; // use dateutc instead
-    this.dateOflatestIndexedImperialDoc = latestImperialDoc[0]._source.dateutc; // use dateutc instead
-    return { latestMetricDoc: latestMetricDoc, latestImperialDoc: latestImperialDoc };
+    const latestMetricDocResult = await getMostRecentDoc(this.client, metricIndexToSearch, opts);
+    const latestImperialDocResult = await getMostRecentDoc(this.client, imperialIndexToSearch, opts);
+    // this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', latestMetricDocResult)
+    // console.log()
+    // this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', latestImperialDocResult)
+    // console.log()
+    this.dateOflatestIndexedMetricDoc = latestMetricDocResult[0]._source.dateutc; // use dateutc instead
+    this.dateOflatestIndexedImperialDoc = latestImperialDocResult[0]._source.dateutc; // use dateutc instead
+    return { latestImperialDoc: latestImperialDocResult, latestMetricDoc: latestMetricDocResult };
   }
 
   /**
-   * @returns {boolean} result from bulk indexing data
-   */
+  * Pings cluster to see if we have a connection
+  * if we have a connection, gets the active write indices
+  * fetches the most recent date (in milliseconds) for the data that's in the cluster
+  * ATM, returns object containing the
+  * @returns {boolean} result from bulk indexing data; undeifned if no connection;
+  */
   async initialize() {
     const haveConnection = await this.ensureConnection();
     if (!haveConnection) {
       // retryForCount(this.ensureConnection) --> implement later, see https://github.com/elastic/kibana/blob/main/src/core/server/elasticsearch/client/retry_call_cluster.ts
-      this.logger.logWarning('Cannot establish a connection with remote cluster')
-    } else {
-      // main workflow through here to setup and prepare for bulk indexing
-      // get the current write indices
-      await this.getActiveWriteIndices();
-      if (this.currentWriteIndices && this.currentWriteIndices.length > 0) {
-        const { latestMetricDoc, latestImperialDoc } = await this.getMostRecentIndexedDocuments();
-      }
-      return { lastIndexedImperialDataDate: this.dateOflatestIndexedImperialDoc, lastIndexedMetricDataDate: this.dateOflatestIndexedMetricDoc }
-      // await bulkIndexData(this.client, data, dataType);
+      this.logger.logWarning('Cannot establish a connection with remote cluster');
+      return 'no connection'
     }
+    this.logger.logInfo('Cluster ping success! We are live :-)');
+    // main workflow through here to setup and prepare for bulk indexing
+    // get the current write indices
+    const currentIndices = await this.getActiveWriteIndices();
+    if (currentIndices && Array.isArray(currentIndices) && currentIndices.length > 0) {
+      const { latestImperialDoc, latestMetricDoc } = await this.getMostRecentIndexedDocuments();
+      return { latestImperialDoc, latestMetricDoc }
+    }
+    return 'no currentIndices found or non returned';
+    // await bulkIndexData(this.client, data, dataType);
   }
 }
+
 
 module.exports = IndexData;
 

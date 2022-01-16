@@ -203,7 +203,7 @@ class FetchRawData {
    * main method for FetchRawData class: fetches data that we don't yet have on file up to fromDate
    * @param {boolean} skipSave: saving to file is skipped if true
    * @param {integer} fromDate: date until which to fetch new data for (calls are made going back in time)
-   * @returns {obj} { dataFetchForDates: <array>, dataFileNames: <array } array of date-times in milliseconds since epoch, array of filenames where the data was/>would have been stored
+   * @returns {obj} { dataFetchForDates: <array>, dataFileNames: <array } array of date-times in milliseconds since epoch, array of filenames where the data was/would have been stored
    */
   // main function for this class
   async getDataForDateRanges(skipSave = false, fromDate) {

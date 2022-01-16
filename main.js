@@ -63,62 +63,145 @@ async function main() {
   let metricDataJSONLFileNames;
   let indexImperialDocsNeeded = false;
   let indexMetricDocsNeeded = false;
+  let indexImperialDocsFromFiles = false;
+  let indexMetricDocsFromFiles = false;
+  let lastIndexedImperialDataDate;
+  let lastIndexedMetricDataDate;
+
+  let stage;
+  let step = {
+    0: 'error',
+    1: 'fetchData',
+    2: 'convertToJsonl',
+    3: 'getRecentIndexedDocs',
+    4: 'checkNewDataAgainstLastIndexedDoc',
+  }
+  const stepsStates = {
+    fatalError: false,
+    fetchNewData: false,
+    newDataFetched: false,
+    newDataSkipped: false,
+    clusterReady: false,
+    dataConvertedToJsonl: false,
+
+  }
   mainLogger.logInfo('starting main function', new Date());
 
+  stage = step[1];
+  console.log('STAGE:', stage)
+  stepsStates.fetchNewData = true;
+  console.log()
+  // step 1: fetch new data if needed, otherwise, move onto step 2
   try {
-    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
+    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
     if (getNewDataPromiseResult === "too early") {
-      // throw new Error(getNewDataPromiseResult)
-      console.log('too early')
+      stepsStates.newDataSkipped = true;
+      // don't throw here, we might still need to convert already fetched data to jsonl
+      mainLogger.logWarning(getNewDataPromiseResult)
     }
     datesForNewData = getNewDataPromiseResult.dataFetchForDates;
-    console.log('datesForNewData', datesForNewData)
-    // example return:
-    //   [
-    //   { from: 1642203900000, to: 1642290300000 },
-    //   { from: 1642117800000, to: 1642203600000 },
-    //   { from: 1642031700000, to: 1642117500000 },
-    //   { from: 1641945600000, to: 1642031400000 },
-    //   { from: 1641859500000, to: 1641945300000 }
-    // ]
+
+    stepsStates.fetchNewData = false;
+    stepsStates.newDataFetched = true;
+
+    //   mainLogger.logInfo('beginning data file conversions: json => jsonl')
+    imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl()
+    metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl();
+
+    mainLogger.logInfo('imperialDataJSONLFileNames', imperialDataJSONLFileNames)
+    mainLogger.logInfo('metricDataJSONLFileNames', metricDataJSONLFileNames)
+
+    stage = step[2];
+    console.log('STAGE:', stage)
   } catch (err) {
+    stage = step[0];
+    console.log('STAGE:', stage)
+    stepsStates.fatalError = true;
     throw err;
   }
-
-  const { lastIndexedImperialDataDate,
-    lastIndexedMetricDataDate } = await dataIndexer.initialize();
-  console.log('lastIndexedImperialDataDate', lastIndexedImperialDataDate)
-  console.log('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
-  // check if new data needs to be indexed based on the dates of the new data that's fetched vs date of most recently indexed documents
-
-  console.log('minDateFromDateObjects(datesForNewData)', minDateFromDateObjects(datesForNewData))
-  console.log('(minDateFromDateObjects(datesForNewData) - lastIndexedImperialDataDate) > 0', (minDateFromDateObjects(datesForNewData) - lastIndexedImperialDataDate) > 0)
-  const dateArrayNeeded = datesForNewData.map((fromToObj => fromToObj.to))
-  if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
-    indexImperialDocsNeeded = true;
-    mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
+  stage = step[3];
+  console.log('STAGE:', stage)
+  console.log()
+  // this can happen regardless? yes
+  const initializeResult = await dataIndexer.initialize(); // { lastIndexedImperialDoc, lastIndexedMetricDoc }
+  console.log("WHAT THE FUCK IS THIS: initializeResult", !!initializeResult === true)
+  console.log("WHAT THE FUCK IS THIS OTHER THING: Object.keys(initializeResult) === ['latestImperialDoc', 'latestMetricDoc']", Object.keys(initializeResult))
+  if (!!initializeResult === true && Object.keys(initializeResult).includes('latestImperialDoc', 'latestMetricDoc')) {
+    stepsStates.clusterReady = true;
+    console.log('STEPS STATE CLUSTER READY', stepsStates.clusterReady)
+    lastIndexedImperialDataDate = initializeResult.latestImperialDoc[0]._source.dateutc;
+    console.log()
+    // console.log('initializeResult.latestImperialDoc[0]', initializeResult.latestImperialDoc[0])
+    console.log('initializeResult.latestImperialDoc[0]._source', initializeResult.latestImperialDoc[0]._source)
+    // console.log('initializeResult.latestImperialDoc[0]._source.dateutc', initializeResult.latestImperialDoc[0]._source.dateutc)
+    // console.log('lastIndexedImperialDataDate', lastIndexedImperialDataDate)
+    console.log()
+    lastIndexedMetricDataDate = initializeResult.latestMetricDoc[0]._source.dateutc;
+    console.log()
+    console.log('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
+    console.log()
+    // move on to indexing stuff
   }
-  if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
-    indexMetricDocsNeeded = true;
-    mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
-  }
+  // check dates for what we have now compared with what's in the cluster.
+  // there are a few scenarios here:
+  // 1. we fetched new data -> do indexing (checking against datesForNewData)
+  // 2. we didn't fetch new data BUT we did convert old data to jsonl -> might not need indexing, so check (check agains data from files)
+  // 3. we didn't fetch new data and didn't convert any data BUT what we have is newer than what's in the cluster. (check all data on file)
 
-  //   mainLogger.logInfo('beginning new data file conversion: json => jsonl')
-  imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl()
-  metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl();
-  mainLogger.logInfo('imperialDataJSONLFileNames', imperialDataJSONLFileNames)
-  mainLogger.logInfo('metricDataJSONLFileNames', metricDataJSONLFileNames)
+  // OR MAKE LIFE EASY AND JUST READ FROM FILE, REGARDLESS
+
+  // scenario 1: new data fetched
+  if (datesForNewData && datesForNewData.length > 0) { //use new data}
+    stage = step[4];
+    console.log('STAGE:', stage);
+    console.log();
+    const dateArrayNeeded = datesForNewData?.map((fromToObj => fromToObj.to))
+    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
+      indexImperialDocsNeeded = true;
+      mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded);
+      console.log()
+    }
+    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
+      indexMetricDocsNeeded = true;
+      mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
+      console.log()
+    }
+  } // scenario 1 or 2:
+  if (imperialDataJSONLFileNames?.length > 0) {
+    stepsStates.dataConvertedToJsonl = true;
+
+    const datesFromFileNames = [
+      ...imperialDataJSONLFileNames.map(name => name.split('_')),
+    ];
+    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1)));
+    if ((maxDateOnFile - lastIndexedImperialDataDate) > 0) {
+      indexImperialDocsFromFiles = true;
+    }
+  }
+  if (metricDataJSONLFileNames?.length > 0) {
+    stepsStates.dataConvertedToJsonl = true;
+    const datesFromFileNames = [
+      ...metricDataJSONLFileNames.map(name => name.split('_')),
+    ];
+    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1)));
+    if ((maxDateOnFile - lastIndexedMetricDataDate) > 0) {
+      indexMetricDocsFromFiles = true;
+    }
+  }
   // now read the data in all the new files and compare the data date with that in the index. If the late is newer (more recent)
   // than the date in the index, add the datapoint to what needs to be formatted for bulk indexing.
 
-  // The following workflow is to index new data as we get it. What this doesn't do is index data that we have on file but that isn't yet in the cluster indices.
-  // convert and prepare for the bulk indexing call.
-  if (indexImperialDocsNeeded === true) {
-    //read all data from the imperialDataJSONLFileNames array
-    // this is a prepareDataForBulkIndex method
-    const dataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataFileNames, 'imperial');
-    console.log('dataReadyForBulkCall', dataReadyForBulkCall)
-
+  //read all data from the imperialDataJSONLFileNames array
+  // this is a prepareDataForBulkIndex method
+  if (indexImperialDocsNeeded === true || indexImperialDocsFromFiles === true) {
+    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
+    console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
+    console.log()
+  }
+  if (indexMetricDocsNeeded === true || indexMetricDocsFromFiles === true) {
+    const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricDataJSONLFileNames, 'metric');
+    console.log('metricDataReadyForBulkCall', metricDataReadyForBulkCall)
+    console.log()
   }
   return 'no new data to index'
 };
