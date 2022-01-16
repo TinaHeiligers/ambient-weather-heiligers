@@ -69,14 +69,14 @@ const dateStringToFileNamePartialString = (stringDate) => {
   return momentTZ.utc(stringDate).format('YYYYMMDD-T-HHmm').toString();
 }
 
-const minDateFromDateObjectsArray = (objArray) => {
-  const allDates = objArray.reduce(function (acc, obj) {
+const minDateFromDateObjectsArray = (unixMillisObj) => {
+  const allDates = unixMillisObj.reduce(function (acc, obj) {
     for (const [key, value] of Object.entries(obj)) {
       if (acc.indexOf(value) === -1) acc.push(value) // collect all the dates
     }
     return acc;
   }, []);
-  return momentTZ.utc(moment.min(allDates));
+  return Math.min(allDates);
 }
 
 module.exports = {

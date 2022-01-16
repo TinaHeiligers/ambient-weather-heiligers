@@ -230,7 +230,7 @@ class FetchRawData {
       fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
-        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Issueing batch request:', { i: i })
+        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Issueing batch request:', { i: i + 1 })
         try {
           const fetchedData = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (fetchedData) {

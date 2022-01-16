@@ -66,25 +66,39 @@ async function main() {
   mainLogger.logInfo('starting main function', new Date());
 
   try {
-    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
+    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
     if (getNewDataPromiseResult === "too early") {
       // throw new Error(getNewDataPromiseResult)
       console.log('too early')
     }
     datesForNewData = getNewDataPromiseResult.dataFetchForDates;
+    console.log('datesForNewData', datesForNewData)
+    // example return:
+    //   [
+    //   { from: 1642203900000, to: 1642290300000 },
+    //   { from: 1642117800000, to: 1642203600000 },
+    //   { from: 1642031700000, to: 1642117500000 },
+    //   { from: 1641945600000, to: 1642031400000 },
+    //   { from: 1641859500000, to: 1641945300000 }
+    // ]
   } catch (err) {
     throw err;
   }
 
   const { lastIndexedImperialDataDate,
     lastIndexedMetricDataDate } = await dataIndexer.initialize();
-
+  console.log('lastIndexedImperialDataDate', lastIndexedImperialDataDate)
+  console.log('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
   // check if new data needs to be indexed based on the dates of the new data that's fetched vs date of most recently indexed documents
-  if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedImperialDataDate)) {
+
+  console.log('minDateFromDateObjectsArray(datesForNewData)', minDateFromDateObjectsArray(datesForNewData))
+  console.log('(minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0', (minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0)
+  const dateArrayNeeded = datesForNewData.map((fromToObj => fromToObj.to))
+  if ((minDateFromDateObjectsArray(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
     indexImperialDocsNeeded = true;
     mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded)
   }
-  if (minDateFromDateObjectsArray(datesForNewData).isAfter(lastIndexedMetricDataDate)) {
+  if ((minDateFromDateObjectsArray(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
     indexMetricDocsNeeded = true;
     mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
   }
@@ -106,9 +120,10 @@ async function main() {
     console.log('dataReadyForBulkCall', dataReadyForBulkCall)
 
   }
+  return 'no new data to index'
 };
 
-function prepareDataForBulkIndex(fileNamesArray, dataType) {
+function prepareDataForBulkIndexing(fileNamesArray, dataType) {
   let preparedData = [];
   const fullPathToFilesToRead = `/data/ambient-weather-heiligers-${dataType}-jsonl`;
   const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}`);

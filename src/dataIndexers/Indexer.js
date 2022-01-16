@@ -136,8 +136,8 @@ class IndexData {
     const latestImperialDoc = await getMostRecentDoc(this.client, imperialIndexToSearch, opts);
     // this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', latestMetricDoc)
     // this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', latestImperialDoc)
-    this.dateOflatestIndexedMetricDoc = latestMetricDoc[0]._source.date; // use dateutc instead
-    this.dateOflatestIndexedImperialDoc = latestImperialDoc[0]._source.date; // use dateutc instead
+    this.dateOflatestIndexedMetricDoc = latestMetricDoc[0]._source.dateutc; // use dateutc instead
+    this.dateOflatestIndexedImperialDoc = latestImperialDoc[0]._source.dateutc; // use dateutc instead
     return { latestMetricDoc: latestMetricDoc, latestImperialDoc: latestImperialDoc };
   }
 
