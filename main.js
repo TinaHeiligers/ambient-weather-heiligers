@@ -23,12 +23,6 @@ const dataIndexer = new IndexData();
  * @param {array} values returned from getNewDataPromise and getRecentIndexedDataDates
  * @returns boolean: true if last indexed data for imperial and metric data is the same and that date is older than the date from which new data was fetched.
  */
-// function lastIndexedIsOlderThanNewData(values) {
-//   const newDataInUTC = momentTZ.utc(values[0].from);
-//   if (values[1].lastIndexedImperialDataDate === values[1].lastIndexedMetricDataDate) {
-//     return newDataInUTC > momentTZ(values[1].lastIndexedImperialDataDate)
-//   }
-// }
 /**
  *
  * @param {*} objArray
@@ -56,6 +50,19 @@ const dataIndexer = new IndexData();
 ]
  */
 
+/**
+ *
+ * @param {class} logger : mainLogger instance
+ * @param {*} stage : stage to advance the step
+ * @param {*} stepsStates : current state within progress flow
+ * @returns {void}: logs to console
+ */
+const logProgress = (logger = mainLogger, stage, stepsStates) => {
+  logger.logInfo('STAGE:', stage);
+  console.log();
+  logger.logInfo('stepsStates:', stepsStates);
+  console.log();
+}
 
 async function main() {
   let datesForNewData;
@@ -90,9 +97,9 @@ async function main() {
   mainLogger.logInfo('starting main function', new Date());
 
   stage = step[1];
-  console.log('STAGE:', stage)
   stepsStates.fetchNewData = true;
-  console.log()
+  logProgress(mainLogger, stage, stepsStates);
+
   // step 1: fetch new data if needed, otherwise, move onto step 2
   try {
     const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
@@ -107,38 +114,30 @@ async function main() {
     stepsStates.newDataFetched = true;
 
     //   mainLogger.logInfo('beginning data file conversions: json => jsonl')
-    imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl()
-    metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl();
+    imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl(); // returns an empty array if nothing was converted
+    metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl(); // returns an empty array if nothing was converted
 
     mainLogger.logInfo('imperialDataJSONLFileNames', imperialDataJSONLFileNames)
     mainLogger.logInfo('metricDataJSONLFileNames', metricDataJSONLFileNames)
 
     stage = step[2];
-    console.log('STAGE:', stage)
+    logProgress(mainLogger, stage, stepsStates)
   } catch (err) {
     stage = step[0];
-    console.log('STAGE:', stage)
     stepsStates.fatalError = true;
+    logProgress(mainLogger, stage, stepsStates)
     throw err;
   }
   stage = step[3];
-  console.log('STAGE:', stage)
-  console.log()
+  logProgress(mainLogger, stage, stepsStates)
+
   // this can happen regardless? yes
   const initializeResult = await dataIndexer.initialize(); // { lastIndexedImperialDoc, lastIndexedMetricDoc }
   if (!!initializeResult === true && Object.keys(initializeResult).includes('latestImperialDoc', 'latestMetricDoc')) {
     stepsStates.clusterReady = true;
-    // console.log('stepsStates', stepsStates)
-    // console.log()
+    logProgress(mainLogger, stage, stepsStates)
     lastIndexedImperialDataDate = initializeResult.latestImperialDoc[0]._source.dateutc;
-    // console.log()
-    // console.log('lastIndexedImperialDataDate', lastIndexedImperialDataDate)
-    // console.log()
     lastIndexedMetricDataDate = initializeResult.latestMetricDoc[0]._source.dateutc;
-    // console.log()
-    // console.log('lastIndexedMetricDataDate', lastIndexedMetricDataDate)
-    // console.log()
-    // move on to indexing stuff
   }
   // check dates for what we have now compared with what's in the cluster.
   // there are a few scenarios here:
@@ -151,64 +150,39 @@ async function main() {
   // scenario 1: new data fetched
   if (datesForNewData && datesForNewData.length > 0) { //use new data}
     stage = step[4];
-    console.log('STAGE:', stage);
-    console.log();
+    logProgress(mainLogger, stage, stepsStates)
     const dateArrayNeeded = datesForNewData?.map((fromToObj => fromToObj.to))
-    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) {
-      indexImperialDocsNeeded = true;
-      // mainLogger.logInfo('indexImperialDocsNeeded', indexImperialDocsNeeded);
-      // console.log()
-    }
-    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) {
-      indexMetricDocsNeeded = true;
-      // mainLogger.logInfo('indexMetricDocsNeeded', indexMetricDocsNeeded)
-      // console.log()
-    }
+    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) indexImperialDocsNeeded = true;
+    if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) indexMetricDocsNeeded = true;
   } // scenario 1 or 2:
   if (imperialDataJSONLFileNames.length > 0) {
-    // console.log('imperialDataJSONLFileNames.length', imperialDataJSONLFileNames.length)
     stepsStates.dataConvertedToJsonl = true;
+    logProgress(mainLogger, stage, stepsStates)
+    const datesFromFileNames = [...imperialDataJSONLFileNames.map(name => name.split('_'))];
+    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries
 
-    const datesFromFileNames = [
-      ...imperialDataJSONLFileNames.map(name => name.split('_')),
-    ];
-    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1)));
-    if ((maxDateOnFile - lastIndexedImperialDataDate) > 0) {
-      indexImperialDocsFromFiles = true;
-    }
+    if ((maxDateOnFile - lastIndexedImperialDataDate) > 0) indexImperialDocsFromFiles = true // flip the switch in case we didn't get new data
+    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
   }
   if (metricDataJSONLFileNames.length > 0) {
-    // console.log('metricDataJSONLFileNames.length', metricDataJSONLFileNames.length)
     stepsStates.dataConvertedToJsonl = true;
-    const datesFromFileNames = [
-      ...metricDataJSONLFileNames.map(name => name.split('_')),
-    ];
-    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1)));
-    if ((maxDateOnFile - lastIndexedMetricDataDate) > 0) {
-      indexMetricDocsFromFiles = true;
-    }
+    logProgress(mainLogger, stage, stepsStates)
+    const datesFromFileNames = [...metricDataJSONLFileNames.map(name => name.split('_'))];
+    const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries
+
+    if ((maxDateOnFile - lastIndexedMetricDataDate) > 0) indexMetricDocsFromFiles = true;// flip the switch in case we didn't get new data
+    const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricDataJSONLFileNames, 'metric');
   }
   // now read the data in all the new files and compare the data date with that in the index. If the late is newer (more recent)
   // than the date in the index, add the datapoint to what needs to be formatted for bulk indexing.
 
   //read all data from the imperialDataJSONLFileNames array
   // this is a prepareDataForBulkIndex method
-  if (indexImperialDocsFromFiles === true) {
-    console.log('1. IMPERIAL HELLO?')
-    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
-    // console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
-    // console.log();
-  }
-  if (indexMetricDocsFromFiles === true) {
-    console.log('1. METRIC HELLO?')
-    const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricDataJSONLFileNames, 'metric');
-    // console.log('metricDataReadyForBulkCall', metricDataReadyForBulkCall)
-    // console.log();
-  }
+
   if (imperialDataJSONLFileNames.length === 0) {
     stage = step[5]
-    // mainLogger.logInfo('no new files, reading exisiting imperial data from file')
-    // console.log();
+    logProgress(mainLogger, stage, stepsStates)
+    mainLogger.logInfo('no new files, reading exisiting imperial data from file')
     const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
     // console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
     // console.log();
@@ -217,7 +191,7 @@ async function main() {
     stage = step[5]
     // mainLogger.logInfo('no new files, reading exisiting imperial data from file')
     // console.log();
-    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
+    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'metric');
     // console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
     // console.log();
   }
@@ -232,63 +206,40 @@ async function main() {
 };
 
 function prepareDataForBulkIndexing(fileNamesArray, dataType) {
-  console.log('2. HELLO?')
   mainLogger.logInfo('[prepareDataForBulkIndexing] [fileNamesArray]:', fileNamesArray)
-  console.log()
   mainLogger.logInfo('[prepareDataForBulkIndexing] [dataType]:', dataType)
   let preparedData = [];
-  const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`;
-  if (fileNamesArray.length > 0) {
-    const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
-    return fullFilePaths.map(fullPath => {
-      if (Object.keys(fullPath).length === 0) return true;
-      const readJsonlData = JSON.parse(fs.readFileSync(fullPath));
-      const dataWithIndexAdded = readJsonlData.flatMap(doc => [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, doc]);
-      console.log('!!!!!!!!!!!!!!!dataWithIndexAdded', dataWithIndexAdded)
-      preparedData.push(dataWithIndexAdded);
-      console.log('???????????????preparedData', preparedData)
-      return preparedData;
-      // read the data and add the extra stuff we need for bulkIndexing.
-      // convert it to the shape we expect to pass into bulkIndex,
-      // example doc is:
-      // {"date":"2022-01-09T00:55:00.000Z","dateutc":1641689700000,"loc":"ambient-prod-1","last_rain":"2022-01-01T10:43:00.000Z","uv":0,"wind_dir":320,"humidity":56,"humidity_inside":39,"barometer_abs_bar":9718.259152,"barometer_rel_bar":10194.385446,"temp_inside_c":21.778,"temp_outside_c":14.5,"battery_condition":"good","windspeed_km_per_hr":0,"windgust_km_per_hr":0,"max_daily_gust_km_per_hr":11.104,"hourly_rain_mm":0,"event_rain_mm":0,"daily_rain_mm":0,"weekly_rain_mm":0,"monthly_rain_mm":10,"total_rain_mm":305,"solar_radiation_W_per_sq_m":0,"feels_like_outside_c":14.5,"dewpoint_c":5.828,"feelslike_inside_c":21.056,"dewpoint_inside_c":7.222}
-    });
-  } else {
-    // read everything:
-    const files = fs.readdirSync(fullPathToFilesToRead);
-    let filesArray = [];// an array of filenames without the extension type: string[] | []
-    filesArray = files.map((file) => (`${file}`.split(".")[0])).filter((fileName => fileName.length > 0));
-    console.log('allfiles', filesArray)
-    fileNamesArray = filesArray;
+  // fetch and read the data first
+  const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
+  if (fileNamesArray.length === 0) {
+    console.log('fileNamesArray is empty')
+    fileNamesArray = readAllData(fullPathToFilesToRead); // get everything
   }
+  console.log('fileNamesArray:', fileNamesArray);
+  const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
+  return fullFilePaths.map(fullPath => {
+    if (Object.keys(fullPath).length === 0) return true;
+    const readJsonlData = JSON.parse(fs.readFileSync(fullPath));
 
-
+    const dataWithIndexAdded = readJsonlData.flatMap(doc => [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, doc]);
+    console.log('!!!!!!!!!!!!!!!dataWithIndexAdded', dataWithIndexAdded)
+    preparedData.push(dataWithIndexAdded);
+    console.log('???????????????preparedData', preparedData)
+    return preparedData;
+    // read the data and add the extra stuff we need for bulkIndexing.
+    // convert it to the shape we expect to pass into bulkIndex,
+    // example doc is:
+    // {"date":"2022-01-09T00:55:00.000Z","dateutc":1641689700000,"loc":"ambient-prod-1","last_rain":"2022-01-01T10:43:00.000Z","uv":0,"wind_dir":320,"humidity":56,"humidity_inside":39,"barometer_abs_bar":9718.259152,"barometer_rel_bar":10194.385446,"temp_inside_c":21.778,"temp_outside_c":14.5,"battery_condition":"good","windspeed_km_per_hr":0,"windgust_km_per_hr":0,"max_daily_gust_km_per_hr":11.104,"hourly_rain_mm":0,"event_rain_mm":0,"daily_rain_mm":0,"weekly_rain_mm":0,"monthly_rain_mm":10,"total_rain_mm":305,"solar_radiation_W_per_sq_m":0,"feels_like_outside_c":14.5,"dewpoint_c":5.828,"feelslike_inside_c":21.056,"dewpoint_inside_c":7.222}
+  });
 }
 
-module.exports = (async () => {
-  try {
-    var result = await main();
-    console.log(result);
-  } catch (err) {
-    // I'll want to log these results rather than throw.
-    throw err;
-  }
-})()
+function readAllData(fullPathToFiles) {
+  console.log('in readAllData with fullPathToFiles as:', fullPathToFiles)
+  const files = fs.readdirSync(fullPathToFiles);
+  let filesArray = [];// an array of filenames without the extension type: string[] | []
+  filesArray = files.map((file) => (`${file}`.split(".")[0])).filter((fileName => fileName.length > 0));
+  console.log('finished reading the dir, with a result of filesArray:', filesArray);
+  return filesArray;
+}
 
-
-// CURRENT STATE:
-/**
-main: starting main function 2022-01-16T00:04:03.195Z
-fetchRawData: [FetchRawData: getDataForDateRanges] args: skipSave, fromDate { skipSave: false, fromDate: 1642291443194 }
-fetchRawData: [FetchRawData: getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count: { estTotalNumRecordsToFetch: 1 }
-datesForNewData [ { from: 1642291200000, to: 1642291200000 } ]
-lastIndexedImperialDataDate 1641664200000
-lastIndexedMetricDataDate 1641664200000
-minDateFromDateObjectsArray(datesForNewData) 1642291200000
-(minDateFromDateObjectsArray(datesForNewData) - lastIndexedImperialDataDate) > 0 true
-converted imperial data files for 1 files: 1642291200000_1642291200000
-Converting imperial to metric data
-converted metric data files for 1 files: 1642291200000_1642291200000
-main: imperialDataJSONLFileNames [ '1642291200000_1642291200000' ]
-main: metricDataJSONLFileNames [ '1642291200000_1642291200000' ]
-no new data to index */
+module.exports = main;

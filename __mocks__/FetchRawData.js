@@ -13,8 +13,13 @@ const mockPath = {
   join: jest.fn()
 };
 
+const mockFetchRawData = {
+  getDataForDateRanges: jest.fn()
+}
+
 module.exports = {
   mockAWApi,
   mockFs,
   mockPath,
+  mockFetchRawData,
 }
