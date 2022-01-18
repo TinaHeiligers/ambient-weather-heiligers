@@ -4,7 +4,7 @@ const Logger = require('./src/logger');
 const mainUtilsLogger = new Logger('main_utils');
 const mockedFileNamesArray = [
   '1641684000000_1641752460000',
-  '1641752700000_1641839100000',
+  // '1641752700000_1641839100000',
   // '1641839400000_1641858900000',
   // '1641859500000_1641945300000',
   // '1641945600000_1642031400000',
@@ -38,7 +38,7 @@ const mockedFileNamesArray = [
 
 const mockedFullFilePaths = [
   'data/ambient-weather-heiligers-imperial-jsonl/1641684000000_1641752460000.jsonl',
-  'data/ambient-weather-heiligers-imperial-jsonl/1641752700000_1641839100000.jsonl',
+  // 'data/ambient-weather-heiligers-imperial-jsonl/1641752700000_1641839100000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641839400000_1641858900000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641859500000_1641945300000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641945600000_1642031400000.jsonl',
@@ -83,10 +83,10 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
 
   const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
 
-  const dataReadyForBulkIndexing = fullFilePaths.map(fullPath => {
+  const dataReadyForBulkIndexing = fullFilePaths.flatMap(fullPath => {
     if (Object.keys(fullPath).length === 0) return true;
     const dataFileRead = fs.readFileSync(fullPath);
-
+    //https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/bulk_examples.html
     return dataFileRead.toString().trim().split("\n").flatMap((line) => {
       // console.log("-->", line);
       // console.log("---->>>{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, line)
@@ -110,17 +110,42 @@ function getAllFilesFromPath(fullPathToFiles) {
 
 const results = prepareDataForBulkIndexing(mockedFileNamesArray, mockedDataType, mainUtilsLogger);
 console.log('results', results);
-
+/**example of what we have now:
+ * { index: [Object] },
+    {
+      dateutc: 1641824400000,
+      tempinf: 70.3,
+      humidityin: 37,
+      baromrelin: 30.434,
+      baromabsin: 29.029,
+      tempf: 45.3,
+      battout: 1,
+      humidity: 65,
+      winddir: 34,
+      windspeedmph: 0,
+      windgustmph: 0,
+      maxdailygust: 8.1,
+      hourlyrainin: 0,
+      eventrainin: 0,
+      dailyrainin: 0,
+      weeklyrainin: 0,
+      monthlyrainin: 0.39,
+      totalrainin: 12.02,
+      solarradiation: 0,
+      uv: 0,
+      feelsLike: 45.3,
+      dewPoint: 34.24,
+      feelsLikein: 68.8,
+      dewPointin: 42.8,
+      lastRain: '2022-01-01T10:43:00.000Z',
+      loc: 'ambient-prod-2',
+      date: '2022-01-10T14:20:00.000Z'
+    },
+ */
 module.exports = {
   prepareDataForBulkIndexing,
   getAllFilesFromPath,
 }
-
-const dataWithIndexAdded = readJsonlData.flatMap(doc => [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, doc]);
-
-preparedData.push(dataWithIndexAdded);
-
-return preparedData;
     // read the data and add the extra stuff we need for bulkIndexing.
     // convert it to the shape we expect to pass into bulkIndex,
     // example doc is:
