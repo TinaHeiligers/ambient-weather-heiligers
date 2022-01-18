@@ -20,7 +20,8 @@ describe('main', () => {
   it('works', async () => {
     mockFetchRawData.getDataForDateRanges
       .mockReturnValueOnce({
-        dataFetchForDates: [{ from: 1595055600000, to: 1595142000000 }], dataFileNames: ['1595055600000_1595142000000']
+        dataFetchForDates: [{ from: 1642377600000, to: 1642446000000 }],
+        dataFileNames: ['1642377600000_1642446000000']
       })
     const result = await main();
     expect(result).toBe('undefined')

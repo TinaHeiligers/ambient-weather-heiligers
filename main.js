@@ -1,11 +1,13 @@
 const AmbientWeatherApi = require('ambient-weather-api');
 const fs = require('file-system');
+const ndjson = require('ndjson');
 const FetchRawData = require('./src/dataFetchers');
 const { ConvertImperialToJsonl, ConvertImperialToMetric } = require('./src/converters');
 const IndexData = require('./src/dataIndexers');
 const Logger = require('./src/logger');
 const { minDateFromDateObjects } = require('./src/utils');
-
+const { prepareDataForBulkIndexing,
+  getAllFilesFromPath } = require('main_utils');
 // initialize the classes;
 
 const awApi = new AmbientWeatherApi({
@@ -103,6 +105,7 @@ async function main() {
   // step 1: fetch new data if needed, otherwise, move onto step 2
   try {
     const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
+    console.log('getNewDataPromiseResult', getNewDataPromiseResult)
     if (getNewDataPromiseResult === "too early") {
       stepsStates.newDataSkipped = true;
       // don't throw here, we might still need to convert already fetched data to jsonl
@@ -205,41 +208,6 @@ async function main() {
   }
 };
 
-function prepareDataForBulkIndexing(fileNamesArray, dataType) {
-  mainLogger.logInfo('[prepareDataForBulkIndexing] [fileNamesArray]:', fileNamesArray)
-  mainLogger.logInfo('[prepareDataForBulkIndexing] [dataType]:', dataType)
-  let preparedData = [];
-  // fetch and read the data first
-  const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
-  if (fileNamesArray.length === 0) {
-    console.log('fileNamesArray is empty')
-    fileNamesArray = readAllData(fullPathToFilesToRead); // get everything
-  }
-  console.log('fileNamesArray:', fileNamesArray);
-  const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
-  return fullFilePaths.map(fullPath => {
-    if (Object.keys(fullPath).length === 0) return true;
-    const readJsonlData = JSON.parse(fs.readFileSync(fullPath));
 
-    const dataWithIndexAdded = readJsonlData.flatMap(doc => [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, doc]);
-    console.log('!!!!!!!!!!!!!!!dataWithIndexAdded', dataWithIndexAdded)
-    preparedData.push(dataWithIndexAdded);
-    console.log('???????????????preparedData', preparedData)
-    return preparedData;
-    // read the data and add the extra stuff we need for bulkIndexing.
-    // convert it to the shape we expect to pass into bulkIndex,
-    // example doc is:
-    // {"date":"2022-01-09T00:55:00.000Z","dateutc":1641689700000,"loc":"ambient-prod-1","last_rain":"2022-01-01T10:43:00.000Z","uv":0,"wind_dir":320,"humidity":56,"humidity_inside":39,"barometer_abs_bar":9718.259152,"barometer_rel_bar":10194.385446,"temp_inside_c":21.778,"temp_outside_c":14.5,"battery_condition":"good","windspeed_km_per_hr":0,"windgust_km_per_hr":0,"max_daily_gust_km_per_hr":11.104,"hourly_rain_mm":0,"event_rain_mm":0,"daily_rain_mm":0,"weekly_rain_mm":0,"monthly_rain_mm":10,"total_rain_mm":305,"solar_radiation_W_per_sq_m":0,"feels_like_outside_c":14.5,"dewpoint_c":5.828,"feelslike_inside_c":21.056,"dewpoint_inside_c":7.222}
-  });
-}
-
-function readAllData(fullPathToFiles) {
-  console.log('in readAllData with fullPathToFiles as:', fullPathToFiles)
-  const files = fs.readdirSync(fullPathToFiles);
-  let filesArray = [];// an array of filenames without the extension type: string[] | []
-  filesArray = files.map((file) => (`${file}`.split(".")[0])).filter((fileName => fileName.length > 0));
-  console.log('finished reading the dir, with a result of filesArray:', filesArray);
-  return filesArray;
-}
 
 module.exports = main;
