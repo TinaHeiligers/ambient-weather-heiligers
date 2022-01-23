@@ -3,7 +3,7 @@ const Logger = require('./src/logger');
 
 const mainUtilsLogger = new Logger('main_utils');
 const mockedFileNamesArray = [
-  '1641684000000_1641752460000',
+  // '1641684000000_1641752460000',
   // '1641752700000_1641839100000',
   // '1641839400000_1641858900000',
   // '1641859500000_1641945300000',
@@ -37,7 +37,7 @@ const mockedFileNamesArray = [
 ];
 
 const mockedFullFilePaths = [
-  'data/ambient-weather-heiligers-imperial-jsonl/1641684000000_1641752460000.jsonl',
+  // 'data/ambient-weather-heiligers-imperial-jsonl/1641684000000_1641752460000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641752700000_1641839100000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641839400000_1641858900000.jsonl',
   // 'data/ambient-weather-heiligers-imperial-jsonl/1641859500000_1641945300000.jsonl',
@@ -71,9 +71,30 @@ const mockedFullFilePaths = [
 ];
 const mockedDataType = 'imperial';
 
+/**
+ *
+ * @param {array} fileNamesArray
+ * @param {string} dataType
+ * @param {Logger} logger
+ * @returns {array} flat array containing bulk payload to send to cluster.
+ * @example
+ // const results = prepareDataForBulkIndexing(mockedFileNamesArray, mockedDataType, mainUtilsLogger);
+// console.log('results', results.length);
+/**example of what we have now:
+ * { index: { _index: `ambient_weather_heiligers_${dataType}*` } },
+    {
+      dateutc: 1641824400000,
+      tempinf: 70.3,
+      humidityin: 37,
+      ...,
+      date: '2022-01-10T14:20:00.000Z'
+    },
+ */
 function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
   let preparedData = [];
   let readJsonlData = [];
+  const targetAlias = `all-ambient-weather-heiligers-${dataType}`;
+  const targetTestIndex = `ambient_weather_heiligers_${dataType}_testbulkindex`;
   // fetch and read the data first
   const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
   if (fileNamesArray.length === 0) {
@@ -90,7 +111,8 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
     return dataFileRead.toString().trim().split("\n").flatMap((line) => {
       // console.log("-->", line);
       // console.log("---->>>{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, line)
-      return [{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, JSON.parse(line)]
+      // return [{ index: { _index: targetAlias } }, JSON.parse(line)]
+      return [{ index: { _index: targetTestIndex } }, JSON.parse(line)]
       // console.log("-->", line);
       // return JSON.parse(line);
     });
@@ -98,50 +120,21 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
   return dataReadyForBulkIndexing;
 }
 
+/**
+ *
+ * @param {string} fullPathToFiles
+ */
 function getAllFilesFromPath(fullPathToFiles) {
   console.log('in getAllFilesFromPath with fullPathToFiles as:', fullPathToFiles)
   const files = fs.readdirSync(fullPathToFiles);
   let filesArray = [];// an array of filenames without the extension type: string[] | []
   filesArray = files
     .map((file) => (`${file}`.split(".")[0])).filter((fileName => fileName.length > 0));
-  console.log('finished reading the dir, with a result of filesArray:', filesArray);
+  // console.log('finished reading the dir, with a result of filesArray:', filesArray);
   return filesArray;
 }
 
-const results = prepareDataForBulkIndexing(mockedFileNamesArray, mockedDataType, mainUtilsLogger);
-console.log('results', results);
-/**example of what we have now:
- * { index: [Object] },
-    {
-      dateutc: 1641824400000,
-      tempinf: 70.3,
-      humidityin: 37,
-      baromrelin: 30.434,
-      baromabsin: 29.029,
-      tempf: 45.3,
-      battout: 1,
-      humidity: 65,
-      winddir: 34,
-      windspeedmph: 0,
-      windgustmph: 0,
-      maxdailygust: 8.1,
-      hourlyrainin: 0,
-      eventrainin: 0,
-      dailyrainin: 0,
-      weeklyrainin: 0,
-      monthlyrainin: 0.39,
-      totalrainin: 12.02,
-      solarradiation: 0,
-      uv: 0,
-      feelsLike: 45.3,
-      dewPoint: 34.24,
-      feelsLikein: 68.8,
-      dewPointin: 42.8,
-      lastRain: '2022-01-01T10:43:00.000Z',
-      loc: 'ambient-prod-2',
-      date: '2022-01-10T14:20:00.000Z'
-    },
- */
+
 module.exports = {
   prepareDataForBulkIndexing,
   getAllFilesFromPath,

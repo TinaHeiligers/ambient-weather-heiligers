@@ -1,4 +1,4 @@
-const createIndexResult = {
+const createIndexResult_EXAMPLE = {
   body: { acknowledged: true, shards_acknowledged: true, index: 'tweets' },
   statusCode: 200,
   headers: {
@@ -30,7 +30,7 @@ const createIndexResult = {
   }
 }
 
-const deleteResult = {
+const deleteResult_EXAMPLE = {
   body: { acknowledged: true },
   statusCode: 200,
   headers: {
@@ -61,8 +61,8 @@ const deleteResult = {
     aborted: false
   }
 }
-
-const getAllAmbientWeatherIndicesResult = [
+// STAGING
+const getAllAmbientWeatherIndicesResult_STAGING = [
   {
     health: 'green',
     status: 'open',
@@ -184,8 +184,8 @@ const getAllAmbientWeatherIndicesResult = [
     'pri.store.size': '378'
   }
 ]
-
-const clusterAliasesResult = [
+// STAGING
+const clusterAliasesResult_STAGING = [
   {
     alias: 'all-ambient-weather-heiligers-imperial',
     index: 'ambient_weather_heiligers_imperial_2021_06_12',
@@ -220,5 +220,53 @@ const clusterAliasesResult = [
     alias: 'all-deduped-ambient-weather-heiligers-imperial',
     index: 'deduped_ambient_weather_heiligers_imperial_2020_07_25',
     is_write_index: '-'
+  }
+]
+// PROD esClientLogger: [getAmbientWeatherAliases][SUCCESS][
+const clusterAliasesResult_PROD = [
+  {
+    alias: 'all-ambient-weather-heiligers-imperial',
+    index: 'ambient_weather_heiligers_imperial_2021_12_30',
+    is_write_index: 'false'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-metric',
+    index: 'ambient_weather_heiligers_metric_2020_09_27',
+    is_write_index: 'false'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-imperial',
+    index: 'ambient_weather_heiligers_imperial_2020_09_12',
+    is_write_index: 'false'
+  },
+  {
+    alias: 'all-deduped-ambient-weather-heiligers-imperial',
+    index: 'deduped_ambient_weather_heiligers_imperial_2020_07_25',
+    is_write_index: '-'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-imperial',
+    index: 'ambient_weather_heiligers_imperial_2020_12_31',
+    is_write_index: 'true'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-metric',
+    index: 'ambient_weather_heiligers_metric_2021_12_30',
+    is_write_index: 'false'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-metric',
+    index: 'ambient_weather_heiligers_metric_2020_12_31',
+    is_write_index: 'true'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-imperial',
+    index: 'ambient_weather_heiligers_imperial_2020_08_03',
+    is_write_index: 'false'
+  },
+  {
+    alias: 'all-ambient-weather-heiligers-imperial',
+    index: 'ambient_weather_heiligers_imperial_2020_06_30',
+    is_write_index: 'false'
   }
 ]

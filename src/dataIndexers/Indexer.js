@@ -1,5 +1,5 @@
 const esClient = require('./esClient');
-const { pingCluster, getAmbientWeatherAliases, getMostRecentDoc } = require('./esClientMethods');
+const { pingCluster, getAmbientWeatherAliases, getMostRecentDoc, createIndex, deleteIndex, bulkIndexDocuments } = require('./esClientMethods');
 const Logger = require('../logger');
 /*
 What do I want to do here?
@@ -21,9 +21,9 @@ What do I want to do here?
  */
 class IndexData {
   #dataToIndex = [];
-  #writeIndex = [];
   #dateOflatestIndexedMetricDoc = ''; // dateString
   #dateOflatestIndexedImperialDoc = ''; // dateString
+  #currentWriteIndices = [];
 
   constructor(esClient) {
     this.client = esClient;
@@ -35,16 +35,15 @@ class IndexData {
   set dataToIndex(dataArray) {
     this.#dataToIndex = Array.isArray(dataArray) ? dataArray : [dataArray]
   };
-  get writeIndex() {
-    return this.#writeIndex;
+  get currentWriteIndices() {
+    return this.#currentWriteIndices;
   };
-  set writeIndex(indexName) {
-    this.#writeIndex = indexName;
+  set currentWriteIndices(indexNames) {
+    this.#currentWriteIndices = Array.isArray(indexNames) ? indexNames : [indexNames];
   };
   get dateOflatestIndexedMetricDoc() {
     return this.#dateOflatestIndexedMetricDoc;
-  }
-
+  };
   set dateOflatestIndexedMetricDoc(dateString) {
     this.#dateOflatestIndexedMetricDoc = dateString;
   }
@@ -81,7 +80,7 @@ class IndexData {
       this.currentWriteIndices = currentIndices;
       result = currentIndices;
     }
-    // this.logger.logInfo('[getActiveWriteIndices] [ RESULT ]:', this.currentWriteIndices)
+    this.logger.logInfo('[getActiveWriteIndices] [ RESULT ]:', this.currentWriteIndices)
     return result;
   }
   /**
@@ -116,18 +115,37 @@ class IndexData {
   async getMostRecentIndexedDocuments() {
     this.logger.logInfo('[getMostRecentIndexedDocuments] [START]')
     console.log()
+
     const metricIndexToSearch = this.currentWriteIndices.filter(name => name.includes('metric'))[0];
     const imperialIndexToSearch = this.currentWriteIndices.filter(name => name.includes('imperial'))[0];
+
     const opts = { size: 1, _source: ['date', 'dateutc', '@timestamp'], sortBy: [{ field: "dateutc", direction: "desc" }], expandWildcards: 'all' }
+
     const latestMetricDocResult = await getMostRecentDoc(this.client, metricIndexToSearch, opts);
     const latestImperialDocResult = await getMostRecentDoc(this.client, imperialIndexToSearch, opts);
-    // this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', latestMetricDocResult)
-    // console.log()
-    // this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', latestImperialDocResult)
-    // console.log()
+
+    this.logger.logInfo('[getMostRecentIndexedDocuments] [metric RESULT]', JSON.stringify(latestMetricDocResult))
+    this.logger.logInfo('[getMostRecentIndexedDocuments] [imperial RESULT]', JSON.stringify(latestImperialDocResult))
+
     this.dateOflatestIndexedMetricDoc = latestMetricDocResult[0]._source.dateutc; // use dateutc instead
     this.dateOflatestIndexedImperialDoc = latestImperialDocResult[0]._source.dateutc; // use dateutc instead
+
     return { latestImperialDoc: latestImperialDocResult, latestMetricDoc: latestMetricDocResult };
+  }
+
+  /**
+   *
+   * @param {array} payload array of preformatted documents to index (output of prepare docs for bulk indexing)
+   * @param {string} dataType data unit type the bulk operation, one of 'metric' or 'imperial'
+   * @returns TBD
+   */
+  async bulkIndexDocuments(payload, dataType) {
+    const body = payload;
+    const indexName = this.#currentWriteIndices.filter(name => name.includes(dataType))[0];
+    const result = await bulkIndexDocuments(this.client, indexName, body);
+    console.log('RESULT FROM BULK INDEX:', result)
+    //
+    return result;
   }
 
   /**
@@ -135,7 +153,7 @@ class IndexData {
   * if we have a connection, gets the active write indices
   * fetches the most recent date (in milliseconds) for the data that's in the cluster
   * ATM, returns object containing the
-  * @returns {boolean} result from bulk indexing data; undeifned if no connection;
+  * @returns {object} { latestImperialDoc, latestMetricDoc, outcome <string> } full hit result from the most recently indexed documents in the write indices
   */
   async initialize() {
     const haveConnection = await this.ensureConnection();
@@ -150,9 +168,9 @@ class IndexData {
     const currentIndices = await this.getActiveWriteIndices();
     if (currentIndices && Array.isArray(currentIndices) && currentIndices.length > 0) {
       const { latestImperialDoc, latestMetricDoc } = await this.getMostRecentIndexedDocuments();
-      return { latestImperialDoc, latestMetricDoc }
+      return { latestImperialDoc, latestMetricDoc, outcome: 'success' }
     }
-    return 'no currentIndices found or non returned';
+    return { latestImperialDoc: null, latestMetricDoc: null, outcome: 'error: no currentIndices found or non returned' };
     // await bulkIndexData(this.client, data, dataType);
   }
 }

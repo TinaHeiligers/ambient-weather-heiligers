@@ -89,7 +89,7 @@ async function getAmbientWeatherAliases(client = require('./esClient')) {
   } catch (err) {
     esClientLogger.logError('[getAmbientWeatherAliases] [ERROR]', err)
   }
-  // esClientLogger.logInfo('[getAmbientWeatherAliases] [SUCCESS]', clusterAliasesResult)
+  esClientLogger.logInfo('[getAmbientWeatherAliases] [SUCCESS]', clusterAliasesResult)
   return clusterAliasesResult; // returns body, statusCode, headers, meta
 }
 /* params:
@@ -118,7 +118,7 @@ async function createIndex(client = require('./esClient'), indexName, indexMappi
       body: {
         mappings: indexMappings
       }
-    }, { ignore: [404] });
+    }, { ignore: [400] }); // explicitly ignore 400, not 404. see https://github.com/elastic/elasticsearch-js/pull/927/files
   } catch (err) {
     if (!indexExistsError(err)) {
       esClientLogger.logError(`[createIndex] [ERROR] cannot create the index: ${indexName}`, err)
@@ -165,8 +165,6 @@ async function deleteIndex(client = require('./esClient'), indexName) {
   return deleteResult.body;
 }
 
-
-
 async function getMostRecentDoc(client = require('./esClient'), indexName, opts) {
   // esClientLogger.logInfo('indexName', indexName)
   if (opts && opts.sort && opts.sort.length > 0) {
@@ -199,6 +197,50 @@ async function getMostRecentDoc(client = require('./esClient'), indexName, opts)
   return searchResultBody;
   //implement me using esClient.search with decending order and retrieving only 1 doc.
 }
+/**
+ *
+ * @param {elasticsearch client} client
+ * @param {string} indexName index to target and return counts from after bulk request is issued.
+ * @param {array} payload preconfigured bulk payload
+ * @param {obj} opts option bulk request options to pass to ES
+ * @returns { obj } { indexCounts: <number> total number of documents in the target index, erroredDocuments: <array> documents that had an error with bulk operation}
+ */
+
+async function bulkIndexDocuments(client = require('./esClient'), indexName, payload, opts = {}) {
+  let indexedDocs;
+  let erroredDocuments = [];
+  // add more configuration if needed later. See https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/8.0/api-reference.html#_bulk
+  const bulkConfig = {
+    ...opts,
+    refresh: 'true',
+  }
+  const body = payload;
+  const { body: bulkResponse } = await client.bulk({ refresh: bulkConfig.refresh, body });
+
+  if (bulkResponse.errors) {
+    // The items array has the same order of the dataset we just indexed.
+    // The presence of the `error` key indicates that the operation
+    // that we did for the document has failed.
+    bulkResponse.items.forEach((action, i) => {
+      const operation = Object.keys(action)[0]
+      if (action[operation].error) {
+        erroredDocuments.push({
+          // If the status is 429 it means that you can retry the document,
+          // otherwise it's very likely a mapping error, and you should
+          // fix the document before to try it again.
+          status: action[operation].status,
+          error: action[operation].error,
+          operation: body[i * 2],
+          document: body[i * 2 + 1]
+        })
+      }
+    })
+    console.log('bulk index erroredDocuments:', erroredDocuments)
+  }
+  // console.log('number of docs without errors:', payload.length() - erroredDocuments.length())
+  const { body: count } = await client.count({ index: indexName })
+  return { indexCounts: count, erroredDocuments }
+}
 // given the configured elasticsearch client, data to index and the target index, bulk indexes data
 // returns
 // const bulkIndexData = async function (client = require('./esClient'), data = [], dataType) {
@@ -215,6 +257,7 @@ const clientMethods = {
   createIndex,
   deleteIndex,
   getMostRecentDoc,
+  bulkIndexDocuments
 }
 // clientMethods.getClusterInfo();
 // clientMethods.pingCluster();
@@ -233,6 +276,6 @@ const clientMethods = {
 // }
 // clientMethods.createIndex(require('./esClient'), 'tweets', testMappings)
 // clientMethods.deleteIndex(require('./esClient'), 'tweets')
-module.exports = { pingCluster, getAmbientWeatherAliases, createIndex, getMostRecentDoc };
+module.exports = { pingCluster, getAmbientWeatherAliases, createIndex, getMostRecentDoc, deleteIndex, bulkIndexDocuments };
 
 
