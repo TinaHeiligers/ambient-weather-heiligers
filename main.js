@@ -13,46 +13,13 @@ const awApi = new AmbientWeatherApi({
   apiKey: process.env.AMBIENT_WEATHER_API_KEY,
   applicationKey: process.env.AMBIENT_WEATHER_APPLICATION_KEY
 });
-const mainLogger = new Logger('main');
+const mainLogger = new Logger('[main]');
 const fetchRawDataTester = new FetchRawData(awApi, fs);
 const imperialToJsonlConverter = new ConvertImperialToJsonl(fs);
 const imperialToMetricJsonlConverter = new ConvertImperialToMetric(fs);
 const dataIndexer = new IndexData();
 
 /**
- *
- * @param {array} values returned from getNewDataPromise and getRecentIndexedDataDates
- * @returns boolean: true if last indexed data for imperial and metric data is the same and that date is older than the date from which new data was fetched.
- */
-/**
- *
- * @param {*} objArray
- * @example
- const datesForNewData = getNewDataPromiseResult.dataFetchForDates;
- geoupBy(etNewDataPromiseResult.dataFetchForDates) = [
-  Moment<2022-01-07T14:05:00-07:00>,
-  Moment<2022-01-08T14:00:00-07:00>,
-  Moment<2022-01-06T14:10:00-07:00>,
-  Moment<2022-01-07T14:00:00-07:00>,
-  Moment<2022-01-05T14:15:00-07:00>,
-  Moment<2022-01-06T14:05:00-07:00>,
-  Moment<2022-01-04T14:20:00-07:00>,
-  Moment<2022-01-05T14:10:00-07:00>,
-  Moment<2022-01-03T14:25:00-07:00>,
-  Moment<2022-01-04T14:15:00-07:00>,
-  Moment<2022-01-02T14:20:00-07:00>,
-  Moment<2022-01-03T14:20:00-07:00>,
-  Moment<2022-01-01T14:25:00-07:00>,
-  Moment<2022-01-02T14:15:00-07:00>,
-  Moment<2021-12-31T14:30:00-07:00>,
-  Moment<2022-01-01T14:20:00-07:00>,
-  Moment<2021-12-31T12:00:00-07:00>,
-  Moment<2021-12-31T14:25:00-07:00>
-]
- */
-
-/**
- *
  * @param {class} logger : mainLogger instance
  * @param {*} stage : stage to advance the step
  * @param {*} stepsStates : current state within progress flow
@@ -71,8 +38,6 @@ async function main() {
   let metricDataJSONLFileNames;
   let indexImperialDocsNeeded = false;
   let indexMetricDocsNeeded = false;
-  let indexImperialDocsFromFiles = false;
-  let indexMetricDocsFromFiles = false;
   let lastIndexedImperialDataDate;
   let lastIndexedMetricDataDate;
 
@@ -85,7 +50,7 @@ async function main() {
     4: 'checkNewDataAgainstLastIndexedDoc',
     5: 'getExistingDataFromFile'
   }
-  const stepsStates = {
+  let stepsStates = {
     fatalError: false,
     clusterError: false,
     fetchNewData: false,
@@ -96,25 +61,26 @@ async function main() {
     backfillDataFromFile: false,
 
   }
+  mainLogger.logInfo('=============================')
   mainLogger.logInfo('starting main function', new Date());
 
   stage = step[1];
-  stepsStates.fetchNewData = true;
+  stepsStates = { ...stepsStates, fetchNewData: true };
   logProgress(mainLogger, stage, stepsStates);
 
   // step 1: fetch new data if needed, otherwise, move onto step 2
   try {
     const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
-    if (getNewDataPromiseResult === "too early") {
-      stepsStates.newDataSkipped = true;
+    if (Object.keys(getNewDataPromiseResult) === 0 && typeof getNewDataPromiseResult === String && getNewDataPromiseResult === "too early") {
+      stepsStates = { ...stepsStates, newDataSkipped: true };
       // don't throw here, we might still need to convert already fetched data to jsonl
-      mainLogger.logWarning(getNewDataPromiseResult)
+      mainLogger.logWarning("too early");
+    } else if (Object.keys(getNewDataPromiseResult) === ['dataFetchForDates', 'dataFileNames']) {
+      datesForNewData = getNewDataPromiseResult.dataFetchForDates;
+
+      stepsStates = { ...stepsStates, fetchNewData: false };
+      stepsStates = { ...stepsStates, newDataFetched: true };
     }
-    datesForNewData = getNewDataPromiseResult.dataFetchForDates;
-
-    stepsStates.fetchNewData = false;
-    stepsStates.newDataFetched = true;
-
     //   mainLogger.logInfo('beginning data file conversions: json => jsonl')
     imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl(); // returns an empty array if nothing was converted
     metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl(); // returns an empty array if nothing was converted
@@ -126,22 +92,21 @@ async function main() {
     logProgress(mainLogger, stage, stepsStates)
   } catch (err) {
     stage = step[0];
-    stepsStates.fatalError = true;
+    stepsStates = { ...stepsStates, fatalError: true };
     logProgress(mainLogger, stage, stepsStates)
     throw err;
   }
   stage = step[3];
   logProgress(mainLogger, stage, stepsStates)
-
   // this can happen regardless? yes
   const initializeResult = await dataIndexer.initialize(); // { lastIndexedImperialDoc, lastIndexedMetricDoc }
   if (!!initializeResult === true && initializeResult.outcome === 'success') {
-    stepsStates.clusterReady = true;
+    stepsStates = { ...stepsStates, clusterReady: true };
     logProgress(mainLogger, stage, stepsStates)
     lastIndexedImperialDataDate = initializeResult.latestImperialDoc[0]._source.dateutc;
     lastIndexedMetricDataDate = initializeResult.latestMetricDoc[0]._source.dateutc;
   } else {
-    stepsStates.clusterError = true;
+    stepsStates = { ...stepsStates, clusterError: true };
     logProgress(mainLogger, stage, stepsStates)
   }
   // check dates for what we have now compared with what's in the cluster.
@@ -159,7 +124,7 @@ async function main() {
     if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) indexMetricDocsNeeded = true;
   } // scenario 1 or 2:
   if (imperialDataJSONLFileNames.length > 0) {
-    stepsStates.dataConvertedToJsonl = true;
+    stepsStates = { ...stepsStates, dataConvertedToJsonl: true };
     logProgress(mainLogger, stage, stepsStates)
     const datesFromFileNames = [...imperialDataJSONLFileNames.map(name => name.split('_'))];
     const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries
@@ -171,7 +136,7 @@ async function main() {
     }
   }
   if (metricDataJSONLFileNames.length > 0) {
-    stepsStates.dataConvertedToJsonl = true;
+    stepsStates = { ...stepsStates, dataConvertedToJsonl: true };
     logProgress(mainLogger, stage, stepsStates)
     const datesFromFileNames = [...metricDataJSONLFileNames.map(name => name.split('_'))];
     const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries

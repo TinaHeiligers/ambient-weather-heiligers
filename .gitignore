@@ -2,7 +2,7 @@
 node_modules
 data/*
 .DS_Store
-**/.DS_Store
+**/**/.DS_Store
 crontab.txt
 pi-README.txt
 *.log

@@ -94,7 +94,6 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
   let preparedData = [];
   let readJsonlData = [];
   const targetAlias = `all-ambient-weather-heiligers-${dataType}`;
-  const targetTestIndex = `ambient_weather_heiligers_${dataType}_testbulkindex`;
   // fetch and read the data first
   const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
   if (fileNamesArray.length === 0) {
@@ -112,7 +111,7 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
       // console.log("-->", line);
       // console.log("---->>>{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, line)
       // return [{ index: { _index: targetAlias } }, JSON.parse(line)]
-      return [{ index: { _index: targetTestIndex } }, JSON.parse(line)]
+      return [{ index: { _index: targetAlias } }, JSON.parse(line)]
       // console.log("-->", line);
       // return JSON.parse(line);
     });

@@ -1,3 +1,6 @@
+const Logger = require('../logger');
+
+const convertImperialToJsonlLogger = new Logger('[ConvertImperialToJsonl]');
 class ConvertImperialToJsonl {
   #pathToJsonlFiles = 'ambient-weather-heiligers-imperial-jsonl';
   #pathToJsonFiles = 'ambient-weather-heiligers-imperial';
@@ -61,9 +64,9 @@ class ConvertImperialToJsonl {
   }
   logResult(filesToConvert) {
     if (this.convertedCount === filesToConvert.length) {
-      console.log(`converted imperial data files for ${filesToConvert.length} files: ${filesToConvert}`);
+      convertImperialToJsonlLogger.logInfo(`converted imperial data files for ${filesToConvert.length} files: ${filesToConvert}`)
     } else {
-      console.log(`couldn't convert imperial data files for ${filesToConvert.length - this.convertedCount} files`);
+      convertImperialToJsonlLogger.logWarning(`couldn't convert imperial data files for ${filesToConvert.length - this.convertedCount} files`);
     }
   }
   convertRawImperialDataToJsonl() {
@@ -77,7 +80,7 @@ class ConvertImperialToJsonl {
       this.convertFiles(filesToConvert);
       this.logResult(filesToConvert);
     } else {
-      console.log('There are no unconverted files')
+      convertImperialToJsonlLogger.logWarning('There are no unconverted files')
     }
     // this.filesConvertedToJsonl = filesToConvert;
     return filesToConvert;

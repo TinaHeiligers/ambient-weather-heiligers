@@ -27,7 +27,7 @@ class IndexData {
 
   constructor(esClient) {
     this.client = esClient;
-    this.logger = new Logger('indexer');
+    this.logger = new Logger('[IndexData]');
   };
   get dataToIndex() {
     return this.#dataToIndex;
@@ -159,10 +159,10 @@ class IndexData {
     const haveConnection = await this.ensureConnection();
     if (!haveConnection) {
       // retryForCount(this.ensureConnection) --> implement later, see https://github.com/elastic/kibana/blob/main/src/core/server/elasticsearch/client/retry_call_cluster.ts
-      this.logger.logWarning('Cannot establish a connection with remote cluster');
+      this.logger.logWarning('[initialize] Cannot establish a connection with remote cluster');
       return 'no connection'
     }
-    this.logger.logInfo('Cluster ping success! We are live :-)');
+    this.logger.logInfo('[initialize] Cluster ping success! We are live :-)');
     // main workflow through here to setup and prepare for bulk indexing
     // get the current write indices
     const currentIndices = await this.getActiveWriteIndices();

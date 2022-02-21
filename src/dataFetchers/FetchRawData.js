@@ -1,5 +1,3 @@
-
-const momentTZ = require('moment-timezone');
 const {
   calcMinutesDiff,
   timeConstants
@@ -10,7 +8,7 @@ const AW_CONSTANTS = {
   maxNumRecords: 288,
 }
 
-const fetchRawDataLogger = new Logger('fetchRawData');
+const fetchRawDataLogger = new Logger('[FetchRawData]');
 /*
  * Fetches data from Ambient-Weather
  * All dates should be in utc
@@ -103,7 +101,7 @@ class FetchRawData {
   /**
    *
    * @param pathToFiles {string} directory path to files to read
-   * @returns {set/array} array of unique unix datetime integers in milliseconds
+   * @returns {set/array} array of unique unix datetime integers in milliseconds. The array can be empty!
    */
   extractUniqueDatesFromFiles(pathToFiles) {
     let allDates = [];
@@ -118,7 +116,7 @@ class FetchRawData {
           const datesFromSingleFile = (parsedDataFromFile && parsedDataFromFile.length > 0) ? parsedDataFromFile.map(datum => datum.dateutc) : [];
           allDates = allDates.concat(datesFromSingleFile);
         } else {
-          fetchRawDataLogger.logWarning('[FetchRawData: extractUniqueDatesFromFiles] [WARNING] file with no entries:', file)
+          fetchRawDataLogger.logWarning('[extractUniqueDatesFromFiles] [WARNING] file with no entries:', file)
         }
       });
       return [...new Set(allDates)];
@@ -154,7 +152,7 @@ class FetchRawData {
       try {
         return await this.AWApi.deviceData(process.env.AMBIENT_WEATHER_MACADDRESS, { limit: numRecords, endDate: from });
       } catch (err) {
-        fetchRawDataLogger.logError('[FetchRawData: fetchRecentData] [ERROR]', err)
+        fetchRawDataLogger.logError('[fetchRecentData] [ERROR]', err)
         throw err;
       }
     } else {
@@ -179,7 +177,6 @@ class FetchRawData {
    * @returns {obj} { from, to }: date-times as milliseconds since Unix epoch time for which data was fetched
    */
   async fetchAndStoreData(toDate, numRecords) {
-
     try {
       const result = await this.fetchRecentData(toDate, numRecords);
       if (result && Array.isArray(result) && result.length > 0) {
@@ -195,7 +192,7 @@ class FetchRawData {
       }
       return null;
     } catch (err) {
-      fetchRawDataLogger.logError('[FetchRawData: fetchAndStoreData] [ERROR] error in fetchAndStoreData', err)
+      fetchRawDataLogger.logError('[fetchAndStoreData] [ERROR] error in fetchAndStoreData', err)
       throw err;
     }
   }
@@ -203,7 +200,8 @@ class FetchRawData {
    * main method for FetchRawData class: fetches data that we don't yet have on file up to fromDate
    * @param {boolean} skipSave: saving to file is skipped if true
    * @param {integer} fromDate: date until which to fetch new data for (calls are made going back in time)
-   * @returns {obj} { dataFetchForDates: <array>, dataFileNames: <array } array of date-times in milliseconds since epoch, array of filenames where the data was/would have been stored
+   * @returns {obj | string} { dataFetchForDates: <array>, dataFileNames: <array } | "too early" if less than 5 min has passed between the current time and the most recent datetime on file
+   array of date-times in milliseconds since epoch, array of filenames where the data was/would have been stored
    */
   // main function for this class
   async getDataForDateRanges(skipSave = false, fromDate) {
@@ -211,7 +209,7 @@ class FetchRawData {
     if (!fromDate) {
       fromDate = this.now;
     }
-    fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] args: skipSave, fromDate', { skipSave: !!skipSave, fromDate: fromDate });
+    fetchRawDataLogger.logInfo('[getDataForDateRanges] args: skipSave, fromDate', { skipSave: !!skipSave, fromDate: fromDate });
 
     this.skipSave = skipSave;
     // this is all setup before I can start fetching the data
@@ -221,16 +219,19 @@ class FetchRawData {
     const dateOfLastDataSaved = this.getLastRecordedUTCDate();
     const minSinceLastData = Math.floor((fromDate - dateOfLastDataSaved) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute));
     // return early if it's too soon to fetch new data
-    if (minSinceLastData < AW_CONSTANTS.dataInterval) return 'too early';
+    if (minSinceLastData < AW_CONSTANTS.dataInterval) {
+      fetchRawDataLogger.logInfo('[getDataForDateRanges] too early', { minSinceLastData: minSinceLastData, minInterval: AW_CONSTANTS.dataInterval })
+      return 'too early';
+    }
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
 
     if (estNumberOfBatches >= 1) {
-      fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
+      fetchRawDataLogger.logInfo('[getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
       this.numberOfRecords = AW_CONSTANTS.maxNumRecordsCanGet;
       for (let i = 0; i < Math.floor(estNumberOfBatches); i++) {
-        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Issueing batch request:', { i: i + 1 })
+        fetchRawDataLogger.logInfo('[getDataForDateRanges] [multi-day fetch] Issueing batch request:', { i: i + 1 })
         try {
           const fetchedData = await this.fetchAndStoreData(this.now, this.numberOfRecords);
           if (fetchedData) {
@@ -242,44 +243,38 @@ class FetchRawData {
             break;
           }
         } catch (err) {
-          fetchRawDataLogger.logError('[FetchRawData: getDataForDateRanges] [multi-day fetch] PROBLEM!', err)
+          fetchRawDataLogger.logError('[getDataForDateRanges] [multi-day fetch] PROBLEM!', err)
         }
       }
       // fetch the last lot of data that doesn't fall into a batch
       const lastRecordsFromDate = Math.min(...this.datesArray.map((entry) => entry.from));
       const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
 
-      fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [multi-day fetch] Setting up final collection for record count:', { lastRecordsLimit: lastRecordsLimit });
+      fetchRawDataLogger.logInfo('[getDataForDateRanges] [multi-day fetch] Setting up final collection for record count:', { lastRecordsLimit: lastRecordsLimit });
 
       const fetchedData = await this.fetchAndStoreData(lastRecordsFromDate, lastRecordsLimit);
       if (fetchedData) {
         const { from, to } = fetchedData;
         this.datesArray = this.datesArray.concat({ from, to })
-        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
-
-        return finalResult;
+        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       } else {
-
-        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
-
-        return finalResult;
+        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       }
-    } else {
-      // single day data fetch
+    } else if (estTotalNumRecordsToFetch >= 2) {
+      // single day data fetch, do not fetch if only one record is needed.
       try {
-        fetchRawDataLogger.logInfo('[FetchRawData: getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count:', { estTotalNumRecordsToFetch: estTotalNumRecordsToFetch })
+        fetchRawDataLogger.logInfo('[getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count:', { estTotalNumRecordsToFetch: estTotalNumRecordsToFetch });
         const result = await this.fetchAndStoreData(this.now, estTotalNumRecordsToFetch);
         this.datesArray = this.datesArray.concat(result)
 
-        const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
-
-        return finalResult;
+        return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       } catch (err) {
-        fetchRawDataLogger.logError('[FetchRawData: getDataForDateRanges] [single-day fetch] PROBLEM!', err)
+        fetchRawDataLogger.logError('[getDataForDateRanges] [single-day fetch] PROBLEM!', err)
       }
+    } else {
+      return "too early"
     }
-    const finalResult = { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
-    return finalResult;
+    return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
   };
 }
 module.exports = FetchRawData;
