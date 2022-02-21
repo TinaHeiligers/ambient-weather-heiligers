@@ -215,6 +215,7 @@ async function bulkIndexDocuments(client = require('./esClient'), indexName, pay
     refresh: 'true',
   }
   const body = payload;
+  // console.log('---------------->>>esClientMethods, bulkIndexDocuments, body(payload)', body)
   const { body: bulkResponse } = await client.bulk({ refresh: bulkConfig.refresh, body });
 
   if (bulkResponse.errors) {
@@ -238,7 +239,6 @@ async function bulkIndexDocuments(client = require('./esClient'), indexName, pay
     console.log('bulk index erroredDocuments:', erroredDocuments)
   }
   // console.log('number of docs without errors:', payload.length() - erroredDocuments.length())
-  console.log('MONKEY_BANANA INDEXNAME:', indexName)
   const { body: count } = await client.count({ index: indexName })
   return { indexCounts: count, erroredDocuments }
 }

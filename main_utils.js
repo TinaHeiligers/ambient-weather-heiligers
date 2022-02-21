@@ -99,7 +99,6 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
     console.log('fileNamesArray is empty')
     fileNamesArray = getAllFilesFromPath(fullPathToFilesToRead); // get everything
   }
-  console.log('------------>>>>targetAlias', targetAlias)
   const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
 
   const dataReadyForBulkIndexing = fullFilePaths.flatMap(fullPath => {
@@ -128,5 +127,4 @@ function getAllFilesFromPath(fullPathToFiles) {
 
 module.exports = {
   prepareDataForBulkIndexing,
-  getAllFilesFromPath,
 }

@@ -142,7 +142,6 @@ class IndexData {
   async bulkIndexDocuments(payload, dataType) {
     const body = payload;
     const indexName = this.#currentWriteIndices.filter(name => name.includes(dataType))[0];
-    this.logger.logWarning('skipping indexing step')
     const result = await bulkIndexDocuments(this.client, indexName, body);
     console.log('RESULT FROM BULK INDEX:', result)
     console.log('Indexer.bulkIndexDocuments, dataType:', dataType)
