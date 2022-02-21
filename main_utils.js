@@ -79,8 +79,7 @@ const mockedDataType = 'imperial';
  * @returns {array} flat array containing bulk payload to send to cluster.
  * @example
  // const results = prepareDataForBulkIndexing(mockedFileNamesArray, mockedDataType, mainUtilsLogger);
-// console.log('results', results.length);
-/**example of what we have now:
+/**
  * { index: { _index: `ambient_weather_heiligers_${dataType}*` } },
     {
       dateutc: 1641824400000,
@@ -100,7 +99,7 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
     console.log('fileNamesArray is empty')
     fileNamesArray = getAllFilesFromPath(fullPathToFilesToRead); // get everything
   }
-
+  console.log('------------>>>>targetAlias', targetAlias)
   const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
 
   const dataReadyForBulkIndexing = fullFilePaths.flatMap(fullPath => {
@@ -108,12 +107,7 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
     const dataFileRead = fs.readFileSync(fullPath);
     //https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/bulk_examples.html
     return dataFileRead.toString().trim().split("\n").flatMap((line) => {
-      // console.log("-->", line);
-      // console.log("---->>>{ index: { _index: `ambient_weather_heiligers_${dataType}*` } }, line)
-      // return [{ index: { _index: targetAlias } }, JSON.parse(line)]
       return [{ index: { _index: targetAlias } }, JSON.parse(line)]
-      // console.log("-->", line);
-      // return JSON.parse(line);
     });
   });
   return dataReadyForBulkIndexing;
@@ -122,23 +116,17 @@ function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
 /**
  *
  * @param {string} fullPathToFiles
+ * @returns {string[]} fileNames array without the extension
  */
 function getAllFilesFromPath(fullPathToFiles) {
-  console.log('in getAllFilesFromPath with fullPathToFiles as:', fullPathToFiles)
   const files = fs.readdirSync(fullPathToFiles);
-  let filesArray = [];// an array of filenames without the extension type: string[] | []
+  let filesArray = [];
   filesArray = files
     .map((file) => (`${file}`.split(".")[0])).filter((fileName => fileName.length > 0));
-  // console.log('finished reading the dir, with a result of filesArray:', filesArray);
   return filesArray;
 }
-
 
 module.exports = {
   prepareDataForBulkIndexing,
   getAllFilesFromPath,
 }
-    // read the data and add the extra stuff we need for bulkIndexing.
-    // convert it to the shape we expect to pass into bulkIndex,
-    // example doc is:
-    // {"date":"2022-01-09T00:55:00.000Z","dateutc":1641689700000,"loc":"ambient-prod-1","last_rain":"2022-01-01T10:43:00.000Z","uv":0,"wind_dir":320,"humidity":56,"humidity_inside":39,"barometer_abs_bar":9718.259152,"barometer_rel_bar":10194.385446,"temp_inside_c":21.778,"temp_outside_c":14.5,"battery_condition":"good","windspeed_km_per_hr":0,"windgust_km_per_hr":0,"max_daily_gust_km_per_hr":11.104,"hourly_rain_mm":0,"event_rain_mm":0,"daily_rain_mm":0,"weekly_rain_mm":0,"monthly_rain_mm":10,"total_rain_mm":305,"solar_radiation_W_per_sq_m":0,"feels_like_outside_c":14.5,"dewpoint_c":5.828,"feelslike_inside_c":21.056,"dewpoint_inside_c":7.222}

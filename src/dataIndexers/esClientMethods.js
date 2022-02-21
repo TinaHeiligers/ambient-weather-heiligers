@@ -238,16 +238,10 @@ async function bulkIndexDocuments(client = require('./esClient'), indexName, pay
     console.log('bulk index erroredDocuments:', erroredDocuments)
   }
   // console.log('number of docs without errors:', payload.length() - erroredDocuments.length())
+  console.log('MONKEY_BANANA INDEXNAME:', indexName)
   const { body: count } = await client.count({ index: indexName })
   return { indexCounts: count, erroredDocuments }
 }
-// given the configured elasticsearch client, data to index and the target index, bulk indexes data
-// returns
-// const bulkIndexData = async function (client = require('./esClient'), data = [], dataType) {
-//   // do stuff
-// }
-
-
 
 const clientMethods = {
   getClusterInfo,

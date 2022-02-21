@@ -32,6 +32,27 @@ const logProgress = (logger = mainLogger, stage, stepsStates) => {
   console.log();
 }
 
+const step = {
+  0: 'error',
+  1: 'fetchData',
+  2: 'convertToJsonl',
+  3: 'getRecentIndexedDocs',
+  4: 'checkNewDataAgainstLastIndexedDoc',
+  5: 'getExistingDataFromFile'
+}
+
+const states = {
+  fatalError: false,
+  clusterError: false,
+  fetchNewData: false,
+  newDataFetched: false,
+  newDataSkipped: false,
+  clusterReady: false,
+  dataConvertedToJsonl: false,
+  backfillDataFromFile: false,
+
+}
+
 async function main() {
   let datesForNewData;
   let imperialDataJSONLFileNames;
@@ -40,27 +61,10 @@ async function main() {
   let indexMetricDocsNeeded = false;
   let lastIndexedImperialDataDate;
   let lastIndexedMetricDataDate;
-
+  // logging stuff
   let stage;
-  let step = {
-    0: 'error',
-    1: 'fetchData',
-    2: 'convertToJsonl',
-    3: 'getRecentIndexedDocs',
-    4: 'checkNewDataAgainstLastIndexedDoc',
-    5: 'getExistingDataFromFile'
-  }
-  let stepsStates = {
-    fatalError: false,
-    clusterError: false,
-    fetchNewData: false,
-    newDataFetched: false,
-    newDataSkipped: false,
-    clusterReady: false,
-    dataConvertedToJsonl: false,
-    backfillDataFromFile: false,
+  let stepsStates = { ...states };
 
-  }
   mainLogger.logInfo('=============================')
   mainLogger.logInfo('starting main function', new Date());
 
@@ -77,10 +81,8 @@ async function main() {
       mainLogger.logWarning("too early");
     } else if (Object.keys(getNewDataPromiseResult) === ['dataFetchForDates', 'dataFileNames']) {
       datesForNewData = getNewDataPromiseResult.dataFetchForDates;
-
-      stepsStates = { ...stepsStates, fetchNewData: false };
-      stepsStates = { ...stepsStates, newDataFetched: true };
     }
+    stepsStates = { ...stepsStates, newDataFetched: true };
     //   mainLogger.logInfo('beginning data file conversions: json => jsonl')
     imperialDataJSONLFileNames = imperialToJsonlConverter.convertRawImperialDataToJsonl(); // returns an empty array if nothing was converted
     metricDataJSONLFileNames = imperialToMetricJsonlConverter.convertImperialDataToMetricJsonl(); // returns an empty array if nothing was converted
@@ -96,13 +98,15 @@ async function main() {
     logProgress(mainLogger, stage, stepsStates)
     throw err;
   }
+
   stage = step[3];
   logProgress(mainLogger, stage, stepsStates)
-  // this can happen regardless? yes
   const initializeResult = await dataIndexer.initialize(); // { lastIndexedImperialDoc, lastIndexedMetricDoc }
+
   if (!!initializeResult === true && initializeResult.outcome === 'success') {
     stepsStates = { ...stepsStates, clusterReady: true };
-    logProgress(mainLogger, stage, stepsStates)
+    logProgress(mainLogger, stage, stepsStates);
+
     lastIndexedImperialDataDate = initializeResult.latestImperialDoc[0]._source.dateutc;
     lastIndexedMetricDataDate = initializeResult.latestMetricDoc[0]._source.dateutc;
   } else {
@@ -119,13 +123,18 @@ async function main() {
   if (datesForNewData && datesForNewData.length > 0) { //use new data}
     stage = step[4];
     logProgress(mainLogger, stage, stepsStates)
+
     const dateArrayNeeded = datesForNewData?.map((fromToObj => fromToObj.to))
     if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedImperialDataDate) > 0) indexImperialDocsNeeded = true;
     if ((minDateFromDateObjects(dateArrayNeeded) - lastIndexedMetricDataDate) > 0) indexMetricDocsNeeded = true;
   } // scenario 1 or 2:
+  // figure out what the new data is and the filenames for that, prepare it for bulk indexing and index the data
+  // imperial data
+  // function prepAndBulkIndexNewData(....)
   if (imperialDataJSONLFileNames.length > 0) {
     stepsStates = { ...stepsStates, dataConvertedToJsonl: true };
     logProgress(mainLogger, stage, stepsStates)
+
     const datesFromFileNames = [...imperialDataJSONLFileNames.map(name => name.split('_'))];
     const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries
 
@@ -135,9 +144,13 @@ async function main() {
       await dataIndexer.bulkIndexDocuments(imperialDataReadyForBulkCall)
     }
   }
+
+  // figure out what the new data is and the filenames for that, prepare it for bulk indexing and index the data
+  // metric data (same code as for imperial data, only for the metric data)
   if (metricDataJSONLFileNames.length > 0) {
     stepsStates = { ...stepsStates, dataConvertedToJsonl: true };
     logProgress(mainLogger, stage, stepsStates)
+
     const datesFromFileNames = [...metricDataJSONLFileNames.map(name => name.split('_'))];
     const maxDateOnFile = Math.max(...datesFromFileNames.map((entry => entry * 1))); // will return NaN for non-integer entries
 
@@ -147,33 +160,28 @@ async function main() {
       await dataIndexer.bulkIndexDocuments(metricDataReadyForBulkCall)
     }
   }
-  // now read the data in all the new files and compare the data date with that in the index. If the late is newer (more recent)
-  // than the date in the index, add the datapoint to what needs to be formatted for bulk indexing.
 
   //read all data from the imperialDataJSONLFileNames array
-  // this is a prepareDataForBulkIndex method
-
+  // scenario 3: no new data fetched
   if (imperialDataJSONLFileNames.length === 0) {
     stage = step[5]
     logProgress(mainLogger, stage, stepsStates)
-    mainLogger.logInfo('no new files, reading exisiting imperial data from file')
+    mainLogger.logInfo('no new files, reading exisiting imperial data from file');
+
     const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialDataJSONLFileNames, 'imperial');
     if (stepsStates.clusterError === false) {
       await dataIndexer.bulkIndexDocuments(imperialDataReadyForBulkCall, 'imperial')
     }
-    // console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
-    // console.log();
   }
   if (metricDataJSONLFileNames.length === 0) {
     stage = step[5]
     logProgress(mainLogger, stage, stepsStates)
+
     mainLogger.logInfo('no new files, reading exisiting metric data from file')
     const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricDataJSONLFileNames, 'metric');
     if (stepsStates.clusterError === false) {
       await dataIndexer.bulkIndexDocuments(metricDataReadyForBulkCall)
     }
-    // console.log('imperialDataReadyForBulkCall', imperialDataReadyForBulkCall)
-    // console.log();
   }
   if (!stepsStates.fatalError === true) {
     return 'DONE'
@@ -184,7 +192,5 @@ async function main() {
     console.log()
   }
 };
-
-
 
 module.exports = main;
