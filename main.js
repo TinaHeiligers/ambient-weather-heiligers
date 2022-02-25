@@ -25,8 +25,8 @@ const dataIndexer = new IndexData();
  * @returns {void}: logs to console
  */
 const logProgress = (logger = mainLogger, stage, stepsStates) => {
-  logger.logInfo('STAGE:', stage + `\n`);
-  logger.logInfo('stepsStates:', stepsStates + `\n`);
+  logger.logInfo('[STAGE]:', stage + `\n`);
+  logger.logInfo('[STEPS STATE]:', stepsStates);
 }
 
 const step = {
@@ -117,7 +117,7 @@ async function main() {
     logProgress(mainLogger, stage, stepsStates)
   } catch (err) {
     stage = step[0];
-    stepsStates = updateProgressState({ fatalError: true }, { warn: `error in step ${step[1]} or ${step[2]}` }, mainLogger, { ...stepsStates })
+    stepsStates = updateProgressState({ fatalError: true }, { error: `error in step ${step[1]} or ${step[2]}`, errorInfo: err }, mainLogger, { ...stepsStates })
     logProgress(mainLogger, stage, stepsStates)
     throw err;
   }
@@ -185,9 +185,9 @@ async function main() {
   if (!stepsStates.fatalError === true) {
     return 'DONE'
   } else {
-    mainLogger.logError(stepsStates)
+    mainLogger.logError('[ERROR] [STEPSSTATE]:', stepsStates)
     console.log()
-    mainLogger.logError(stage)
+    mainLogger.logError('[ERROR] [STAGE]:', stage)
     console.log()
   }
 };

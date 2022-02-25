@@ -98,8 +98,10 @@ function updateProgressState(stepState, logMeta, mainLogger, oldStates) {
     mainLogger.logWarning(logMeta.warn)
   } else if (logMeta?.info) {
     mainLogger.logInfo(`=================\n${logMeta.info}`)
+  } else if (logMeta?.error) {
+    mainLogger.logError(logMeta.error, logMeta?.errorInfo)
   }
-
+  mainLogger.logInfo('[PROGRESS STATE]:', newState)
   return newState
 };
 /**
@@ -121,13 +123,10 @@ function updateProgressState(stepState, logMeta, mainLogger, oldStates) {
     },
  */
 function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
-  let preparedData = [];
-  let readJsonlData = [];
   const targetAlias = `all-ambient-weather-heiligers-${dataType}`;
   // fetch and read the data first
   const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
   if (fileNamesArray.length === 0) {
-    console.log('fileNamesArray is empty')
     fileNamesArray = getAllFilesFromPath(fullPathToFilesToRead); // get everything
   }
   const fullFilePaths = fileNamesArray.map(filename => `${fullPathToFilesToRead}/${filename}.jsonl`);
