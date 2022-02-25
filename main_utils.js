@@ -73,6 +73,37 @@ const mockedDataType = 'imperial';
 
 /**
  *
+ * @param {Object} stepState containing updated step
+ * @param {Object} logMeta containing level: info || warn || error, message: string
+ * @param { Logger } mainLogger instance
+ * @param {Object} oldStates previous progress state
+ */
+function updateProgressState(stepState, logMeta, mainLogger, oldStates) {
+  const states = {
+    fatalError: false,
+    clusterError: false,
+    fetchNewData: false,
+    newDataFetched: false,
+    newDataSkipped: false,
+    clusterReady: false,
+    dataConvertedToJsonl: false,
+    backfillDataFromFile: false,
+  }
+  if (!oldStates) {
+    oldStates = states;
+  }
+
+  const newState = { ...oldStates, ...stepState }
+  if (logMeta?.warn) {
+    mainLogger.logWarning(logMeta.warn)
+  } else if (logMeta?.info) {
+    mainLogger.logInfo(`=================\n${logMeta.info}`)
+  }
+
+  return newState
+};
+/**
+ *
  * @param {array} fileNamesArray
  * @param {string} dataType
  * @param {Logger} logger
@@ -126,5 +157,6 @@ function getAllFilesFromPath(fullPathToFiles) {
 }
 
 module.exports = {
+  updateProgressState,
   prepareDataForBulkIndexing,
 }
