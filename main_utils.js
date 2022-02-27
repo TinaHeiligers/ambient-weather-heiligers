@@ -123,6 +123,8 @@ function updateProgressState(stepState, logMeta, mainLogger, oldStates) {
     },
  */
 function prepareDataForBulkIndexing(fileNamesArray, dataType, logger) {
+  // note: here I'm passing all the filenames, not just the ones that have data for dates not already in the cluster
+  // we will get duplicates.
   const targetAlias = `all-ambient-weather-heiligers-${dataType}`;
   // fetch and read the data first
   const fullPathToFilesToRead = `data/ambient-weather-heiligers-${dataType}-jsonl`; // can be moved to the top.
