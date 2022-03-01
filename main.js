@@ -149,13 +149,13 @@ async function main() {
   }
 
   // scenario 1 or 2:
-  if (imperialJSONLFileNames.length > 0 && indexImperialDocsNeeded === true) {
+  if (imperialJSONLFileNames.length > 0) {
     stepsStates = updateProgressState({ dataConvertedToJsonl: true }, { info: `preparing imperial data for bulk index ` }, mainLogger, { ...stepsStates })
     logProgress(mainLogger, stage, stepsStates)
     prepAndBulkIndexNewData('imperial', imperialJSONLFileNames, lastIndexedImperialDataDate, { indexImperialDocsNeeded: true })
   }
 
-  if (metricJSONLFileNames.length > 0 && indexMetricDocsNeeded === true) {
+  if (metricJSONLFileNames.length > 0) {
     stepsStates = updateProgressState({ dataConvertedToJsonl: true }, { info: `preparing metric data for bulk index ` }, mainLogger, { ...stepsStates })
     logProgress(mainLogger, stage, stepsStates)
 
@@ -166,23 +166,23 @@ async function main() {
   if (imperialJSONLFileNames.length === 0) {
     stage = step[5]
     stepsStates = updateProgressState({ backfillDataFromFile: true }, { info: `no new files, reading exisiting imperial data from file` }, mainLogger, { ...stepsStates })
-    return;
+    // return;
     // TODO: add logic to backfill data
-    // const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialJSONLFileNames, 'imperial');
-    // if (stepsStates.clusterError === false) {
-    //   await dataIndexer.bulkIndexDocuments(imperialDataReadyForBulkCall, 'imperial')
-    // }
+    const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialJSONLFileNames, 'imperial');
+    if (stepsStates.clusterError === false) {
+      await dataIndexer.bulkIndexDocuments(imperialDataReadyForBulkCall, 'imperial')
+    }
   }
 
   if (metricJSONLFileNames.length === 0) {
     stage = step[5]
     stepsStates = updateProgressState({ backfillDataFromFile: true }, { info: `no new files, reading exisiting metric data from file` }, mainLogger, { ...stepsStates })
-    return;
+    // return;
     // TODO: add logic to backfill data
-    // const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricJSONLFileNames, 'metric');
-    // if (stepsStates.clusterError === false) {
-    //   await dataIndexer.bulkIndexDocuments(metricDataReadyForBulkCall, 'metric')
-    // }
+    const metricDataReadyForBulkCall = prepareDataForBulkIndexing(metricJSONLFileNames, 'metric');
+    if (stepsStates.clusterError === false) {
+      await dataIndexer.bulkIndexDocuments(metricDataReadyForBulkCall, 'metric')
+    }
   }
   if (!stepsStates.fatalError === true) {
     mainLogger.logInfo('DONE', stepsStates)
