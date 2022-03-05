@@ -10,15 +10,18 @@
   "author": "Tina Heiligers",
   "license": "MIT",
   "dependencies": {
-    "@elastic/elasticsearch": "^7.7.1",
+    "@elastic/elasticsearch": "^7.16.0",
     "ambient-weather-api": "0.0.6",
+    "assert": "^2.0.0",
     "convert-units": "^2.3.4",
     "file-system": "^2.2.2",
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.31"
   },
   "devDependencies": {
+    "@elastic/elasticsearch-mock": "^0.3.1",
     "jest": "^27.0.4",
-    "jest-cli": "^27.0.4"
+    "jest-cli": "^27.0.4",
+    "jsdoc": "^3.6.7"
   }
 }

@@ -3,8 +3,10 @@ const {
   convertTemp,
   convertMPH,
   calcMinutesDiff,
-  convertToMetric
+  convertToMetric,
+  minDateFromDateObjects
 } = require("./helpers");
+const timeConstants = require('./constants');
 
 describe("helpers", () => {
   describe("convertTemp", () => {
@@ -24,13 +26,21 @@ describe("helpers", () => {
     });
   });
   describe("calcMinutesDiff", () => {
-    it("calculates the difference between two date times in minutes", () => {
+    it("calculates the difference between two moment-timezone objects in minutes", () => {
       const dateTime1 = momentTZ('2020-06-01').add(1, 'days');
       const dateTime2 = momentTZ('2020-06-01');
       const expected = 24 * 60;
       const actual = calcMinutesDiff(dateTime1, dateTime2);
+      console.log(actual)
       expect(actual).toEqual(expected);
     });
+    it("calculates the difference between two dates as date-time milliseconds since the unix epoch in minutes", () => {
+      const dateTime1 = (new Date('2020-06-01')).getTime() + timeConstants.one_day_as_milliseconds;
+      const dateTime2 = (new Date('2020-06-01')).getTime();
+      const expected = 24 * 60;
+      const actual = calcMinutesDiff(dateTime1, dateTime2);
+      expect(actual).toEqual(expected)
+    })
   });
   describe("convertToMetric", () => {
     it("converts imperial units to metric units", () => {
@@ -96,4 +106,25 @@ describe("helpers", () => {
       expect(actualResult).toEqual(expectedMetricDatum);
     });
   });
+  describe("minDateFromDateObjects", () => {
+    it("returns the minimum datetime", () => {
+      const testFromToObj1 = { from: Date.parse(momentTZ('2022-01-07T14:05:00-07:00')), to: Date.parse(momentTZ('2022-01-06T14:10:00-07:00')) };
+      const testFromToObj2 = { from: Date.parse(momentTZ('2022-01-07T14:00:00-07:00')), to: Date.parse(momentTZ('2022-01-05T14:15:00-07:00')) };
+      const testArray = [testFromToObj1, testFromToObj2];
+      const expectedMin = Date.parse(momentTZ.utc('2022-01-05T21:15:00.000Z'));
+      const actualMin = minDateFromDateObjects(testArray);
+      // as integers, we can compare the difference in dates to be less than or greater than 0
+      expect((expectedMin - actualMin) > 0).toBe(false);
+    });
+    it("handles mixed date-time strings and numbers", () => {
+      const testFromToObj1 = { from: Date.parse(momentTZ('2022-01-07T14:05:00-07:00')), to: Date.parse(momentTZ('2022-01-06T14:10:00-07:00')) };
+      const testFromToObj2 = { from: Date.parse(momentTZ('2022-01-07T14:00:00-07:00')), to: Date.parse(momentTZ('2022-01-05T14:15:00-07:00')) };
+      const testArray = [testFromToObj1, testFromToObj2];
+      const expectedMin = Date.parse(momentTZ.utc('2022-01-05T21:15:00.000Z'));
+      const actualMin = minDateFromDateObjects(testArray);
+      // as integers, we can compare the difference in dates to be less than or greater than 0
+      expect((expectedMin - actualMin) > 0).toBe(false);
+    })
+  })
+  const testFromToObj1 = { from: momentTZ('2022-01-07T14:05:00-07:00'), to: momentTZ('2022-01-06T14:10:00-07:00') };
 });

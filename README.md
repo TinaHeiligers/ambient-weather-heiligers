@@ -60,25 +60,27 @@ POST /_aliases
 <br></br>Note: It’s good practice to use an alias for reads/queries from your application anyway, so if you did that from the get-go, you’d have been able to skip the first three steps in that reindexing process.
 
 ## TODO:
-- ~~Delete duplicate entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch~~ Current solution is to use logstash
-- automate test runs before pushing to Github
-- set up CI
-- refactor metric conversion to class
-- add new classes to their own call modules
-- implement using es client to index without filebeat
-- automate de-duping entries
+1. Code:
+- Implement using es client to index without filebeat: in progress
+- Automate de-duping entries: https://www.elastic.co/blog/how-to-find-and-remove-duplicate-documents-in-elasticsearch Old solution was to use logstash but it's very manual
+- Set up ILM to automatically rollover the indices (metric, imperial & deduped entries)
+- Set up monitoring for the pi
+- Set up CI -> eventually, not needed right now
+    - Automate test runs before pushing to Github -> not doing with husky, something went wrong and I don't feel like figuring it out.
+- Convert to typescript
+- Add jsdocs: in progress
 
+2. Kibana:
+- index pattern to match the aliases
 ## Known bugs:
  - If the last saved data file is an empty array, the rawDataFatcher doesn't fetch new data.
- - ~~still valid? if there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.~~
-
+ - If there aren't any files in the `ambient-weather-heiligers-data` folder, `getLastRecordedDataDate` throws an error.
+ - If not enough time's passed since fetching data, we end up with files names "Infinity_-Infinity"
 ## Current aliases:
 | alias | index | filter | routing.index | routing.search | is_write_index (if blank, defaults to true) |
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
-| all-deduped-ambient-weather-heiligers-imperial | deduped_ambient_weather_heiligers_imperial_2020_07_25 - | - | - | - |
-| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_09_12 | - | - | - | false |
-| all-ambient-weather-heiligers-metric | ambient_weather_heiligers_metric_2020_12_31 | - | - | - | true |
-| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_08_03 | - | - | - | false |
-| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_06_30 | - | - | - | false |
-| all-ambient-weather-heiligers-metric | ambient_weather_heiligers_metric_2020_09_27 | - | - | - | false |
-| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_12_31 | - | - | - | true |
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_08_03 | - | - | - | false
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2021_06_12 | - | - | - | true
+| all-ambient-weather-heiligers-imperial | ambient_weather_heiligers_imperial_2020_06_30 | - | - | - | false
+| all-deduped-ambient-weather-heiligers-imperial | deduped_ambient_weather_heiligers_imperial_2020_07_25 | - | -  | - | - |
+all-ambient-weather-heiligers-metric | ambient_weather_heiligers_metric_2021_06_12 | - | - | - | true |

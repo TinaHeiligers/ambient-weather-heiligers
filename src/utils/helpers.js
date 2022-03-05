@@ -1,5 +1,7 @@
 const cu = require("convert-units");
 const momentTZ = require("moment-timezone");
+const moment = require('moment')
+const timeConstants = require('./constants')
 
 const convertTemp = function (f) {
   const tempInC = cu(f).from("F").to("C");
@@ -10,10 +12,17 @@ const convertMPH = function (mph) {
   const speedmph = cu(mph).from("m/h").to("km/h");
   return Number(speedmph.toFixed(3));
 };
-
+/**
+ * calculate the number of minutes between two date-times in milliseconds
+ * note: javascript uses milliseconds as the unit to `getTime()`
+ * @param {number} to date-time in milliseconds
+ * @param {number} from date-time in milliseconds
+ * @returns number of minutes difference
+ */
 const calcMinutesDiff = (to, from) => {
-  return momentTZ.duration(momentTZ(to).diff(momentTZ(from))).as("minutes");
+  return Math.floor((to - from) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute))
 };
+
 
 function convertRainReading(reading) {
   if (reading !== 0) {
@@ -55,10 +64,31 @@ function convertToMetric(datum) {
     dewpoint_inside_c: convertTemp(datum.dewPointin),
   }
 }
+/**
+ *
+ * @param {Array} fromToObjsArray: array of { from: <datetime>, to: <datetime> }
+ * objects where datetime could either be a momentTZ datestring or a date-time in
+ * milliseconds
+ */
+const minDateFromDateObjects = (fromToObjsArray) => {
+  const allDates = fromToObjsArray.reduce(function (acc, obj) {
+    for (const [key, value] of Object.entries(obj)) {
+      if (acc.indexOf(value) === -1) acc.push(value) // collect all the dates
+    }
+    return acc;
+  }, []);
+  if (allDates.every(item => typeof item === Number)) {
+    return Math.min(...allDates);
+  } else {
+    const allDatesAsNumbers = allDates.map((item => typeof item !== Number ? Date.parse(momentTZ(item)) : item));
+    return Math.min(...allDatesAsNumbers);
+  }
+}
 
 module.exports = {
   convertTemp,
   convertMPH,
   calcMinutesDiff,
-  convertToMetric
+  convertToMetric,
+  minDateFromDateObjects
 };

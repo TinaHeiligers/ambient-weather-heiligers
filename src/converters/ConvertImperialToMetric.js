@@ -2,7 +2,10 @@
 // Converts from imperial to metric units
 const momentTZ = require("moment-timezone");
 const { convertToMetric } = require('../utils');
+const Logger = require('../logger');
 // Writes the metric data directly to jsonl files
+
+const convertImperialToMetricLogger = new Logger('[ConvertImperialToMetric]');
 class ConvertImperialToMetric {
   #pathToMetricJsonlFiles = 'ambient-weather-heiligers-metric-jsonl'; // jsonl form of metric data already converted
   #pathToImperialDataFiles = 'ambient-weather-heiligers-imperial'; // raw imperial data in json form
@@ -78,30 +81,33 @@ class ConvertImperialToMetric {
     });
     return true;
   }
+
   logResult(filesToConvert) {
     if (this.convertedToMetricCount === filesToConvert.length) {
-      console.log(`converted files for ${filesToConvert.length} files: ${filesToConvert}`);
+      convertImperialToMetricLogger.logInfo(`converted metric data files for ${filesToConvert.length} files: ${filesToConvert}`);
     } else {
-      console.log(`couldn't convert files for ${filesToConvert.length - this.convertedToMetricCount} files`);
+      convertImperialToMetricLogger.logWarning(`couldn't convert metric data files for ${filesToConvert.length - this.convertedToMetricCount} files`);
     }
   }
 
   // Main function that gets executed.
   convertImperialDataToMetricJsonl() {
     // fetch converted and unconverted file names without the .json/.jsonl;
-    console.log(`Converting imperial to metric data`)
+    convertImperialToMetricLogger.logInfo(`Converting imperial to metric data`)
     const allMetricJsonlFileNames = this.getArrayOfFiles('jsonl');
     const allImperialFileNames = this.getArrayOfFiles('json');
     // filter out the files that have already been converted
     const fileNamesToConvertToMetric = allImperialFileNames.filter((fileName) => allMetricJsonlFileNames.indexOf(fileName) === -1);
+
     // read and write the file contents as newline delimited data
     if (fileNamesToConvertToMetric.length > 0) {
       this.convertDataAndWriteJsonlFile(fileNamesToConvertToMetric);
       this.logResult(fileNamesToConvertToMetric);
     } else {
-      console.log('There are no unconverted files')
+      convertImperialToMetricLogger.logWarning('There are no unconverted files')
     }
-    return this.dataFilesConvertedToMetricJsonl;
+    // this.dataFilesConvertedToMetricJsonl = fileNamesToConvertToMetric;
+    return fileNamesToConvertToMetric;
   }
 }
 
