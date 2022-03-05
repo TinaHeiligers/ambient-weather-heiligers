@@ -5,7 +5,7 @@ const mockAWApi = mocks.mockAWApi;
 const mockFs = mocks.mockFs;
 const mockFetchRawData = mocks.mockFetchRawData;
 
-describe('main', () => {
+describe.skip('main', () => {
   let mockedFetchedData = [];
   let mockedFiles = [];
   let mockedData = [];

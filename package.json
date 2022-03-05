@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/jest",
-    "start": "node runFetchRawData.js && node runConvertImperialToJsonl.js && node runConvertImperialToMetric.js"
+    "start": "node runFetchRawData.js && node runConvertImperialToJsonl.js && node runConvertImperialToMetric.js",
+    "run_main": "node runMainIIFE.js"
   },
   "author": "Tina Heiligers",
   "license": "MIT",
