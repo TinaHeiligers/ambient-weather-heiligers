@@ -317,7 +317,7 @@ describe('FetchRawData', () => {
       expect(Object.keys(result)).toStrictEqual(["dataFetchForDates", "dataFileNames"]);
       expect(result.dataFetchForDates).toEqual([{ from: mockedFrom, to: mockedTo }]);
     });
-    it("fetches data if no date is provided", async () => {
+    it.skip("fetches data if no date is provided", async () => {
       rawDataFetcher = new FetchRawData(mockAWApi, mockFs);
       // mock return value of rawDataFetcher.getLastRecordedUTCDate
       jest.spyOn(rawDataFetcher, 'getLastRecordedUTCDate').mockImplementation((path) => ({ mostRecentDate: '2020-07-18T17:55:00Z', allFilesDates: new Set(["2020-07-18T17:55:00Z"]) }));
