@@ -2,7 +2,7 @@
   "name": "ambient-weather-heiligers",
   "version": "1.0.0",
   "description": "collect data from Heiligers weather station",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "./node_modules/.bin/jest",
     "start": "node runFetchRawData.js && node runConvertImperialToJsonl.js && node runConvertImperialToMetric.js",

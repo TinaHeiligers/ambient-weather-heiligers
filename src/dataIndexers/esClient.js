@@ -2,16 +2,16 @@ const { Client } = require('@elastic/elasticsearch');
 const assert = require('assert');
 
 function initEsClient() {
-  const envConfig = {
-    cloud_id: process.env.STAGING_CLOUD_ID,
-    username: process.env.STAGING_ES_USERNAME,
-    password: process.env.STAGING_ES_PASSWORD,
-  }
   // const envConfig = {
-  //   cloud_id: process.env.ES_CLOUD_ID,
-  //   username: process.env.ES_USERNAME,
-  //   password: process.env.ES_PASSWORD,
+  //   cloud_id: process.env.STAGING_CLOUD_ID,
+  //   username: process.env.STAGING_ES_USERNAME,
+  //   password: process.env.STAGING_ES_PASSWORD,
   // }
+  const envConfig = {
+    cloud_id: process.env.ES_CLOUD_ID,
+    username: process.env.ES_USERNAME,
+    password: process.env.ES_PASSWORD,
+  }
 
   let missingEnvEntries = [];
   if (!envConfig.cloud_id) missingEnvEntries.push('cloud_id')

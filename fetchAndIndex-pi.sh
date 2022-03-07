@@ -1,6 +1,6 @@
 #!/bin/bash
-source $HOME/.bashrc
-cd /home/pi/ProjectsClones/ambient-weather-heiligers
+source /home/pi/.bashrc
+cd /home/pi/Projects/ambient-weather-heiligers
 echo $PWD
 echo "===================="
 echo date
