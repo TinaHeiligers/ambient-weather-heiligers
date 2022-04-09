@@ -16,7 +16,7 @@
     "assert": "^2.0.0",
     "convert-units": "^2.3.4",
     "file-system": "^2.2.2",
-    "moment": "^2.26.0",
+    "moment": "^2.29.2",
     "moment-timezone": "^0.5.31"
   },
   "devDependencies": {
