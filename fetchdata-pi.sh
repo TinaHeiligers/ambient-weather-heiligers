@@ -1,4 +1,5 @@
 #!/bin/bash
+# NOT USED
 source /home/pi/.bashrc
 cd /home/pi/Projects/ambient-weather-heiligers
 echo $PWD

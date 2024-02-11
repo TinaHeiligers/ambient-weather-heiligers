@@ -130,6 +130,7 @@ class FetchRawData {
    */
 
   getLastRecordedUTCDate = (allDatesFromFiles = this.allUniqueDates) => {
+    console.log('In getLastRecordedUTCDate')
     if (allDatesFromFiles.length > 0 && allDatesFromFiles.every(item => typeof item === "number")) {
       const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
       return Math.max(...uniqueUtcDatesArray);
@@ -217,8 +218,6 @@ class FetchRawData {
 
     // set the unique dates entry set to the class instance
     this.allUniqueDates = this.extractUniqueDatesFromFiles(this.pathToFiles);
-    console.log(this.allUniqueDates)
-    return this.#allUniqueDates;
     const dateOfLastDataSaved = this.getLastRecordedUTCDate();
     const minSinceLastData = Math.floor((fromDate - dateOfLastDataSaved) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute));
     // return early if it's too soon to fetch new data
@@ -229,7 +228,6 @@ class FetchRawData {
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
-    return estNumberOfBatches;
 
     if (estNumberOfBatches >= 1) {
       fetchRawDataLogger.logInfo('[getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
@@ -251,6 +249,7 @@ class FetchRawData {
         }
       }
       // fetch the last lot of data that doesn't fall into a batch
+      console.log('HELLOOOOOOOOOOO')
       const lastRecordsFromDate = Math.min(...this.datesArray.map((entry) => entry.from));
       const lastRecordsLimit = Math.floor(calcMinutesDiff(lastRecordsFromDate, dateOfLastDataSaved) / AW_CONSTANTS.dataInterval)
 
@@ -264,7 +263,8 @@ class FetchRawData {
       } else {
         return { dataFetchForDates: this.datesArray, dataFileNames: this.recentDataFileNames };
       }
-    } else if (estTotalNumRecordsToFetch >= 2) {
+    } else if (estTotalNumRecordsToFetch >= 2 && estTotalNumRecordsToFetch <= 288) {
+      console.log('single day data fetch: batches is only 1, do not fetch if only one record is needed.')
       // single day data fetch, do not fetch if only one record is needed.
       try {
         fetchRawDataLogger.logInfo('[getDataForDateRanges] [single-day fetch] Fewer than a 288-batch records required. Setting up request for records count:', { estTotalNumRecordsToFetch: estTotalNumRecordsToFetch });
