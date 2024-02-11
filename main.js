@@ -101,7 +101,8 @@ async function main() {
 
   // step 1: fetch new data & convert it to JSONl
   try {
-    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
+    // const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(false);
+    const getNewDataPromiseResult = await fetchRawDataTester.getDataForDateRanges(true);
     if (toEarlyForNewData(getNewDataPromiseResult)) {
       // advance steps and log
       stepsStates = updateProgressState({ newDataSkipped: true }, { warn: 'too early' }, mainLogger, { ...stepsStates })
@@ -175,7 +176,6 @@ async function main() {
     // return;
     // TODO: add logic to backfill data
     const imperialDataReadyForBulkCall = prepareDataForBulkIndexing(imperialJSONLFileNames, 'imperial');
-    console.log('8. HELLO!!!!!!!!!!!!!!!!!!')
     if (stepsStates.clusterError === false) {
       await dataIndexer.bulkIndexDocuments(imperialDataReadyForBulkCall, 'imperial')
     }

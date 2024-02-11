@@ -204,10 +204,11 @@ class FetchRawData {
    array of date-times in milliseconds since epoch, array of filenames where the data was/would have been stored
    */
   // main function for this class
-  async getDataForDateRanges(skipSave = false, fromDate) {
+  async getDataForDateRanges(skipSave = true, fromDate) {
 
     if (!fromDate) {
       fromDate = this.now;
+      console.log('setting fromDate to now')
     }
     fetchRawDataLogger.logInfo('[getDataForDateRanges] args: skipSave, fromDate', { skipSave: !!skipSave, fromDate: fromDate });
 
@@ -216,6 +217,8 @@ class FetchRawData {
 
     // set the unique dates entry set to the class instance
     this.allUniqueDates = this.extractUniqueDatesFromFiles(this.pathToFiles);
+    console.log(this.allUniqueDates)
+    return this.#allUniqueDates;
     const dateOfLastDataSaved = this.getLastRecordedUTCDate();
     const minSinceLastData = Math.floor((fromDate - dateOfLastDataSaved) / (timeConstants.milliseconds_per_second * timeConstants.seconds_per_minute));
     // return early if it's too soon to fetch new data
@@ -226,6 +229,7 @@ class FetchRawData {
     const estTotalNumRecordsToFetch = Math.floor(minSinceLastData / AW_CONSTANTS.dataInterval);
     const estNumberOfBatches = estTotalNumRecordsToFetch / AW_CONSTANTS.maxNumRecords;
     // multi-day data fetch
+    return estNumberOfBatches;
 
     if (estNumberOfBatches >= 1) {
       fetchRawDataLogger.logInfo('[getDataForDateRanges] [multi-day fetch] Setting up batched requests for batches:', { estNumberOfBatches: Math.floor(estNumberOfBatches) })
