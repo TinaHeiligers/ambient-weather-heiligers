@@ -105,7 +105,7 @@ async function main() {
     if (toEarlyForNewData(getNewDataPromiseResult)) {
       // advance steps and log
       stepsStates = updateProgressState({ newDataSkipped: true }, { warn: 'too early' }, mainLogger, { ...stepsStates })
-    } else if (Object.keys(getNewDataPromiseResult) === ['dataFetchForDates', 'dataFileNames']) {
+    } else if (Object.keys(getNewDataPromiseResult).includes('dataFetchForDates') && Object.keys(getNewDataPromiseResult).includes('dataFileNames')) {
       datesForNewData = getNewDataPromiseResult.dataFetchForDates;
     }
 
