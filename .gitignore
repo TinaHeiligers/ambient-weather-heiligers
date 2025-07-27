@@ -1,5 +1,7 @@
 .env
 node_modules
+coverage/
+src/coverage/
 data/*
 data_archive/*
 .DS_Store
