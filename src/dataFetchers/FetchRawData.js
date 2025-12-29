@@ -133,7 +133,8 @@ class FetchRawData {
     console.log('In getLastRecordedUTCDate')
     if (allDatesFromFiles.length > 0 && allDatesFromFiles.every(item => typeof item === "number")) {
       const uniqueUtcDatesArray = [...new Set(allDatesFromFiles)];
-      return Math.max(...uniqueUtcDatesArray);
+      // return Math.max(...uniqueUtcDatesArray); // doesn't handle super large arrays
+      return uniqueUtcDatesArray.reduce((max, current) => current > max ? current : max);
     } else {
       return (this.now - timeConstants.one_day_as_milliseconds);
     }
