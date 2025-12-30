@@ -134,9 +134,6 @@ async function main() {
     throw err;
   }
 
-  return 'STOP NOW';
-
-
   stage = step[3];
   logProgress(mainLogger, stage, stepsStates)
   const initializeResult = await dataIndexer.initialize();
